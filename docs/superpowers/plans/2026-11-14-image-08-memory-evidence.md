@@ -106,7 +106,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- scripts/benchmark_images.py scripts/image_measurement.py services/image_telemetry.py deploy/comfy_lifecycle_probe.py deploy/start-comfy.py services/images.py tests/test_tb08_memory_evidence.py OPERATIONS.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t08 vertical core"
 ```
 
@@ -224,7 +230,13 @@ python -m scripts.benchmark_images --scenario observe --config "<维护者私有
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- scripts/benchmark_images.py scripts/image_measurement.py services/image_telemetry.py deploy/comfy_lifecycle_probe.py deploy/start-comfy.py services/images.py tests/test_tb08_memory_evidence.py OPERATIONS.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t08 boundaries and recovery"
 ```
 

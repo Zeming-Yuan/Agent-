@@ -122,7 +122,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- scripts/migrate_image_owners.py services/ownership.py services/store.py services/gateway.py tests/test_tb04_owner_contract.py OPERATIONS.md docs/adr/0001-owner-scoped-storage.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/migrate_image_owners.py","services/ownership.py","services/store.py","services/gateway.py","tests/test_tb04_owner_contract.py","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t04 vertical core"
 ```
 
@@ -144,6 +150,7 @@ from services.ownership import expand_ownership
 def test_tb04_repeat_contract_keeps_ids(tmp_path):
     store = Store(tmp_path)
     fid = "file-" + "d"*32
+    (store.files/fid).write_bytes(b"old")
     store.add_file(fid, "old.png", 3, owner="legacy")
     expand_ownership(store.db, "legacy")
     assert contract_ownership(store.db, "legacy")["version"] == 1
@@ -229,7 +236,13 @@ Run: `python -m pytest -q -k "tb01 or tb02 or tb03 or tb04 or task_idempotency"`
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- scripts/migrate_image_owners.py services/ownership.py services/store.py services/gateway.py tests/test_tb04_owner_contract.py OPERATIONS.md docs/adr/0001-owner-scoped-storage.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/migrate_image_owners.py","services/ownership.py","services/store.py","services/gateway.py","tests/test_tb04_owner_contract.py","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t04 boundaries and recovery"
 ```
 
@@ -293,3 +306,7 @@ def test_tb04_backup_does_not_overwrite_previous_snapshot(tmp_path):
     with pytest.raises(FileExistsError):
         backup_state(store.db,target)
 ```
+
+## Legacy 接管身份说明
+
+本计划示例的稳定 legacy owner 为 `legacy`。人员接管通过向指定人员发放映射到该既有 owner 的新独立 Key 完成，不是把已经归属的行改成另一个 owner。CLI 的 legacy-owner 必须与 T01 记录的稳定 owner 一致；不一致在写入前拒绝。把旧数据合并进另一个已经存在的 owner 是额外数据迁移，不在本次 contract 隐式执行。

@@ -113,7 +113,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- client/windows/install-windows.ps1 client/windows/configure.py client/windows/README.md tests/test_tb12_windows_client.py
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["client/windows/install-windows.ps1","client/windows/configure.py","client/windows/README.md","tests/test_tb12_windows_client.py"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t12 vertical core"
 ```
 
@@ -211,7 +217,13 @@ python -m client.spark_image_tools --config "<Windows 个人配置文件>"
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- client/windows/install-windows.ps1 client/windows/configure.py client/windows/README.md tests/test_tb12_windows_client.py
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["client/windows/install-windows.ps1","client/windows/configure.py","client/windows/README.md","tests/test_tb12_windows_client.py"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t12 boundaries and recovery"
 ```
 

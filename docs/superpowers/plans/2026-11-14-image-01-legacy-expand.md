@@ -122,7 +122,7 @@ def require_owner(db, kind, object_id, owner):
 ```
 
 - [ ] 不改变 files/tasks 的原列数；把 legacy 归属旁表与预检放进 factory 初始化，旧进程新写入仍由预检暴露。
-- [ ] 将已验证的 Bearer 解析结果交给 KeyRegistry.resolve；legacy 模式另检查 owner=='legacy'，再设置 request.state.principal。无注册表时用原 token 注册 legacy；staging/strict 只能由服务配置选择。
+- [ ] 本任务仅接入 ownership 旁表和原 SQL 兼容测试；暂不创建 tests/conftest.py，也不向 gateway 引入 services.identity。身份注册表、鉴权切换和共享夹具统一在 Task 2 完成，确保边界 A 可以独立通过。
 
 - [ ] **Step 4: 运行首条测试和受影响既有回归**
 
@@ -142,7 +142,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- services/identity.py services/ownership.py services/gateway.py tests/conftest.py tests/test_tb01_legacy_expand.py OPERATIONS.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t01 vertical core"
 ```
 
@@ -259,6 +265,7 @@ class KeyRegistry:
 ```
 
 
+- [ ] 先创建上面的 KeyRegistry，再将已验证的 Bearer 解析结果交给 resolve；legacy 模式只接受 owner=='legacy' 并设置 request.state.principal。无注册表时用原 token 注册 legacy；staging/strict 只来自服务配置。
 - [ ] 按共享契约实现完整 owner_env/ImageBackend：模拟边界只在 /prompt、/history、/view、/queue、/interrupt 和 /system_stats；返回真实可解码 PNG，所有真实 HTTP/Store/worker 保留。
 - [ ] 把旧版本复制到临时审查目录，在同一 expand 后数据副本运行原有 task_idempotency 和上传测试；不是只让新版读取旧库。
 
@@ -291,7 +298,13 @@ Run: `python -m pytest -q -k "tb01 or task_idempotency_cancel_and_persistence or
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- services/identity.py services/ownership.py services/gateway.py tests/conftest.py tests/test_tb01_legacy_expand.py OPERATIONS.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t01 boundaries and recovery"
 ```
 

@@ -119,7 +119,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- services/gateway.py services/image_routes.py services/store.py tests/test_tb05_server_resume.py docs/IMAGE-SERVICE.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t05 vertical core"
 ```
 
@@ -257,7 +263,13 @@ Run: `python -m pytest -q -k "tb05 or image_admission or unknown_submit_outcome 
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- services/gateway.py services/image_routes.py services/store.py tests/test_tb05_server_resume.py docs/IMAGE-SERVICE.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t05 boundaries and recovery"
 ```
 

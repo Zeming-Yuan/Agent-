@@ -119,7 +119,13 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
 ```bash
-git add -- scripts/check_image_acceptance.py tests/test_tb14_joint_acceptance.py OPERATIONS.md docs/IMAGE-SERVICE.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "feat(image): t14 vertical core"
 ```
 
@@ -221,7 +227,13 @@ python -m pytest -q
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
 ```bash
-git add -- scripts/check_image_acceptance.py tests/test_tb14_joint_acceptance.py OPERATIONS.md docs/IMAGE-SERVICE.md
+python - <<'PY'
+from pathlib import Path
+import subprocess
+candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md"]
+paths = [p for p in candidates if Path(p).is_file()]
+subprocess.run(["git", "add", "--", *paths], check=True)
+PY
 git commit -m "test(image): t14 boundaries and recovery"
 ```
 
