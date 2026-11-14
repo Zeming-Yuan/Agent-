@@ -43,6 +43,8 @@
 - Create: tests/test_tb05_server_resume.py
 - Modify: docs/IMAGE-SERVICE.md
 
+- Modify: OPERATIONS.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T04 strict owner 与 request 映射。Produces: GET /v1/tasks?status=&after= 的本人分页响应；Store.lookup_request(owner, request_key, fingerprint)->dict|None；Store.list_tasks(owner, *, status=None, after=None, limit=20)->dict；同步等待超时仍含 task_id。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -122,7 +124,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -266,7 +268,7 @@ Run: `python -m pytest -q -k "tb05 or image_admission or unknown_submit_outcome 
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/gateway.py","services/image_routes.py","services/store.py","tests/test_tb05_server_resume.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

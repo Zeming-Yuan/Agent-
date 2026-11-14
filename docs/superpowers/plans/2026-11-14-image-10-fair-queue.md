@@ -44,6 +44,9 @@
 - Create: tests/test_tb10_fair_queue.py
 - Modify: docs/IMAGE-SERVICE.md
 
+- Modify: OPERATIONS.md — 本票文档/ADR/实际测量记录同步
+- Modify: docs/superpowers/plans/2026-11-14-image-10-fair-queue.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T09 可执行判断与独占执行权、T07 稳定阶段。Produces: choose_next(heads,last_owner)->str|None；Store.claim_image_task(resource_view)->dict|None 原子保存 cursor 与 running/claim；queue_ahead:int|None，仅当前公平快照，不含他人详情。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -113,7 +116,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/image_queue.py","services/store.py","services/images.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb10_fair_queue.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/image_queue.py","services/store.py","services/images.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb10_fair_queue.py","docs/IMAGE-SERVICE.md","OPERATIONS.md","docs/superpowers/plans/2026-11-14-image-10-fair-queue.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -219,7 +222,7 @@ Run: `python -m pytest -q -k "tb10 or tb09 or bounded_task_queue or image_task_v
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/image_queue.py","services/store.py","services/images.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb10_fair_queue.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/image_queue.py","services/store.py","services/images.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb10_fair_queue.py","docs/IMAGE-SERVICE.md","OPERATIONS.md","docs/superpowers/plans/2026-11-14-image-10-fair-queue.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

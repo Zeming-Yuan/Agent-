@@ -44,6 +44,8 @@
 - Create: tests/test_tb02_owner_files.py
 - Modify: docs/IMAGE-SERVICE.md
 
+- Modify: docs/adr/0001-owner-scoped-storage.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T01 Principal/require_owner/owner_env。Produces: Store.file/path/add_file/save_generated/delete_file 的 keyword-only owner（过渡期仅旧入口允许 legacy 默认）；所有用户文件路径先 require_owner，再接触文件系统。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -112,7 +114,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/media.py","services/images.py","tests/test_tb02_owner_files.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/media.py","services/images.py","tests/test_tb02_owner_files.py","docs/IMAGE-SERVICE.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -230,7 +232,7 @@ Run: `python -m pytest -q -k "tb02 or upload_quota_is_atomic or rejected_edit_re
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/media.py","services/images.py","tests/test_tb02_owner_files.py","docs/IMAGE-SERVICE.md"]
+candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/media.py","services/images.py","tests/test_tb02_owner_files.py","docs/IMAGE-SERVICE.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

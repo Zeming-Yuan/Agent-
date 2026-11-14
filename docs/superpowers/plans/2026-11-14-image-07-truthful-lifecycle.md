@@ -47,6 +47,8 @@
 - Modify: deploy/gateway-requirements.lock — 固定 websockets==16.0（采用现有图片运行时已锁版本）
 - Modify: tests/conftest.py — 注入受控事件流，禁止测试连接真实后端 WebSocket
 
+- Modify: OPERATIONS.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T06 的稳定任务恢复、owner 和桥接输出。Produces: task_runtime 字段、Store.transition 的执行契约；apply_event(task:dict,event:dict,*,backend_stopped=False,result_saved=False)->dict（services.task_lifecycle）。status 保持既有五态，stage 与 step/steps 为额外字段。 ComfyEventStream(url:str, client_id:str) 的 async events() 产出原始事件字典；normalize_event(event:dict, prompt_id:str, active_node:str|None)->dict|None 只接收本任务事件。 create_app 新增 event_stream_factory 参数，默认真实连接器；测试注入 ImageBackend.events 异步消息迭代器。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -133,7 +135,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/task_lifecycle.py","services/comfy_events.py","services/store.py","services/images.py","services/image_routes.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb07_lifecycle.py","docs/IMAGE-SERVICE.md","deploy/gateway-requirements.lock","tests/conftest.py"]
+candidates = ["services/task_lifecycle.py","services/comfy_events.py","services/store.py","services/images.py","services/image_routes.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb07_lifecycle.py","docs/IMAGE-SERVICE.md","deploy/gateway-requirements.lock","tests/conftest.py","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -239,7 +241,7 @@ Run: `python -m pytest -q -k "tb07 or cancelling_running_image or unknown_submit
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/task_lifecycle.py","services/comfy_events.py","services/store.py","services/images.py","services/image_routes.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb07_lifecycle.py","docs/IMAGE-SERVICE.md","deploy/gateway-requirements.lock","tests/conftest.py"]
+candidates = ["services/task_lifecycle.py","services/comfy_events.py","services/store.py","services/images.py","services/image_routes.py","services/gateway.py","client/spark_image_tools.py","tests/test_tb07_lifecycle.py","docs/IMAGE-SERVICE.md","deploy/gateway-requirements.lock","tests/conftest.py","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

@@ -44,6 +44,8 @@
 - Create: tests/test_tb01_legacy_expand.py
 - Modify: OPERATIONS.md — expand/预检及兼容回退
 
+- Create: docs/adr/0001-owner-scoped-storage.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: 当前 Store(root, max_pending=4) 和 create_app(root, token)。Produces: 执行契约中的 Principal、KeyRegistry、expand_ownership、preflight_ownership、require_owner、owner_env；新增 create_app 的 key_registry/identity_mode 参数，默认 legacy。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -105,6 +107,10 @@ def preflight_ownership(db_path):
     report = {}
     with sqlite3.connect(db_path) as db:
         for kind, table in (("file", "files"), ("task", "tasks")):
+            has_owners = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='object_owners'").fetchone()
+            if not has_owners:
+                report["unowned_" + table] = db.execute("SELECT count(*) FROM " + table).fetchone()[0]
+                continue
             report["unowned_" + table] = db.execute(f"""
                 SELECT count(*) FROM {table} x LEFT JOIN object_owners o
                 ON o.kind=? AND o.object_id=x.id WHERE o.object_id IS NULL
@@ -145,7 +151,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md"]
+candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -217,6 +223,13 @@ Run: `python -m pytest -q tests/test_tb01_legacy_expand.py`
 - [ ] **Step 3: 用最小改动满足反例，完成必要接线**
 
 `services/identity.py` 的核心内容：
+
+
+def test_tb01_preflight_reads_unexpanded_legacy_schema(tmp_path):
+    store = Store(tmp_path)
+    with store.connect() as db:
+        db.execute("INSERT INTO files VALUES(?,?,?,?)",("file-"+"f"*32,"legacy",1,1))
+    assert preflight_ownership(store.db)["unowned_files"] == 1
 
 ```python
 import hashlib
@@ -301,7 +314,7 @@ Run: `python -m pytest -q -k "tb01 or task_idempotency_cancel_and_persistence or
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md"]
+candidates = ["services/identity.py","services/ownership.py","services/gateway.py","tests/conftest.py","tests/test_tb01_legacy_expand.py","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

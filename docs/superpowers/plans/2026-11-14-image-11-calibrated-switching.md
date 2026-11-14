@@ -43,6 +43,8 @@
 - Modify: OPERATIONS.md — 有效预算及标定记录
 - Modify: docs/adr/0002-image-resource-admission.md — 记录采用依据，不伪造数值
 
+- Modify: docs/superpowers/plans/2026-11-14-image-11-calibrated-switching.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T10 最终调度构建、T09 准入和 T08 原始测量契约。Produces: validate_profile_report(report)->list[str]；model-switch CLI；私有原始记录和经证据绑定的 profile 配置。CLI --cycles 接受不小于 3，比较配置时每侧至少 5 轮交替。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -122,7 +124,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","tests/test_tb11_calibrated_switching.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md"]
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","tests/test_tb11_calibrated_switching.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","docs/superpowers/plans/2026-11-14-image-11-calibrated-switching.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -240,7 +242,7 @@ python -m scripts.benchmark_images --scenario model-switch --profiles fast,stand
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","tests/test_tb11_calibrated_switching.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md"]
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","tests/test_tb11_calibrated_switching.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","docs/superpowers/plans/2026-11-14-image-11-calibrated-switching.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

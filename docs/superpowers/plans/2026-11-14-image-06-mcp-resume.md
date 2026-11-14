@@ -43,6 +43,8 @@
 - Create: tests/test_tb06_mcp_resume.py
 - Modify: docs/IMAGE-SERVICE.md
 
+- Modify: OPERATIONS.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T05 本人列表、GET /v1/me 和 scoped replay。Produces: 执行契约中的 RequestJournal；ImageBridge(..., journal_path=None)；generate/edit(..., *, request_id=None)；MCP list_image_tasks；构建入口不默认导出共享 Key。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -165,7 +167,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["client/request_journal.py","client/spark_image_tools.py","scripts/build_image_client_bundle.py","tests/test_tb06_mcp_resume.py","docs/IMAGE-SERVICE.md"]
+candidates = ["client/request_journal.py","client/spark_image_tools.py","scripts/build_image_client_bundle.py","tests/test_tb06_mcp_resume.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -285,7 +287,7 @@ Run: `python -m pytest -q -k "tb06 or bridge_returns_real_mcp_image_content"`
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["client/request_journal.py","client/spark_image_tools.py","scripts/build_image_client_bundle.py","tests/test_tb06_mcp_resume.py","docs/IMAGE-SERVICE.md"]
+candidates = ["client/request_journal.py","client/spark_image_tools.py","scripts/build_image_client_bundle.py","tests/test_tb06_mcp_resume.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

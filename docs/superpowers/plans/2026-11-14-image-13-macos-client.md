@@ -43,6 +43,8 @@
 - Create: tests/test_tb13_macos_client.py
 - Reuse without parallel edits: client/spark_image_tools.py / 公共构建器
 
+- Modify: OPERATIONS.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T06 公共恢复/打包和 T11 已标定后端。Produces: make_config(install_dir:str,config_file:str)->dict（client.mac.configure）；macOS 平台专属升级流程；保留 Windows 相同的工具协议。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -115,7 +117,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["client/mac/configure.py","client/mac/install-mac.command","client/mac/README.md","tests/test_tb13_macos_client.py"]
+candidates = ["client/mac/configure.py","client/mac/install-mac.command","client/mac/README.md","tests/test_tb13_macos_client.py","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -217,7 +219,7 @@ python -m client.spark_image_tools --config "<macOS 个人配置文件>"
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["client/mac/configure.py","client/mac/install-mac.command","client/mac/README.md","tests/test_tb13_macos_client.py"]
+candidates = ["client/mac/configure.py","client/mac/install-mac.command","client/mac/README.md","tests/test_tb13_macos_client.py","OPERATIONS.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

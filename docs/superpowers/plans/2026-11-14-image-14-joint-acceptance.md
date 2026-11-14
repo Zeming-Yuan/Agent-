@@ -43,6 +43,10 @@
 - Modify: docs/IMAGE-SERVICE.md — 最终外部契约及未验收边界
 - Reuse: 全部最终实现与私有实机报告，不新增大功能
 
+- Modify: docs/adr/0001-owner-scoped-storage.md — 本票文档/ADR/实际测量记录同步
+- Modify: docs/adr/0002-image-resource-admission.md — 本票文档/ADR/实际测量记录同步
+- Modify: docs/superpowers/plans/2026-11-14-image-14-joint-acceptance.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T12/T13 实际双端证据、T11 profile 报告与迁移/恢复结果。Produces: check_acceptance(report)->list[str]；CLI --report <file> 非零拒绝缺证据；交付记录关联 AC-01..AC-20，不自动修改父 Issue。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -122,7 +126,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md"]
+candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md","docs/adr/0001-owner-scoped-storage.md","docs/adr/0002-image-resource-admission.md","docs/superpowers/plans/2026-11-14-image-14-joint-acceptance.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -230,7 +234,7 @@ python -m pytest -q
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md"]
+candidates = ["scripts/check_image_acceptance.py","tests/test_tb14_joint_acceptance.py","OPERATIONS.md","docs/IMAGE-SERVICE.md","docs/adr/0001-owner-scoped-storage.md","docs/adr/0002-image-resource-admission.md","docs/superpowers/plans/2026-11-14-image-14-joint-acceptance.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

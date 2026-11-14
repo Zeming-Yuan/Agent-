@@ -45,6 +45,9 @@
 - Create: tests/test_tb08_memory_evidence.py
 - Modify: OPERATIONS.md
 
+- Modify: docs/superpowers/plans/2026-11-14-image-measurement-contract.md — 本票文档/ADR/实际测量记录同步
+- Modify: docs/superpowers/plans/2026-11-14-image-08-memory-evidence.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T07 阶段事件；现有 benchmark_images 和固定 ComfyUI 0.33.2。Produces: ResourceSample、validate_run(record)->list[str]、summarize_run(record)->dict；observe CLI；私有 JSONL 原始记录。观测元数据包含 host_id/runtime_hash 和 release_epoch，不公开业务内容。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -109,7 +112,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md"]
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md","docs/superpowers/plans/2026-11-14-image-measurement-contract.md","docs/superpowers/plans/2026-11-14-image-08-memory-evidence.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -233,7 +236,7 @@ python -m scripts.benchmark_images --scenario observe --config "<维护者私有
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md"]
+candidates = ["scripts/benchmark_images.py","scripts/image_measurement.py","services/image_telemetry.py","deploy/comfy_lifecycle_probe.py","deploy/start-comfy.py","services/images.py","tests/test_tb08_memory_evidence.py","OPERATIONS.md","docs/superpowers/plans/2026-11-14-image-measurement-contract.md","docs/superpowers/plans/2026-11-14-image-08-memory-evidence.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY

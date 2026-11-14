@@ -45,6 +45,8 @@
 - Modify: OPERATIONS.md / docs/adr/0002-image-resource-admission.md
 - Modify: tests/conftest.py — 为既有集成测试注入有效合成资源与包络
 
+- Modify: docs/superpowers/plans/2026-11-14-image-09-safe-admission.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T08 ResourceSample/release_epoch 与 T07 终态/阶段。Produces: MemoryBudget、AdmissionDecision、admit 与 released(samples,after_epoch,stable_window)->bool；正值 max_age/stable_window/wait_timeout 配置；未签署/失效 profile 默认禁用。 create_app 增加 resource_sampler、memory_budgets、resource_settings、image_runtime_hash 四个 keyword-only 注入点，默认加载真实观测与配置；只在测试 fixture 提供合成值。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -136,7 +138,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/image_resources.py","services/images.py","services/store.py","services/gateway.py","deploy/run-image.sh","tests/test_tb09_safe_admission.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","tests/conftest.py"]
+candidates = ["services/image_resources.py","services/images.py","services/store.py","services/gateway.py","deploy/run-image.sh","tests/test_tb09_safe_admission.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","tests/conftest.py","docs/superpowers/plans/2026-11-14-image-09-safe-admission.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -240,7 +242,7 @@ Run: `python -m pytest -q -k "tb09 or tb07 or unknown_submit_outcome or unavaila
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/image_resources.py","services/images.py","services/store.py","services/gateway.py","deploy/run-image.sh","tests/test_tb09_safe_admission.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","tests/conftest.py"]
+candidates = ["services/image_resources.py","services/images.py","services/store.py","services/gateway.py","deploy/run-image.sh","tests/test_tb09_safe_admission.py","OPERATIONS.md","docs/adr/0002-image-resource-admission.md","tests/conftest.py","docs/superpowers/plans/2026-11-14-image-09-safe-admission.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -278,3 +280,7 @@ git commit -m "test(image): t09 boundaries and recovery"
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+
+## 预算有效期的时钟约定
+
+部署配置持久化 UTC expires_at；加载时换算为本次启动的 monotonic 截止：valid_until = monotonic_now + max(0, expires_at - utc_now)。MemoryBudget.valid_until 仅为内存对象，不将单调时钟值写回持久配置；重启后重新换算，过期配置保持禁用。测试中的 now/valid_until 是同一单调时钟域。

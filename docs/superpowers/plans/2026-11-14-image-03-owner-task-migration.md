@@ -44,6 +44,8 @@
 - Create: tests/test_tb03_owner_tasks.py
 - Modify: docs/IMAGE-SERVICE.md / OPERATIONS.md
 
+- Modify: docs/adr/0001-owner-scoped-storage.md — 本票文档/ADR/实际测量记录同步
+
 **Consumes / Produces:** Consumes: T02 文件隔离与 T01 KeyRegistry。Produces: Store.task(tid,*,owner)、Store.worker_task(tid)、Store.submit(kind,fid,options,idem,*,owner)；GET /v1/me；task_requests 联合主键；CLI issue/revoke；保持原模型参数与结果形状。
 
 ## Task 1: 首条用户反例与最小纵向实现
@@ -114,7 +116,7 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/images.py","services/media.py","services/identity.py","tests/test_tb03_owner_tasks.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
+candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/images.py","services/media.py","services/identity.py","tests/test_tb03_owner_tasks.py","docs/IMAGE-SERVICE.md","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
@@ -235,7 +237,7 @@ Run: `python -m pytest -q -k "tb03 or image_task_validation_idempotency or edit_
 python - <<'PY'
 from pathlib import Path
 import subprocess
-candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/images.py","services/media.py","services/identity.py","tests/test_tb03_owner_tasks.py","docs/IMAGE-SERVICE.md","OPERATIONS.md"]
+candidates = ["services/store.py","services/gateway.py","services/image_routes.py","services/images.py","services/media.py","services/identity.py","tests/test_tb03_owner_tasks.py","docs/IMAGE-SERVICE.md","OPERATIONS.md","docs/adr/0001-owner-scoped-storage.md"]
 paths = [p for p in candidates if Path(p).is_file()]
 subprocess.run(["git", "add", "--", *paths], check=True)
 PY
