@@ -11,3 +11,5 @@ T01 使用 `object_owners(kind, object_id, owner)` 旁表，保留 files 的 4 �
 过渡期保持生产 legacy 单身份访问；未具备全链路 owner 校验时不能开放多人生产入口。回退保留旁表和新写入数据，多 owner 数据存在后不得回退到共享可读的旧版。
 
 T01 KeyRegistry 单独持久化凭证摘要和不可变的 owner/key_id；撤销不被重注册或默认 factory 重启抵消。HTTP 只把已解析的 Principal 放入 request.state，不改变尚待 T02/T03 迁移的文件与任务 API。legacy 拒绝非 legacy；staging 是隔离测试配置；strict 在 owner 迁移完成前拒绝启动。这一 fail-closed 过渡限制优先于提前开放严格模式，T04 收口时必须移除该限制并验证真正的 owner 路径。
+
+T02 切片 A 将文件与 `object_owners` 在同一 BEGIN IMMEDIATE 中提交，读取/删除先验证归属。文件方法的 legacy 默认仅供尚未迁移的旧内部调用；所有已迁移 HTTP 文件入口显式传 owner。删除使用写事务串行检查在用引用与回收，跨人和未知 ID 都返回相同 404。T01 模拟旧写入的测试改用已冻结旧 Store，避免把 T02 的新归属写入当作旧版行为。

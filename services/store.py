@@ -7,6 +7,7 @@ import time
 import uuid
 from pathlib import Path
 from fastapi import HTTPException
+from .ownership import require_owner
 
 
 class Store:
@@ -19,6 +20,8 @@ class Store:
         self.max_pending = max_pending
         with self.connect() as db:
             db.executescript('''
+            CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
+                owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
             CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
             CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
               options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
@@ -35,48 +38,53 @@ class Store:
         finally:
             db.close()
 
-    def file(self, fid):
+    def file(self, fid, *, owner="legacy"):
         with self.connect() as db:
+            require_owner(db, 'file', fid, owner)
             row = db.execute('SELECT * FROM files WHERE id=?', (fid,)).fetchone()
         if row is None:
-            raise HTTPException(404, 'File not found')
+            raise HTTPException(404, 'Object not found')
         return dict(row)
 
-    def path(self, fid):
-        self.file(fid)
+    def path(self, fid, *, owner="legacy"):
+        self.file(fid, owner=owner)
         # Only opaque IDs retrieved from SQLite can reach the filesystem.
         return self.files / fid
 
-    def add_file(self, fid, name, size):
+    def add_file(self, fid, name, size, *, owner="legacy"):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             used=db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
             if used+size>2*1024**3: raise HTTPException(413,'File/storage limit exceeded')
             db.execute('INSERT INTO files VALUES(?,?,?,?)', (fid, Path(name).name[:200], size, int(time.time())))
-        return self.file(fid)
+            db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('file', fid, owner))
+        return self.file(fid, owner=owner)
 
-    def save_generated(self, fid, data, name):
+    def save_generated(self, fid, data, name, *, owner="legacy"):
         path=self.files/fid
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             existing=db.execute('SELECT bytes FROM files WHERE id=?',(fid,)).fetchone()
             if existing:
+                require_owner(db, 'file', fid, owner)
                 if existing['bytes']==len(data) and path.is_file() and path.read_bytes()==data:
-                    return self.file(fid)
+                    return self.file(fid, owner=owner)
                 raise HTTPException(409,'File ID conflicts with different content')
             used=db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
             if used+len(data)>2*1024**3: raise HTTPException(413,'File/storage limit exceeded')
             try:
                 with path.open('xb') as out: out.write(data)
                 db.execute('INSERT INTO files VALUES(?,?,?,?)',(fid,name,len(data),int(time.time())))
+                db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('file', fid, owner))
             except BaseException:
                 path.unlink(missing_ok=True)
                 raise
-        return self.file(fid)
+        return self.file(fid, owner=owner)
 
-    def delete_file(self, fid):
-        self.file(fid)
+    def delete_file(self, fid, *, owner="legacy"):
         with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            require_owner(db, 'file', fid, owner)
             if db.execute("""SELECT 1 FROM tasks WHERE status IN ('queued','running') AND
                           (file_id=? OR json_extract(options,'$.foreground_file_id')=? OR
                            EXISTS(SELECT 1 FROM json_each(tasks.options,'$.image_ids') WHERE value=?))""",
@@ -84,6 +92,7 @@ class Store:
                 raise HTTPException(409, 'File has pending tasks')
             (self.files / fid).unlink(missing_ok=True)
             db.execute('DELETE FROM files WHERE id=?', (fid,))
+            db.execute("DELETE FROM object_owners WHERE kind='file' AND object_id=?", (fid,))
 
     def task(self, tid):
         with self.connect() as db:

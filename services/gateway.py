@@ -265,7 +265,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                                       media_type='text/event-stream',headers={'Cache-Control':'no-cache','X-Accel-Buffering':'no',**budget_headers})
 
     @app.post('/v1/files')
-    async def upload(file: UploadFile = File(...), purpose: str = Form('assistants')):
+    async def upload(request: Request, file: UploadFile = File(...), purpose: str = Form('assistants')):
         async with upload_lock:
             fid = 'file-' + uuid.uuid4().hex
             path = store.files / fid
@@ -282,7 +282,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                         out.write(chunk)
                 if size==0:
                     raise HTTPException(422,'Empty file')
-                item = store.add_file(fid,file.filename or 'upload',size)
+                item = store.add_file(fid,file.filename or 'upload',size,owner=request.state.principal.owner)
                 return {'id':fid,'object':'file','bytes':size,'created_at':item['created'],'filename':item['name'],'purpose':purpose}
             except BaseException:
                 path.unlink(missing_ok=True)
@@ -291,15 +291,15 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 await file.close()
 
     @app.get('/v1/files/{fid}/content')
-    async def content(fid: str):
-        path=store.path(fid)
+    async def content(fid: str, request: Request):
+        path=store.path(fid,owner=request.state.principal.owner)
         with path.open('rb') as source: signature=source.read(8)
         mime='image/png' if signature==b'\x89PNG\r\n\x1a\n' else 'application/octet-stream'
         return FileResponse(path,media_type=mime,headers={'X-Content-Type-Options':'nosniff'})
 
     @app.delete('/v1/files/{fid}')
-    async def delete(fid: str):
-        store.delete_file(fid)
+    async def delete(fid: str, request: Request):
+        store.delete_file(fid,owner=request.state.principal.owner)
         return {'id':fid,'object':'file','deleted':True}
 
     @app.post('/v1/tasks', status_code=202)

@@ -239,22 +239,14 @@ def test_cancelled_scope_still_closes_upstream_and_releases_slot():
 
 def test_upload_quota_is_atomic_across_concurrent_requests(tmp_path):
     import asyncio
-    from io import BytesIO
-    from starlette.datastructures import UploadFile
-    from starlette.routing import request_response
     app=create_app(tmp_path,'test-secret-token',run_worker=False)
     store=app.state.store
     store.add_file('file-'+'f'*32,'quota-fixture',2*1024**3-3*1024**2)
-    upload=next(route.endpoint for route in app.routes if route.path=='/v1/files' and 'POST' in route.methods)
-    class SlowFile(UploadFile):
-        async def read(self,size=-1):
-            await asyncio.sleep(.02)
-            return await super().read(size)
     async def check():
-        files=[SlowFile(filename='audio',file=BytesIO(b'x'*(2*1024**2))) for _ in range(2)]
-        result=await asyncio.gather(*(upload(file=f,purpose='assistants') for f in files),return_exceptions=True)
-        assert sum(isinstance(r,dict) for r in result)==1
-        assert any(getattr(r,'status_code',None)==413 for r in result)
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
+            result=await asyncio.gather(*(client.post('/v1/files',headers=AUTH,
+                files={'file':('audio',b'x'*(2*1024**2))}) for _ in range(2)))
+        assert sorted(r.status_code for r in result)==[200,413]
         with store.connect() as db:
             assert db.execute('select sum(bytes) from files').fetchone()[0]<=2*1024**3
     asyncio.run(check())

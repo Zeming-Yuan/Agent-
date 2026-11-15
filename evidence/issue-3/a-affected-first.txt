@@ -1,0 +1,117 @@
+.....F....F................F............................................ [ 98%]
+.                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb01_legacy_expand_preserves_explicit_owner_on_retry ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_expand_preser1')
+
+    def test_tb01_legacy_expand_preserves_explicit_owner_on_retry(tmp_path):
+        from fastapi import HTTPException
+        from services.ownership import expand_ownership, require_owner
+    
+        store = Store(tmp_path)
+        fid = 'file-' + 'c' * 32
+        store.add_file(fid, 'owned.png', 1)
+        expand_ownership(store.db, 'A')
+        for _ in range(3):
+            expand_ownership(store.db, 'legacy')
+        with store.connect() as db:
+>           require_owner(db, 'file', fid, 'A')
+
+tests/test_tb01_legacy_expand.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xfccc46f22f20>, kind = 'file'
+object_id = 'file-cccccccccccccccccccccccccccccccc', owner = 'A'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+______ test_tb01_legacy_expand_gateway_initializes_compatibility_metadata ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_expand_gatewa0')
+caplog = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>
+
+    def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog):
+        from fastapi.testclient import TestClient
+        from services.gateway import create_app
+        from services.ownership import preflight_ownership
+    
+        store = Store(tmp_path)
+        fid = 'file-' + 'd' * 32
+        store.save_generated(fid, b'old result', 'result.png')
+        task = store.submit('image_generate', None, {}, 'old-request')
+        store.update(task['id'], status='completed', result={'file_id': fid})
+        import logging
+        caplog.set_level(logging.INFO, logger='agent-mm')
+        with TestClient(create_app(tmp_path, 'test-secret-token', run_worker=False)) as client:
+            auth = {'Authorization': 'Bearer test-secret-token'}
+            assert client.get('/v1/tasks/' + task['id'], headers=auth).json()['result'] == {'file_id': fid}
+            assert client.get('/v1/files/' + fid + '/content', headers=auth).content == b'old result'
+            assert preflight_ownership(store.db) == {
+                'unowned_files': 0, 'unowned_tasks': 0,
+                'unowned_idempotency_records': 0, 'running_tasks': 0,
+            }
+    
+>       assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in caplog.text
+E       AssertionError: assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in 'INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=1 unowned_idempotency_records=1 run...t-mm:gateway.py:150 ef1c29e0d8d3402ba7697bbb20de3974 GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n'
+E        +  where 'INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=1 unowned_idempotency_records=1 run...t-mm:gateway.py:150 ef1c29e0d8d3402ba7697bbb20de3974 GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n' = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>.text
+
+tests/test_tb01_legacy_expand.py:111: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0
+INFO     agent-mm:gateway.py:150 e5d54ef9b46742f89ebf4b279de53959 GET /v1/tasks/task-6f1cd84dbd964816ad605cb12d6d9700 200
+INFO     agent-mm:gateway.py:150 ef1c29e0d8d3402ba7697bbb20de3974 GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200
+_ test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_expand_interr0')
+
+    def test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss(tmp_path):
+        import sqlite3
+        from services.ownership import expand_ownership, preflight_ownership, require_owner
+    
+        store = Store(tmp_path)
+        store.add_file('existing', 'existing.png', 1)
+        expand_ownership(store.db, 'A')
+        store.add_file('new-file', 'new.png', 1)
+        task = store.submit('image_generate', None, {}, 'new-request')
+        with store.connect() as db:
+            db.execute("""CREATE TRIGGER fail_task_owner BEFORE INSERT ON object_owners
+                          WHEN NEW.kind='task' BEGIN SELECT RAISE(ABORT, 'injected interruption'); END""")
+        before = preflight_ownership(store.db)
+        with pytest.raises(sqlite3.IntegrityError, match='injected interruption'):
+            expand_ownership(store.db, 'legacy')
+        assert preflight_ownership(store.db) == before
+        with store.connect() as db:
+>           require_owner(db, 'file', 'existing', 'A')
+
+tests/test_tb01_legacy_expand.py:353: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xfccc45baf5b0>, kind = 'file'
+object_id = 'existing', owner = 'A'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preserves_explicit_owner_on_retry
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss
+3 failed, 70 passed, 1 warning in 7.20s
