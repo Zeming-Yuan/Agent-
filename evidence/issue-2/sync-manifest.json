@@ -1,6 +1,5 @@
 {
   "base": "443fc6022af58f9679b99bc3fb2b40cbc616138c",
-  "head": "d636e6564253b4aef53e67c8cbc2c77741748297",
   "source": "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115",
   "destination": "/home/clusteradmin/Desktop/Agent多模态服务",
   "paths": {
@@ -66,7 +65,7 @@
     },
     "evidence/issue-2/acceptance.md": {
       "before": null,
-      "after": "c6f76b657d630917f9588a20252f4443bf284eb5a984785db52ba447b9090195"
+      "after": "8964603e2bf6e777ac5a36d0ed2fe65917add619bdafb28569a096c70f69a464"
     },
     "evidence/issue-2/b-auth-green.txt": {
       "before": null,
@@ -126,7 +125,7 @@
     },
     "evidence/issue-2/progress.md": {
       "before": null,
-      "after": "58543d8d1ee726a7f6321b1833b141ad8657396cceb8e6a9857a61f4f43ca511"
+      "after": "c9df77dad43728af282fd923834e91eab620204318eb9f87aa7966b34043b415"
     },
     "evidence/issue-2/review-a.md": {
       "before": null,
@@ -179,6 +178,17 @@
     "tests/test_tb01_legacy_expand.py": {
       "before": null,
       "after": "3e283cd6cfd20496bcd4b0d78337d1845373ad12d7fb20d51f97f4d249002c0e"
+    },
+    "evidence/issue-2/isolated-post-sync.txt": {
+      "before": null,
+      "after": "f55f2459dcd6dc426d64778dddd7db1ddfd69116b6e9dbbd55366a145a4aa5b2"
+    },
+    "evidence/issue-2/product-final.txt": {
+      "before": null,
+      "after": "1112321144a67960647dee4ce27336efec2dc3e9677628f491efd149ba1a213c"
     }
-  }
+  },
+  "initial_sync_head": "d636e6564253b4aef53e67c8cbc2c77741748297",
+  "verified_payload_head": "7475033a978e7686a6c0e8c9709d7dde7f4e9c90",
+  "note": "Final payload hashes exclude this self-describing manifest. before is the pre-sync product preimage; new delivery evidence has no preimage. No deployment or private runtime changes."
 }
