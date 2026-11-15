@@ -446,7 +446,7 @@ class Store:
                 task = self._event_tx(db, row['id'], {'type':'resource_wait','reason':decision.reason})
                 if time.time()-task['stage_started_at'] >= timeout:
                     reason = task['blocked_reason']
-                    category = 'resource_wait_expired' if reason in ('system_memory','container_memory') else 'release_unconfirmed'
+                    category = 'resource_wait_expired' if reason in ('system_memory','container_memory','invalid_budget') else 'release_unconfirmed'
                     self._event_tx(db, row['id'], {'type':'failed','error':'Image resource wait expired: '+str(reason),
                                                  'blocked_reason':category})
                     reasons.append(category)

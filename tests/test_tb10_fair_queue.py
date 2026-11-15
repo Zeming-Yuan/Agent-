@@ -427,3 +427,22 @@ def test_tb10_snapshot_counts_the_same_pending_release_turn_as_claim(owner_env):
         b=owner_env.submit(c,'B').json()
         assert a['queue_ahead'] is None and a['queue_reason']=='release_required'
         assert b['queue_ahead']==1  # A must first own the controlled release turn
+
+
+def test_tb10_expired_profile_wait_does_not_disable_other_valid_profiles(owner_env):
+    import time
+    backend=owner_env.new_backend(hold=True)
+    config=synthetic_resources(wait_timeout=.15)
+    a,b=seed_blocked_pair(owner_env,backend,config)
+    config['memory_budgets']['high']=dataclasses.replace(config['memory_budgets']['high'],valid_until=time.monotonic()-1)
+    with configured_client(owner_env,backend,config) as c:
+        try:
+            assert backend.started.wait(1)
+            failed=owner_env.wait_task(c,a,'A',lambda t:t['status']=='failed',timeout=1)
+            assert failed['blocked_reason']=='resource_wait_expired',failed
+            assert 'invalid_budget' in failed['error']
+            assert c.get('/health',headers=owner_env.auth('B')).status_code==200
+            second=owner_env.submit(c,'B').json()['id']
+        finally:backend.finish.set()
+        owner_env.wait_task(c,second,'B',lambda t:t['status']=='completed')
+        assert [job['client_id'] for job in backend.jobs]==[b,second]

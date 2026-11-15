@@ -4,9 +4,9 @@
   "services/image_queue.py": "57c5be49dbcb07949dce672b96aa007f09f95bdf2d2c84762ffed09011b0a90c",
   "services/image_resources.py": "72817bd49662c220fef5ee1bc1f4be29e6c124f3d6c7f06c7701229bab2f3215",
   "services/images.py": "53d8baa5b830d22a7e806e66b5a2b3ffa329119c1c5f58a19af2e9b1a69bac95",
-  "services/store.py": "32b929c3afa30a94411a9a70fe0942f9b974b1532368308c8cf7975acfd1b7fa",
+  "services/store.py": "21ddf61ccfaa2bceaa7c92c30c6c008324b673585f0541521ccec7020bea0b7c",
   "services/task_lifecycle.py": "f52a4731627c0a7312dccefb1115af3265c7ac6b60150dc43c7582c2b8c1555c",
   "tests/test_tb07_lifecycle.py": "abc815138cce798e62e9822e1cf2312dc497c552aa5acbe53069928f26015f15",
   "tests/test_tb09_safe_admission.py": "246d8e195dd3440ed9b30a391984966e17a45ebdf0a3829d450d397ea609697f",
-  "tests/test_tb10_fair_queue.py": "c4880c03cb364b2900e471a73be1affe84932323876317b81386bced953ea6ff"
+  "tests/test_tb10_fair_queue.py": "3cb78660c1ab010af5205cf99628f43c67e04de74cedb1582b6ac46c918fe9cb"
 }

@@ -1,0 +1,36 @@
+tests/test_tb10_fair_queue.py::test_tb10_owner_gets_turn_before_repeat_submitter
+tests/test_tb10_fair_queue.py::test_tb10_http_worker_serves_other_owner_before_second_task
+tests/test_tb10_fair_queue.py::test_tb10_http_queue_ahead_tracks_fair_order_without_other_owner_details
+tests/test_tb10_fair_queue.py::test_tb10_mcp_explains_dynamic_queue_snapshot_without_eta
+tests/test_tb10_fair_queue.py::test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake
+tests/test_tb10_fair_queue.py::test_tb10_idle_backend_gets_release_turn_before_cold_capacity_is_known[prior_residents0]
+tests/test_tb10_fair_queue.py::test_tb10_idle_backend_gets_release_turn_before_cold_capacity_is_known[None]
+tests/test_tb10_fair_queue.py::test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs
+tests/test_tb10_fair_queue.py::test_tb10_recovered_head_waits_for_occupied_turn_without_expiring
+tests/test_tb10_fair_queue.py::test_tb10_follower_explains_owner_head_resource_block
+tests/test_tb10_fair_queue.py::test_tb10_proven_release_with_low_memory_yields_without_repeated_free
+tests/test_tb10_fair_queue.py::test_tb10_running_resource_sample_still_counts_the_owned_slot
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[A-True-True-B1]
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[B-True-True-A1]
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[A-True-False-A1]
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[B-False-True-B1]
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[A-False-False-None]
+tests/test_tb10_fair_queue.py::test_tb10_round_robin_counterexamples[removed-True-True-A1]
+tests/test_tb10_fair_queue.py::test_tb10_queue_policy_is_immutable_and_never_overtakes_blocked_owner_head
+tests/test_tb10_fair_queue.py::test_tb10_global_capacity_is_not_personal_quota
+tests/test_tb10_fair_queue.py::test_tb10_concurrent_same_time_acceptance_keeps_owner_fifo
+tests/test_tb10_fair_queue.py::test_tb10_restart_cancel_and_backup_restore_preserve_owner_turn
+tests/test_tb10_fair_queue.py::test_tb10_all_blocked_waits_without_free_or_prompt_and_wakes_on_resource_change
+tests/test_tb10_fair_queue.py::test_tb10_queued_cancel_keeps_owned_control_count_until_release_settles
+tests/test_tb10_fair_queue.py::test_tb10_nonimage_media_does_not_add_to_image_snapshot
+tests/test_tb10_fair_queue.py::test_tb10_real_stdio_tls_exposes_dynamic_counts_and_downloads_same_result
+tests/test_tb10_fair_queue.py::test_tb10_snapshot_counts_the_same_pending_release_turn_as_claim
+tests/test_tb10_fair_queue.py::test_tb10_expired_profile_wait_does_not_disable_other_valid_profiles
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+28/477 tests collected (449 deselected) in 0.21s
