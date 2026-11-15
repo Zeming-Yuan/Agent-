@@ -1,6 +1,7 @@
 """Durable request identity, partitioned by service and server-authenticated owner."""
 import json
 import os
+import re
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -19,6 +20,8 @@ class RequestJournal:
                 payload TEXT, task_id TEXT, PRIMARY KEY(service,owner,request_id))''')
 
     def prepare(self, request_id: str, fingerprint: str, payload: dict) -> dict:
+        if not isinstance(request_id,str) or not re.fullmatch(r'[\x21-\x7e]{1,128}',request_id):
+            raise ValueError('request_id must be 1..128 printable ASCII characters without spaces')
         with closing(sqlite3.connect(self.path)) as db, db:
             db.execute('BEGIN IMMEDIATE')
             key = (self.service, self.owner, request_id)

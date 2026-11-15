@@ -1,6 +1,9 @@
 """T06 public bridge/MCP recovery against the real owner-aware HTTP app."""
 import asyncio
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import httpx
@@ -87,6 +90,30 @@ def test_tb06_new_intent_and_conflict(owner_env, tmp_path):
                 records = RequestJournal(tmp_path/'requests.sqlite3','https://spark.invalid/v1','A').pending()
                 assert {r['task_id'] for r in records} == {first['id'],new['id']}
                 assert owner_env.keys['A'].encode() not in (tmp_path/'requests.sqlite3').read_bytes()
+            finally:
+                await bridge.close()
+        asyncio.run(run())
+
+
+def test_tb06_direct_bridge_entrypoint_runs_outside_source_cwd(tmp_path):
+    script = Path(__file__).resolve().parents[1]/'client/spark_image_tools.py'
+    env = {k:v for k,v in os.environ.items() if k != 'PYTHONPATH'}
+    result = subprocess.run([sys.executable,str(script),'--help'],cwd=tmp_path,env=env,
+                            capture_output=True,text=True,timeout=10)
+    assert result.returncode == 0, result.stderr
+
+
+@pytest.mark.parametrize('request_id',['', 'a'*129, 'bad\nheader', '中文'])
+def test_tb06_invalid_request_identity_never_submits(owner_env, tmp_path, request_id):
+    with owner_env.client() as gateway:
+        transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3')
+        async def run():
+            bridge = bridge_for(owner_env, tmp_path, transport)
+            try:
+                with pytest.raises(ValueError, match='request_id'):
+                    await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+                assert not any(r.method == 'POST' for r in transport.requests)
+                assert gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'] == []
             finally:
                 await bridge.close()
         asyncio.run(run())

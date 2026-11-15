@@ -273,3 +273,5 @@ T04历史“strict启动拒绝running”在T05运行时更新：完整只读归�
 桥接在服务确认 owner 后打开按(service,owner,request_id)分区的 SQLite 日志，prepare 提交早于任务 POST。保留日志，勿删除映射后自动重提；网络响应丢失使用原 request_id。日志包含业务恢复信息，应按个人私有数据保管，文件0600、新目录0700，不写入原始 Key。备份时停止桥接写入，用 SQLite backup 或停写后复制；恢复到私有路径后用相同服务和同 owner Key 继续查询。Key 轮换不改变 owner；服务/owner 分区测试与完整恢复工具在切片 B 补齐。
 
 回退先停新创作并保留日志和服务端任务/结果；通过本人任务查询与下载恢复，不能清空日志盲目生成。仅修改客户端，不迁移服务端数据库或部署。验证与限制见 evidence/issue-7/progress.md。
+
+T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，非法值在任务提交前拒绝；公共脚本兼容直接启动与包内导入。a-cli-red/green与a-id-red/a-review-green保留复现及验证证据。

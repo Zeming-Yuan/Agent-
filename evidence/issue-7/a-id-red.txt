@@ -1,0 +1,238 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+______________ test_tb06_invalid_request_identity_never_submits[] ______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfd42c4dcc720>, wait_task=<function owner_env.<locals>.wait_task at 0xfd42c4dcc7c0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden0')
+request_id = ''
+
+    @pytest.mark.parametrize('request_id',['', 'a'*129, 'bad\nheader', '中文'])
+    def test_tb06_invalid_request_identity_never_submits(owner_env, tmp_path, request_id):
+        with owner_env.client() as gateway:
+            transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    with pytest.raises(ValueError, match='request_id'):
+                        await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+                    assert not any(r.method == 'POST' for r in transport.requests)
+                    assert gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'] == []
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge = bridge_for(owner_env, tmp_path, transport)
+        try:
+>           with pytest.raises(ValueError, match='request_id'):
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:113: Failed
+_ test_tb06_invalid_request_identity_never_submits[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfd42c4cd68e0>, wait_task=<function owner_env.<locals>.wait_task at 0xfd42c4cd77e0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden1')
+request_id = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+
+    @pytest.mark.parametrize('request_id',['', 'a'*129, 'bad\nheader', '中文'])
+    def test_tb06_invalid_request_identity_never_submits(owner_env, tmp_path, request_id):
+        with owner_env.client() as gateway:
+            transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    with pytest.raises(ValueError, match='request_id'):
+                        await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+                    assert not any(r.method == 'POST' for r in transport.requests)
+                    assert gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'] == []
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:114: in run
+    await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+client/spark_image_tools.py:61: in generate
+    result=(await self.request('POST','tasks',json=payload,headers={'Idempotency-Key':request_id})).json()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <client.spark_image_tools.ImageBridge object at 0xfd42c4be9100>
+method = 'POST', path = 'tasks'
+kwargs = {'headers': {'Idempotency-Key': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...a'}, 'json': {'kind': 'image_generate', 'options': {'prompt': 'fixture', 'seed': 0, 'size': '1024x1024', 'title': ''}}}
+response = <Response [422 Unprocessable Entity]>
+
+    async def request(self,method,path,**kwargs):
+        response=await self.client.request(method,path,**kwargs)
+        if not response.is_success:
+            # Only status and response body; never request headers or key.
+>           raise RuntimeError(f'Spark HTTP {response.status_code}: {response.text[:1000]}')
+E           RuntimeError: Spark HTTP 422: {"detail":"Idempotency key too long"}
+
+client/spark_image_tools.py:37: RuntimeError
+________ test_tb06_invalid_request_identity_never_submits[bad\nheader] _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfd42c4cd6e80>, wait_task=<function owner_env.<locals>.wait_task at 0xfd42c4cd79c0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden2')
+request_id = 'bad\nheader'
+
+    @pytest.mark.parametrize('request_id',['', 'a'*129, 'bad\nheader', '中文'])
+    def test_tb06_invalid_request_identity_never_submits(owner_env, tmp_path, request_id):
+        with owner_env.client() as gateway:
+            transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    with pytest.raises(ValueError, match='request_id'):
+                        await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+                    assert not any(r.method == 'POST' for r in transport.requests)
+                    assert gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'] == []
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge = bridge_for(owner_env, tmp_path, transport)
+        try:
+>           with pytest.raises(ValueError, match='request_id'):
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:113: Failed
+________ test_tb06_invalid_request_identity_never_submits[\u4e2d\u6587] ________
+
+    async def run():
+        bridge = bridge_for(owner_env, tmp_path, transport)
+        try:
+            with pytest.raises(ValueError, match='request_id'):
+>               await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+
+tests/test_tb06_mcp_resume.py:114:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+client/spark_image_tools.py:61: in generate
+    result=(await self.request('POST','tasks',json=payload,headers={'Idempotency-Key':request_id})).json()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+client/spark_image_tools.py:34: in request
+    response=await self.client.request(method,path,**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:1527: in request
+    request = self.build_request(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:367: in build_request
+    headers = self._merge_headers(headers)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:430: in _merge_headers
+    merged_headers.update(headers)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_models.py:275: in update
+    headers = Headers(headers)
+              ^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_models.py:156: in __init__
+    bytes_value = _normalize_header_value(v, encoding)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+value = '中文', encoding = None
+
+    def _normalize_header_value(value: str | bytes, encoding: str | None = None) -> bytes:
+        """
+        Coerce str/bytes into a strictly byte-wise HTTP header value.
+        """
+        if isinstance(value, bytes):
+            return value
+        if not isinstance(value, str):
+            raise TypeError(f"Header value must be str or bytes, not {type(value)}")
+>       return value.encode(encoding or "ascii")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-1: ordinal not in range(128)
+
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_models.py:82: UnicodeEncodeError
+
+During handling of the above exception, another exception occurred:
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden3/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfd42c4be2160>, wait_task=<function owner_env.<locals>.wait_task at 0xfd42c4be3ce0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-298/test_tb06_invalid_request_iden3')
+request_id = '中文'
+
+    @pytest.mark.parametrize('request_id',['', 'a'*129, 'bad\nheader', '中文'])
+    def test_tb06_invalid_request_identity_never_submits(owner_env, tmp_path, request_id):
+        with owner_env.client() as gateway:
+            transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    with pytest.raises(ValueError, match='request_id'):
+                        await bridge.generate('fixture','1024x1024',0,'','',request_id=request_id)
+                    assert not any(r.method == 'POST' for r in transport.requests)
+                    assert gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'] == []
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge = bridge_for(owner_env, tmp_path, transport)
+        try:
+>           with pytest.raises(ValueError, match='request_id'):
+E           AssertionError: Regex pattern did not match.
+E             Expected regex: 'request_id'
+E             Actual message: "'ascii' codec can't encode characters in position 0-1: ordinal not in range(128)"
+
+tests/test_tb06_mcp_resume.py:113: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[bad\nheader]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[\u4e2d\u6587]
+4 failed, 3 deselected, 1 warning in 0.69s

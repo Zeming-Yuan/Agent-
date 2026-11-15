@@ -12,7 +12,10 @@ from pathlib import Path
 import httpx
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent, TextContent
-from client.request_journal import RequestJournal
+if __package__:
+    from .request_journal import RequestJournal
+else:
+    from request_journal import RequestJournal
 
 
 class ImageBridge:

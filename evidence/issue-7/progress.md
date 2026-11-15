@@ -8,3 +8,5 @@ Pre-flight: Task1 journal.prepare and ImageBridge request_id feed Task2 MCP/list
 Task1: in progress. Baseline hashes match product.
 
 Task1: RED 01-red TypeError missing journal_path; GREEN01-green 1passed; a-regression3passed. New-intent and conflict cases retained as already-green regressions. Scope split: A freezes no-reference generation/journal; B adds edit/reference/list/save/bundle. domain-modeling used to synchronize ADR0001 without new state machine.
+
+A independent initial review: Standards P1 direct CLI import + P2 empty request_id; Spec P2 empty request_id. Both reproduced RED then fixed, a-review-green8passed (one existing dependency warning). Re-review required at new fixed HEAD.

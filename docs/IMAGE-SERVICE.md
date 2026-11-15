@@ -114,3 +114,5 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 公共桥接首次生成前先通过 GET /v1/me 确定 owner，将 request_id 与业务指纹持久化后才 POST /tasks，使用同一 Idempotency-Key。generate_image 可传 request_id；跨调用重试必须复用该值，新创作省略时生成新 UUID，不能按提示词永久去重。同键不同输入在本地拒绝。默认日志 ~/.local/state/spark-image-tools/requests.sqlite3，也可传 journal_path；日志按规范服务 URL 与稳定 owner 隔离，不存 Key。
 
 切片 A 仅交付无参考素材生成的持久身份；编辑/素材、本人列表、原子保存及显式个人包入口由切片 B 接线。证据 evidence/issue-7/：01-red 缺 journal_path，01-green 真实 call_tool/HTTP/Store/worker 丢响应重启后同任务且一次后端执行，a-regression 3 passed。生产、双端 Harness 与真实后端未验证；未配置类型/静态/构建检查为 N/A。
+
+T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，非法值在任务提交前拒绝；公共脚本兼容直接启动与包内导入。a-cli-red/green与a-id-red/a-review-green保留复现及验证证据。
