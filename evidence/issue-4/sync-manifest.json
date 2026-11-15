@@ -1,0 +1,226 @@
+{
+  "base": "ee26c31eb74d891b33b26ab428514e1c84dcb636",
+  "runtime_head": "dd28584",
+  "source": "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115",
+  "product": "/home/clusteradmin/Desktop/Agent多模态服务",
+  "files": [
+    {
+      "path": "OPERATIONS.md",
+      "before_sha256": "c728a5ff1fb19403e72083eb84ea7b37b4ff139993a3f6920de513a98020bf4d",
+      "after_sha256": "ec5b3b033452f474c1b5e6e2ca801da115f2d5442ae95711c9ab52ff8ec1a8c1",
+      "mode": "0o664"
+    },
+    {
+      "path": "docs/IMAGE-SERVICE.md",
+      "before_sha256": "add62179c3dc7b51e7fd556865e554774e22f8ab6128e0075d1ce444ce766bfb",
+      "after_sha256": "a1ef1e8ca3041e2f1b03c4275286420a65aa708cfadcb1f8f05f2a079b084d1b",
+      "mode": "0o664"
+    },
+    {
+      "path": "docs/adr/0001-owner-scoped-storage.md",
+      "before_sha256": "55c3bd3c598c19a480cdc26fc35598bfc4dd72b86d1c7dd9dc0495c7e35328c9",
+      "after_sha256": "028040ad2a5fc6fcbd0a02a5e1bd7a51c212a0f30a7439ac47eab727d83189a1",
+      "mode": "0o664"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-14-image-03-owner-task-migration.md",
+      "before_sha256": "edbfeac142e0320568b8a56b34fc623c0835d91cae76fb94f79f1074df17ce8a",
+      "after_sha256": "f59e673e9f1d99e061a2164ef40dd0f48c5949f63b4e5d8870699d4c526f0006",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/a-affected.txt",
+      "before_sha256": null,
+      "after_sha256": "ff39e01639325fb54451027e6b2e05824be7fa5d2a1e60b91085a47477054677",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/a-first-red.txt",
+      "before_sha256": null,
+      "after_sha256": "79cb29204e706456f7153fd9b5be1b7d17d91f2d2ecb30d511da442469525171",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/a-review-green.txt",
+      "before_sha256": null,
+      "after_sha256": "d17862db7650f3f9ca876c0fb16d9b28336bf3af2b4d456acff5f3776e9755a8",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/a-review-red.txt",
+      "before_sha256": null,
+      "after_sha256": "5eb5596f8c28bd32ad59c1d0bb4a54981f007ac93c844a6ca10facbb5028e6f7",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/acceptance.md",
+      "before_sha256": null,
+      "after_sha256": "6227f318c92990d97cd3c6a018634be8b70aecc83a7078409db5a80d45947fba",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-affected.txt",
+      "before_sha256": null,
+      "after_sha256": "221d3e49ce344e6914410d0aa57c426636a62baf3fe5e3564d1748be03caff91",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-cli-red.txt",
+      "before_sha256": null,
+      "after_sha256": "4adc4e17dd6dd1907058b4972674968350d48af06576f298f1a3f924dea542ab",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-delivery-red.txt",
+      "before_sha256": null,
+      "after_sha256": "df18fbf0a10b21ad8c7adf20a91c78729464d636a5abdb0478e060c7f8b9aa2a",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-file-red.txt",
+      "before_sha256": null,
+      "after_sha256": "0e3475caec73a3154a101ec66c30e8b5b5c9a0f5fb1456562e3f96602c2343eb",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-focused.txt",
+      "before_sha256": null,
+      "after_sha256": "95d991ee991e9e2513413e41200790ae147ca2c51927a47550d109f555617e4e",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-guidance-red.txt",
+      "before_sha256": null,
+      "after_sha256": "b3b3bac9d23b23dab8fdec4db5706b60cf940e9bb1e21719ebf2e72a008f36cc",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-me-red.txt",
+      "before_sha256": null,
+      "after_sha256": "efe82fbb9f42e67dd7f61aaa8a4d812d8cfef6feeea3bacc4b3976bab7bd77d8",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-review-green.txt",
+      "before_sha256": null,
+      "after_sha256": "997ebffec157e12f6b521f52c54caac416891942a08b851ef4794a22913dcbf8",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/b-review-red.txt",
+      "before_sha256": null,
+      "after_sha256": "f234602f72721e8314e89b09ee2a9ef83bb37cd796cd2991aa4f386ffdf9ac5e",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/collect-final.txt",
+      "before_sha256": null,
+      "after_sha256": "a50e813c379e0f52d8ab13c8b4ab68e810480fbf658197cdd04f52b2fff66137",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/collect-latest.txt",
+      "before_sha256": null,
+      "after_sha256": "0d5f167321e03f4d5915a60ca88115e1d381ed06fa15900d17ff2e5c94e5a411",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/collect.txt",
+      "before_sha256": null,
+      "after_sha256": "01b58552954fcf278e9ba446402be029f630bff94543a2a081006981ccba07b0",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/execution.md",
+      "before_sha256": null,
+      "after_sha256": "21486d5b3e49dc00baf5ac1f2ac3a0a7122d32b2d78533a52f0e6b85ee72a45c",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/final-affected.txt",
+      "before_sha256": null,
+      "after_sha256": "0265fabb8fd1c27dd6ce0c407fc1d72aa5835144e18e521c57d32528a53e6401",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/focused-final.txt",
+      "before_sha256": null,
+      "after_sha256": "33b747e86ffdd61cb88b638bcd02055186055c5bf558cb648169b9bd2a5b6850",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/plan-regression-latest.txt",
+      "before_sha256": null,
+      "after_sha256": "078fefce0f312ffa7b3469dacdd2d8c5743d367e78e352d47102501ff6a00081",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/plan-regression.txt",
+      "before_sha256": null,
+      "after_sha256": "d8e7bc95fc7b60ba35697f1ccef5518781d38d522bab68b30ba9c6bc6f8a9665",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/product-final.txt",
+      "before_sha256": null,
+      "after_sha256": "edff5023e958cd9c263abdb7f47c2587e4b862e97ba94291fff49b0d600a2c77",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/review-a.md",
+      "before_sha256": null,
+      "after_sha256": "2c783c772ea9e109f7e470d8c476bd2688e8fda15bb2a1c4807a7e4211f11263",
+      "mode": "0o664"
+    },
+    {
+      "path": "evidence/issue-4/review-b.md",
+      "before_sha256": null,
+      "after_sha256": "6e1aca416011457ba2b453989aded0d729a86504a11cca646b6550003a97ea1d",
+      "mode": "0o664"
+    },
+    {
+      "path": "services/gateway.py",
+      "before_sha256": "23d2982e53065262b33d2bf4b0b95a23f27806b6a23468e6705ed3cb379d657e",
+      "after_sha256": "c88e72d320938cfeee881436608b5c0b39968a20b7272f873883f3e03cf3727b",
+      "mode": "0o664"
+    },
+    {
+      "path": "services/identity.py",
+      "before_sha256": "a438d5ba9474351c43972e1e3d3513008242c62108f9549e5c16c8fb409e85d8",
+      "after_sha256": "23ff11da4c09085c9078a65dcc09f8981999985f3a55f7a34584b3445e154f8b",
+      "mode": "0o664"
+    },
+    {
+      "path": "services/image_routes.py",
+      "before_sha256": "fbfd9d5521875e470c6663a297c5f2cf37a1241c640cc8bfa4c5cff952378ce7",
+      "after_sha256": "f96d8092940a45380f09ca4b3aaeb049a19cd5ca36107f872e13343c33ab6d2c",
+      "mode": "0o664"
+    },
+    {
+      "path": "services/images.py",
+      "before_sha256": "855d9198d1160a3bb8ce391ac5185a9b966272f211a9691df0df1da0a90318c3",
+      "after_sha256": "a014498874e1c0120e2ce499ba6321d3033bec4e0ee831479a59346dd4bb97b2",
+      "mode": "0o664"
+    },
+    {
+      "path": "services/store.py",
+      "before_sha256": "6f56e69f184399c30fc21c33a85926e7e453898edadab431fd5f60e8de1181c3",
+      "after_sha256": "92f97e2a1618da661f0edb27c9608811ad68d1eb6e509b02fadfffbe3f3b5a11",
+      "mode": "0o664"
+    },
+    {
+      "path": "tests/test_media.py",
+      "before_sha256": "a6d2d3b6c34f4eac06d9ae1c665f11b0ba206676bb7195d193a1e9ad67573d67",
+      "after_sha256": "2d2975b036b63ec6ef999395da8ede1b4ababd0b35e1840dc02e6283df013368",
+      "mode": "0o664"
+    },
+    {
+      "path": "tests/test_tb03_owner_tasks.py",
+      "before_sha256": null,
+      "after_sha256": "3cb79edd561992d024f2d1db0f465faa0b84c8a54195b014e310dd991663cbef",
+      "mode": "0o664"
+    }
+  ],
+  "note": "Only these sanitized changed payload paths are delivered. Manifest excludes itself from recursive hash. No private data/config/keys/models copied. Original product was non-Git; local source commits are authoritative history.",
+  "product_verification": "129 passed, 1 existing deprecation warning; evidence/issue-4/product-final.txt"
+}

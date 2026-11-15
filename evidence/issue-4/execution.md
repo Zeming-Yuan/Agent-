@@ -36,3 +36,7 @@ Slice B initial review: Standards1/Spec1, same P2: revoke failure skipped own-ou
 B guidance followup: Standards re-review found unconditional removal advice for existing target (P2), Spec re-review0. Added CLI3-case red→green; KeyDeliveryError cleanup_pending is true only when unlink of this invocation's newlycreated output actually failed. No removal advice for pre-existing/alreadyremoved output.
 
 最终自动验证：T03采集33/133（collect-latest.txt），计划回归36 passed（plan-regression-latest.txt），受影响12文件129 passed（final-affected.txt）；1条既有弃用警告。旧记录28/124与30/126为审查修复前历史输出，不作为最终版本证据。
+
+Final slice B review at dd28584: Standards0/Spec0. All important findings addressed and re-reviewed. No deferred minors. Rulings: use affected checks only per user; original approved design executed without new approval loop; historical pre-T03 deleted material returns recoverable409 rather than pretending to prove equivalence (cost: automatic replay unavailable for lost historical content).
+
+产品交付复测：原产品 cwd 使用 `.venv/bin/python` 执行同一12文件受影响命令，129 passed（product-final.txt），1条既有警告。选择性同步前逐文件原内容核对无冲突，之后SHA256一致；未交付私有数据/凭证/模型/生产库。源码分支保留本地，不合并、不推送、不部署。所有重要审查问题已处理，无延后minor。#4保留open等待实际入口验收；既有后续#5—#15保留其门禁。

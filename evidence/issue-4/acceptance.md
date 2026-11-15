@@ -41,3 +41,7 @@ Plan commands: `python -m pytest -q -k tb03_owner_tasks` →28 passed (`focused-
 Slice B review correction: both axes found the same P2 (revocation error skipped owned-file cleanup). Real SQLite authorizer denies revocation UPDATE while issuance/reads still work; both fresh partial output and existing-target cases first fail (`b-review-red.txt`). Fix independently cleans owned output, preserves prior files, raises safe KeyDeliveryError with key_id for manual revoke after DB recovery. It does NOT claim successful revocation while DB writes are unavailable. Actual disk exhaustion was not simulated. Docs/ADR/operations describe the recovery requirement.
 
 组合故障修复后重新采集30/130（collect-final.txt），受影响12文件126 passed（b-review-green.txt），1条既有弃用警告；先前28/124为修复前历史记录。未运行完整门禁。
+
+Final fixed-diff reviews: slice A ee26c31...f56cf69, slice B f56cf69...dd28584, both nonempty; Standards0/Spec0 after all fixes and re-reviews. No deferred minor findings. Runtime commits:941e986,f56cf69,a0c170e,f772b6c,dd28584. All are local and each retains its own focused verification/docs evidence.
+
+产品交付复测：原产品 cwd 使用 `.venv/bin/python` 执行同一12文件受影响命令，129 passed（product-final.txt），1条既有警告。选择性同步前逐文件原内容核对无冲突，之后SHA256一致；未交付私有数据/凭证/模型/生产库。源码分支保留本地，不合并、不推送、不部署。所有重要审查问题已处理，无延后minor。#4保留open等待实际入口验收；既有后续#5—#15保留其门禁。

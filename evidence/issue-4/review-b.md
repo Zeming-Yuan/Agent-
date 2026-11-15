@@ -19,3 +19,11 @@ Public issue_to_file boundary test uses real SQLite authorizer to reject UPDATE 
 ## Re-review f56cf69...f772b6c
 
 Spec0 (7 focused tests); original combined-failure P2 resolved. Standards1 remainingP2: recovery error unconditionally advised removing output even for an O_EXCL pre-existing collision. Fix must distinguish owned/pending cleanup. CLI reproducer b-guidance-red.txt verifies existing/removed/pending cases first fail; corrected error includes cleanup_pending and only identifies newly-created output when removal is still pending. Existing output explicitly preserved.
+
+## Final re-review f56cf69...dd28584
+
+Standards:0 actionable findings; both priorP2s addressed. Cleanup remains independent of revoke, guidance requests cleanup only for this invocation's newlycreated output whose unlink failed; existing files explicitly preserved. Docs/ADR aligned. Reviewer independently ran10 focused tests.
+
+Spec:0 actionable findings; prior failure finding remains addressed, ownership-aware recovery guidance covers preserved/removed/pending output. Reviewer independently ran5 recovery tests plus diff whitespace check.
+
+Final summary: Standards0 (no worst issue), Spec0 (no worst issue). No full gates, live deployment, actual disk-full or platform filesystem acceptance claimed.
