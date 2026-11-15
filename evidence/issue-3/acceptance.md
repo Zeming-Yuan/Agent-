@@ -18,7 +18,7 @@ All names above have the `test_tb02_` prefix. Production factory, legacy fixture
 
 Recorded red→green: a-download (foreign200→404), a-delete (own404→200), b-roundtrip (own reference404→completed/private result), b-reference (offline503→404), b-sync (own result404→200 and owner-local random reference), b-sync-foreground (503→404), b-exclusive (collision destroyed existing file, subsequent500→200/exact bytes).
 
-Already satisfied counterexamples are regression evidence, not manufactured red. `b-boundaries-first.txt` records an invalid opaque foreground fixture, later corrected to a genuinely transparent, unscaled known-pixel fixture; no production fix was made for this test error. Test outputs with random temporary Bearer values are redacted for publication; assertions/statuses remain intact.
+Already satisfied counterexamples are regression evidence, not manufactured red. `b-boundaries-first.txt` records an invalid opaque foreground fixture, later corrected to a genuinely transparent, unscaled known-pixel fixture; no production fix was made for this test error. Test outputs with random temporary Bearer values are redacted for publication; assertions/statuses remain intact; trailing log whitespace is normalized.
 
 ## Verification
 
@@ -35,8 +35,12 @@ Commands derive from README, T02 plan and existing focused file execution; use p
 
 ## Review, reproduction and rollback
 
-User-confirmed ticket base: 2509e43. Slice A: 81c77e2; independent Standards0/Spec0 (`review-a.md`). Slice B review is recorded separately after its commit, never against an empty diff. Each local slice commit contains code/tests/docs/evidence and can be checked out for independent focused verification.
+User-confirmed ticket base: 2509e43. Slice A: 81c77e2; independent Standards0/Spec0 (`review-a.md`). Slice B: d1ca934; independent Standards0/Spec0 (`review-b.md`), Spec independently reran21 tests. Both diffs are fixed and non-empty. Each local slice commit contains code/tests/docs/evidence and can be checked out for independent focused verification.
 
 Product directory remains non-Git; controlled source checkout: `/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115`, local branch `feat/issue-3-owner-files`. Only verified changed files are synced after preimage checks; sync hashes recorded separately. No source push/deployment is implied by a local commit.
 
 Before operational rollback stop admission, preserve database/files/registry/new writes, stop targeted inference and verify backend idle. Close controlled staging access, serve legacy-owned data only, retain new owner/digest metadata and file checks. Multi-owner data MUST NOT be handed to T01 or earlier globally-readable code. Restore rehearsed only on synthetic copies; never overwrite newer live state. No irreversible schema rebuild in T02.
+
+## Product delivery verification
+
+After SHA256/preimage-checked selective sync (43 payload paths at first sync, zero conflicts), the original product cwd ran the same affected11-file command: **96 passed**, one existing warning (`product-final.txt`). `sync-manifest.json` records original preimages and final payload hashes; source checkout remains local and product remains non-Git. Final added-diff scan found no private-key/API-secret patterns or unexpected untracked paths. Only evidence whitespace/redaction changed after the last product run; no runtime code changed.

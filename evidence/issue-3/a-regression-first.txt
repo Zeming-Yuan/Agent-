@@ -26,8 +26,8 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-119/test_upload_quota_i
                 assert db.execute('select sum(bytes) from files').fetchone()[0]<=2*1024**3
 >       asyncio.run(check())
 
-tests/test_gateway_validation.py:260: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_gateway_validation.py:260:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /usr/lib/python3.12/asyncio/runners.py:194: in run
     return runner.run(main)
            ^^^^^^^^^^^^^^^^
@@ -40,7 +40,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 tests/test_gateway_validation.py:255: in check
     result=await asyncio.gather(*(upload(file=f,purpose='assistants') for f in files),return_exceptions=True)
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 .0 = <list_iterator object at 0xfa418d5e1a20>
 

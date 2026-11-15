@@ -263,3 +263,13 @@ git commit -m "test(image): t02 boundaries and recovery"
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+
+## 2026-11-15 执行记录（替代上文计划阶段状态）
+
+用户明确授权执行 issue #3，并确认 HTTP 测试边界及固定审查点2509e43；按 implement + TDD 原生串行执行。受控源码 checkout 复用 `/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115`，分支 `feat/issue-3-owner-files`；产品目录仍非 Git，不初始化/全量上传。
+
+- Task1 切片 A：81c77e2，red/green 已执行；受影响73 passed，独立 Standards0/Spec0。
+- Task2 切片 B：d1ca934，red/green、状态反例、并发、重启/新目录副本恢复已执行；采集21个T02测试，focused21 passed、计划回归24 passed、受影响96 passed，独立 Standards0/Spec0（Spec独立复跑21 passed）。
+- 逐条验收、命令、原始输出、裁决与审查：`evidence/issue-3/acceptance.md`、`progress.md`、`review-a.md`、`review-b.md`。
+- 文件方法过渡 legacy 默认保留；任务仅补齐 worker 需要的持久 owner，不提前实现 T03/T04。原文件/任务表列数、全局4单/2GiB和20GiB保护配置不改。
+- 按用户约束只跑受影响验证，未跑完整门禁。类型/lint/构建/CI等未配置项N/A；真实HTTPS、物理模型/内存标定、Windows/macOS Harness、生产发布/恢复仍未验证（后续T08—T14），baseline_status=not_run，无性能结论。

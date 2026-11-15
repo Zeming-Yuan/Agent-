@@ -8,7 +8,7 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_ex
     def test_tb01_legacy_expand_preserves_explicit_owner_on_retry(tmp_path):
         from fastapi import HTTPException
         from services.ownership import expand_ownership, require_owner
-    
+
         store = Store(tmp_path)
         fid = 'file-' + 'c' * 32
         store.add_file(fid, 'owned.png', 1)
@@ -18,8 +18,8 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_ex
         with store.connect() as db:
 >           require_owner(db, 'file', fid, 'A')
 
-tests/test_tb01_legacy_expand.py:60: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb01_legacy_expand.py:60:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xfccc46f22f20>, kind = 'file'
 object_id = 'file-cccccccccccccccccccccccccccccccc', owner = 'A'
@@ -41,7 +41,7 @@ caplog = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>
         from fastapi.testclient import TestClient
         from services.gateway import create_app
         from services.ownership import preflight_ownership
-    
+
         store = Store(tmp_path)
         fid = 'file-' + 'd' * 32
         store.save_generated(fid, b'old result', 'result.png')
@@ -57,7 +57,7 @@ caplog = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>
                 'unowned_files': 0, 'unowned_tasks': 0,
                 'unowned_idempotency_records': 0, 'running_tasks': 0,
             }
-    
+
 >       assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in caplog.text
 E       AssertionError: assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in 'INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=1 unowned_idempotency_records=1 run...t-mm:gateway.py:150 ef1c29e0d8d3402ba7697bbb20de3974 GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n'
 E        +  where 'INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=1 unowned_idempotency_records=1 run...t-mm:gateway.py:150 ef1c29e0d8d3402ba7697bbb20de3974 GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n' = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>.text
@@ -74,7 +74,7 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_ex
     def test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss(tmp_path):
         import sqlite3
         from services.ownership import expand_ownership, preflight_ownership, require_owner
-    
+
         store = Store(tmp_path)
         store.add_file('existing', 'existing.png', 1)
         expand_ownership(store.db, 'A')
@@ -90,8 +90,8 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-121/test_tb01_legacy_ex
         with store.connect() as db:
 >           require_owner(db, 'file', 'existing', 'A')
 
-tests/test_tb01_legacy_expand.py:353: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb01_legacy_expand.py:353:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xfccc45baf5b0>, kind = 'file'
 object_id = 'existing', owner = 'A'
