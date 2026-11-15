@@ -1,0 +1,50 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-462/test_tb08_memory_evidence_expo0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xee8ef9493ba0>, wait_task=<function owner_env.<locals>.wait_task at 0xee8ef9493ce0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xee8ef9a4fce0>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-462/test_tb08_memory_evidence_expo0')
+
+    def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(owner_env, monkeypatch, tmp_path):
+        import json
+        import time
+        from scripts.image_measurement import write_curve
+        directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+        backend=owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
+            tid=owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+            pid=backend.jobs[0]['prompt_id']
+            try:
+                for node in ('4','7','8','9'):
+                    backend.events_to_emit.put({'type':'executing','data':{'prompt_id':pid,'node':node}})
+                deadline=time.monotonic()+2
+                while time.monotonic()<deadline:
+                    rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+                    if any(r.get('node')=='9' for r in rows): break
+                    time.sleep(.01)
+            finally:
+                backend.finish.set()
+            owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
+        rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+        operations={r.get('operation') for r in rows}
+>       assert {'text_encode','sampling','vae_decode','backend_save','cleanup'} <= operations
+E       AssertionError: assert {'backend_sav... 'vae_decode'} <= {None}
+E
+E         Extra items in the left set:
+E         'vae_decode'
+E         'sampling'
+E         'text_encode'
+E         'cleanup'
+E         'backend_save'
+
+tests/test_tb08_memory_evidence.py:493: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries
+1 failed, 46 deselected, 1 warning in 2.46s

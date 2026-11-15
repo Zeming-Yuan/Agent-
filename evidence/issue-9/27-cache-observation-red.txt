@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is_not_work _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-467/test_tb08_memory_evidence_cach0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfda44c56ca40>, wait_task=<function owner_env.<locals>.wait_task at 0xfda44c56cb80>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfda44c533ec0>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-467/test_tb08_memory_evidence_cach0')
+
+    def test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is_not_work(owner_env, monkeypatch, tmp_path):
+        import json
+        import time
+        from scripts.image_measurement import validate_run
+        directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+        backend=owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
+            tid=owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+            pid=backend.jobs[0]['prompt_id']
+            try:
+                backend.events_to_emit.put({'type':'execution_cached','data':{'prompt_id':pid,'nodes':['4']}})
+                deadline=time.monotonic()+2
+                while time.monotonic()<deadline:
+                    rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+                    if any(r.get('cached_nodes')==['4'] for r in rows): break
+                    time.sleep(.01)
+            finally: backend.finish.set()
+            owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
+>       assert any(r.get('cached_nodes')==['4'] for r in rows)
+E       assert False
+E        +  where False = any(<generator object test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is_not_work.<locals>.<genexpr> at 0xfda44b9e2c20>)
+
+tests/test_tb08_memory_evidence.py:539: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is_not_work
+1 failed, 50 deselected, 1 warning in 2.49s

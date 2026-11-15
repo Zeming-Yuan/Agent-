@@ -173,6 +173,11 @@ def runtime_identity(root, *, image_id, argv):
     from services import image_telemetry
     descriptor = {'comfy_version': '0.33.2', 'source_hashes': SUPPORTED_SOURCE_HASHES,
         'image_id': image_id, 'flags': list(argv), 'python': platform.python_version(),
+        'kernel': platform.release(),
+        'worker_sha256': hashlib.sha256(Path(image_telemetry.__file__).with_name('images.py').read_bytes()).hexdigest(),
+        'launcher_sha256': hashlib.sha256(Path(__file__).with_name('start-comfy.py').read_bytes()).hexdigest(),
+        'nvidia_driver': Path('/proc/driver/nvidia/version').read_text().splitlines()[0]
+            if Path('/proc/driver/nvidia/version').is_file() else None,
         'probe_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         'sampler_sha256': hashlib.sha256(Path(image_telemetry.__file__).read_bytes()).hexdigest(),
         'model_manifests': {name: hashlib.sha256((root/'models'/name).read_bytes()).hexdigest()

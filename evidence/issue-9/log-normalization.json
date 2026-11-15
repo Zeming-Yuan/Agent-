@@ -35,6 +35,11 @@
       "path": "evidence/issue-9/21-cancel-phase-red.txt",
       "original_sha256": "9bd63f7897b62c57bc18ab1aeb82553e997d6274eebd28a1ef1ce0a2b11b5983",
       "normalized_sha256": "18b9dc90809b6b0266062746d1f1507ab1edfc15fdd243145df63005723563f5"
+    },
+    {
+      "path": "evidence/issue-9/24-node-boundaries-red.txt",
+      "original_sha256": "6703b98842b7a29a2b3f62b14f4f564bfafeb522c40986148d19d3046fb191ed",
+      "normalized_sha256": "18e8773f3814adb7406c632bf4d0950b9990e73870166d0b05699ef113743401"
     }
   ]
 }

@@ -1,5 +1,5 @@
 """Opt-in private resource evidence. Host and GPU scopes must never be summed."""
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 import time
 
@@ -66,6 +66,8 @@ import threading
 
 _OWNER_SALT = os.urandom(32)
 _WRITE_LOCK = threading.Lock()
+# Latch on the existing Store instance, not a separate task lifecycle table.
+_OBSERVATION_ERROR_ATTRIBUTE = '_image_observation_write_failed'
 
 
 def host_identity(path=None):
@@ -105,15 +107,33 @@ def record_task(store, task, **evidence):
                'input_size': {'size': opts['size'], 'reference_count': len(opts['image_ids']),
                               'foreground': bool(opts['foreground_file_id'])},
                'stage': task['stage'], 'stage_seq': task['stage_seq'], 'status': task['status'],
-               'observed_at': time.monotonic(), 'utc_ns': time.time_ns(), 'host_id': host_identity(), **evidence}
+               'blocked_reason': task.get('blocked_reason'),
+               'observed_at': time.monotonic(), 'utc_ns': time.time_ns(), 'host_id': host_identity(),
+               'observation_errors': ['task_observation_write_failed'] if getattr(store,_OBSERVATION_ERROR_ATTRIBUTE,False) else [], **evidence}
         write_private_jsonl(directory, 'tasks.jsonl', row)
     except Exception:
+        setattr(store,_OBSERVATION_ERROR_ATTRIBUTE,True)
         logging.getLogger(__name__).warning('Image task observation unavailable')
     return task
 
 
+NODE_OPERATIONS = {
+    '1': 'model_load', '2': 'text_encoder_load', '3': 'vae_load', '4': 'text_encode',
+    '5': 'conditioning', '6': 'latent_allocate', '7': 'sampling', '8': 'vae_decode',
+    '9': 'backend_save', '10': 'sampling_setup', '11': 'cfg_norm', '12': 'lora_load',
+    '20': 'reference_load', '21': 'reference_load', '22': 'reference_load',
+}
+
+
 def task_event(store, tid, event):
-    return record_task(store, store.event(tid, event))
+    task = store.event(tid, event)
+    metadata = {}
+    node = event.get('node')
+    if node in NODE_OPERATIONS and task['stage'] == event.get('stage'):
+        operation = NODE_OPERATIONS[node]
+        if node == '4' and task['kind'] == 'image_edit': operation = 'text_vision_encode'
+        metadata = {'node': node, 'operation': operation, 'event': 'backend_node'}
+    return record_task(store, task, **metadata)
 
 
 def task_transition(store, tid, **transition):
@@ -125,4 +145,22 @@ def record_current_task(store, tid, **evidence):
     try:
         record_task(store, store.worker_task(tid), **evidence)
     except Exception:
+        setattr(store,_OBSERVATION_ERROR_ATTRIBUTE,True)
         logging.getLogger(__name__).warning('Image task observation unavailable')
+
+
+def record_cached_nodes(store, tid, prompt_id, raw):
+    if not os.getenv('IMAGE_TELEMETRY_DIR') or not isinstance(raw,dict) or raw.get('type') != 'execution_cached': return
+    data = raw.get('data')
+    if not isinstance(data,dict) or data.get('prompt_id') != prompt_id: return
+    nodes = data.get('nodes')
+    if not isinstance(nodes,list) or any(not isinstance(node,str) or node not in NODE_OPERATIONS for node in nodes): return
+    try:
+        task = store.worker_task(tid)
+        if task['status'] != 'running': return
+        operation = 'text_vision_encode_cached' if task['kind'] == 'image_edit' else 'text_encode_cached'
+        record_task(store,task,event='backend_cached',cached_nodes=sorted(set(nodes)),
+                    operation=operation if '4' in nodes else 'cached_nodes')
+    except Exception:
+        setattr(store,_OBSERVATION_ERROR_ATTRIBUTE,True)
+        logging.getLogger(__name__).warning('Image cache observation unavailable')

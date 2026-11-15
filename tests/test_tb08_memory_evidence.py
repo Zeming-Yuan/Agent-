@@ -237,9 +237,13 @@ def test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_
                 'running_prompts': [], 'errors': [], 'sampling_gap_seconds': None})
             stop.wait(.05)
     async def external(request):
+        if request.url.path.startswith('/history/'):
+            await asyncio.sleep(.03)  # let controlled external node events arrive before history proof
         result = await backend(request)
         if request.url.path == '/prompt':
             body = json.loads(request.content)
+            for node in ('4','7','8','9'):
+                backend.events_to_emit.put({'type':'executing','data':{'prompt_id':body['prompt_id'],'node':node}})
             write_private_jsonl(directory, 'lifecycle.jsonl', {
                 'event': 'execution_started', 'task_id': body['client_id'], 'prompt_id': body['prompt_id'],
                 'utc_ns': time.time_ns(), 'observed_at': time.monotonic(), 'host_id': host,
@@ -287,8 +291,14 @@ def measured_run():
     row = good_run()
     row.update(evidence_version=1, expected_host_id='host', capture_start_utc_ns=0,
         submitted_utc_ns=200_000_000, work_end_utc_ns=800_000_000, capture_end_utc_ns=1_000_000_000,
-        source_errors=[], task_events=[{'task_id':'task-a','stage':'loading','stage_seq':2,'host_id':'host','utc_ns':250_000_000,'event':'submit_started','prompt_id':'pid'},
-                                     {'task_id':'task-a','stage':'completed','stage_seq':4,'host_id':'host','utc_ns':800_000_000}],
+        source_errors=[], task_events=[{'task_id':'task-a','stage':'unloading','stage_seq':1,'host_id':'host','utc_ns':210_000_000},
+                                     {'task_id':'task-a','stage':'loading','stage_seq':2,'host_id':'host','utc_ns':250_000_000,'event':'submit_started','prompt_id':'pid'},
+                                     {'task_id':'task-a','stage':'loading','stage_seq':2,'host_id':'host','utc_ns':300_000_000,'operation':'text_encode'},
+                                     {'task_id':'task-a','stage':'generating','stage_seq':3,'host_id':'host','utc_ns':400_000_000,'operation':'sampling'},
+                                     {'task_id':'task-a','stage':'saving','stage_seq':4,'host_id':'host','utc_ns':600_000_000,'operation':'vae_decode'},
+                                     {'task_id':'task-a','stage':'saving','stage_seq':4,'host_id':'host','utc_ns':650_000_000,'operation':'backend_save'},
+                                     {'task_id':'task-a','stage':'saving','stage_seq':4,'host_id':'host','utc_ns':700_000_000,'operation':'cleanup'},
+                                     {'task_id':'task-a','stage':'completed','stage_seq':5,'host_id':'host','utc_ns':800_000_000}],
         execution_events=[{'event':'execution_started','task_id':'task-a','prompt_id':'pid','host_id':'host',
                            'runtime_hash':'hash','session_id':'s','utc_ns':300_000_000}],
         memory_samples=[{'utc_ns': i*100_000_000, 'observed_at': i*.1, 'available_bytes':40*1024**3,
@@ -299,7 +309,7 @@ def measured_run():
 
 
 @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
-    'duplicate_execution','canonical_prompt','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    'missing_nodes','cached_sampler','duplicate_execution','canonical_prompt','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
 def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
     from scripts.image_measurement import validate_run
     row = measured_run()
@@ -309,6 +319,8 @@ def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
     if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
     if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
     if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+    if fault == 'missing_nodes': row['task_events'] = [dict(t,operation=None) for t in row['task_events']]
+    if fault == 'cached_sampler': row['task_events'] = [dict(t,operation='cached_nodes') if t.get('operation') == 'sampling' else t for t in row['task_events']]
     if fault == 'duplicate_execution': row['execution_events'] *= 2
     if fault == 'canonical_prompt': row['execution_events'][0]['prompt_id'] = 'other-prompt'
     if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
@@ -430,3 +442,109 @@ def test_tb08_memory_evidence_cancel_trace_records_cleanup_boundary(owner_env, m
         owner_env.wait_task(c,tid,'A',lambda t:t['status']=='cancelled')
     rows = [json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
     assert {'cancelling','cancelled'} <= {r['stage'] for r in rows}
+
+
+def test_tb08_memory_evidence_transient_trace_write_fault_invalidates_later_events(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    from services import image_telemetry
+    from scripts.image_measurement import validate_run
+    directory = tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+    task = {'id':'task-a','owner':'A','kind':'image_generate','status':'running','stage':'loading','stage_seq':2,
+            'options':{'size':'1024x1024','quality':'standard','image_ids':[],'foreground_file_id':None}}
+    store = SimpleNamespace(worker_task=lambda tid:task)
+    write = image_telemetry.write_private_jsonl
+    def fail_one(directory, name, row):
+        if row.get('stage') == 'generating': raise OSError('synthetic one-stage write failure')
+        return write(directory,name,row)
+    monkeypatch.setattr(image_telemetry,'write_private_jsonl',fail_one)
+    image_telemetry.record_task(store,task)
+    task.update(stage='generating',stage_seq=3); image_telemetry.record_task(store,task)
+    task.update(stage='completed',status='completed',stage_seq=4); image_telemetry.record_task(store,task)
+    rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+    assert rows[-1]['observation_errors'] == ['task_observation_write_failed']
+    row=measured_run(); row['task_events'][-1]['observation_errors']=rows[-1]['observation_errors']
+    assert 'task_observation_errors' in validate_run(row)
+
+
+def test_tb08_memory_evidence_noncontiguous_committed_stage_sequence_is_invalid():
+    from scripts.image_measurement import validate_run
+    row=measured_run(); row['task_events'][-1]['stage_seq']=99
+    assert 'task_stage_gap' in validate_run(row)
+
+
+def test_tb08_memory_evidence_positive_raw_fixture_is_valid():
+    from scripts.image_measurement import validate_run
+    assert validate_run(measured_run()) == []
+
+
+def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(owner_env, monkeypatch, tmp_path):
+    import json
+    import time
+    from scripts.image_measurement import write_curve
+    directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+    backend=owner_env.new_backend(hold=True)
+    with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
+        tid=owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+        pid=backend.jobs[0]['prompt_id']
+        try:
+            for node in ('4','7','8','9'):
+                backend.events_to_emit.put({'type':'executing','data':{'prompt_id':pid,'node':node}})
+            deadline=time.monotonic()+2
+            while time.monotonic()<deadline:
+                rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+                if any(r.get('node')=='9' for r in rows): break
+                time.sleep(.01)
+        finally:
+            backend.finish.set()
+        owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
+    rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+    operations={r.get('operation') for r in rows}
+    assert {'text_encode','sampling','vae_decode','backend_save','cleanup'} <= operations
+    curve=write_curve([],rows,rows[0]['utc_ns'],rows[-1]['utc_ns'])
+    assert 'text_encode' in curve and 'vae_decode' in curve
+
+
+def test_tb08_memory_evidence_runtime_identity_covers_workflow_and_launcher(tmp_path, monkeypatch):
+    import hashlib
+    from deploy import comfy_lifecycle_probe as adapter
+    # The external Comfy source fixture has a synthetic fingerprint; production
+    # pins stay literal and the real filesystem/runtime identity path runs.
+    source=tmp_path/'main.py'; source.write_text('external source fixture')
+    monkeypatch.setattr(adapter,'SUPPORTED_SOURCE_HASHES',{'main.py':hashlib.sha256(source.read_bytes()).hexdigest()})
+    runtime_hash, descriptor=adapter.runtime_identity(tmp_path,image_id='fixture-image',argv=['--cache-ram','20'])
+    assert descriptor['worker_sha256'] == hashlib.sha256((Path(adapter.__file__).parents[1]/'services/images.py').read_bytes()).hexdigest()
+    assert descriptor['launcher_sha256'] == hashlib.sha256(Path(adapter.__file__).with_name('start-comfy.py').read_bytes()).hexdigest()
+    assert descriptor['kernel'] and len(runtime_hash)==64
+
+
+def test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is_not_work(owner_env, monkeypatch, tmp_path):
+    import json
+    import time
+    from scripts.image_measurement import validate_run
+    directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+    backend=owner_env.new_backend(hold=True)
+    with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
+        tid=owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+        pid=backend.jobs[0]['prompt_id']
+        try:
+            for noise in (None, {'type':'execution_cached','data':{'prompt_id':'other','nodes':['7']}},
+                          {'type':'execution_cached','data':{'prompt_id':pid,'nodes':['PRIVATE-CACHE-SENTINEL']}}):
+                backend.events_to_emit.put(noise)
+            backend.events_to_emit.put({'type':'execution_cached','data':{'prompt_id':pid,'nodes':['4']}})
+            deadline=time.monotonic()+2
+            while time.monotonic()<deadline:
+                rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+                if any(r.get('cached_nodes')==['4'] for r in rows): break
+                time.sleep(.01)
+        finally: backend.finish.set()
+        owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
+    assert any(r.get('cached_nodes')==['4'] for r in rows)
+    assert 'PRIVATE-CACHE-SENTINEL' not in str(rows)
+    row=measured_run()
+    row['task_events']=[dict(t,operation='text_encode_cached',cached_nodes=['4'])
+        if t.get('operation')=='text_encode' else t for t in row['task_events']]
+    assert validate_run(row)==[]
+    row['task_events']=[dict(t,operation='sampling_cached',cached_nodes=['7'])
+        if t.get('operation')=='sampling' else t for t in row['task_events']]
+    assert 'operation_coverage' in validate_run(row)

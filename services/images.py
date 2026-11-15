@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import HTTPException
 
-from .image_telemetry import record_current_task, task_event, task_transition
+from .image_telemetry import record_cached_nodes, record_current_task, task_event, task_transition
 
 LOG=logging.getLogger('agent-mm.images')
 Image.MAX_IMAGE_PIXELS=16_000_000
@@ -199,6 +199,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                 active_node=None
                 try:
                     async for raw in stream.events():
+                        record_cached_nodes(store,tid,pid,raw)
                         event=normalize_event(raw,pid,active_node)
                         if event is not None:
                             if event['type']=='backend_error':backend_failed=True
@@ -238,7 +239,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             await asyncio.sleep(.5)
         raise TimeoutError('Image inference timeout')
     finally:
-        record_current_task(store,tid)
+        record_current_task(store,tid,operation='cleanup',event='cleanup_started')
         def discard_result():
             if saved_fid:
                 reclaim_result(store,saved_fid,owner=owner)

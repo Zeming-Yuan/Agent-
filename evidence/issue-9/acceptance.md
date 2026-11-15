@@ -33,3 +33,7 @@ Disable IMAGE_TELEMETRY_DIR and perform normal controlled service maintenance to
 Collected43/351; focused selector43passed; prescribed selector45passed; explicit affected12-file selection196passed (b-final-affected.txt), one existing AnyIO warning. b-source-hashes.json freezes code/tests/launchers at this verification. No code edits occurred during the final affected run. Earlier190-test run is historical pre-review evidence only.
 
 Remaining physical acceptance is tracked by https://github.com/Zeming-Yuan/Agent-/issues/24. Requested ready-for-human label was absent (verified label inventory), so follow-up created without inventing a replacement label; #9 remainsOPEN. No model run occurred. Trailing whitespace in pytest captures normalized with original/normalized hashes; no outcome or diagnostic rewritten.
+
+## Repair verification
+
+Initial review Standards1P2/Spec2P2; all reproduced and repaired (review-b.md). Fresh collection51/359; focused module51passed; planned53passed; explicit affected204passed/one existing warning (repair-affected.txt). repair-source-hashes.json freezes the verified source. No full gates, production or hardware actions. Independent re-review pending fixed repair commit.

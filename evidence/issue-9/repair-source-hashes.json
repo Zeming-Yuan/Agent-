@@ -1,0 +1,11 @@
+{
+  "scripts/benchmark_images.py": "38b34404a3f8585f90568a6030a33e89a852ff1d9372463128e006334b1c966b",
+  "scripts/image_measurement.py": "25b3d9919597f97126953c387dcb2c8320af577597d60be07b514199f29556a6",
+  "services/image_telemetry.py": "0177d5b8f4386ac8d1086058ffb5c493be2880f95da1d4594af75d494087640f",
+  "services/images.py": "ca8e4ce1bbd2393d6f9d6c74ca92485971890c90cd11c55e2ca592cdb6958880",
+  "deploy/comfy_lifecycle_probe.py": "cf863eeb1652e56392443bb02046d6e63b9703ba1a535c3b611908ab3c7ef32b",
+  "deploy/start-comfy.py": "6972cd2188f34236fd4fe60f2b2393639abd41f40a264dbc87870edc1e501660",
+  "deploy/run-image.sh": "deccfa836f29220f0defe6d0319f925364c95dfcb5ffcf7f4a4315bbba2f05f8",
+  "deploy/run-gateway-runtime.sh": "3edd5fd2b7631c1e745629bd09fc4b786580fb2cc4d2f52e1cc0f9367af55c30",
+  "tests/test_tb08_memory_evidence.py": "1efb5945ae78519a0e20c0acff7d2fc38a67bdf46872cdcf27c50aac1905a274"
+}

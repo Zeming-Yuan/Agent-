@@ -56,7 +56,7 @@ def write_curve(samples, tasks, start, end):
         for event in tasks:
             x = 100+950*(event['utc_ns']-start)/max(1,end-start)
             parts.append(f'<line x1="{x:.2f}" x2="{x:.2f}" y1="{top+10}" y2="{top+100}" stroke="#bbb"/>')
-            if index == 0: parts.append(f'<text x="{x:.2f}" y="{top+115}" font-size="9">{escape(event["stage"])}</text>')
+            if index == 0: parts.append(f'<text x="{x:.2f}" y="{top+115}" font-size="9">{escape(event.get("operation", event["stage"]))}</text>')
     return ''.join(parts)+ '</svg>\n'
 
 
@@ -74,6 +74,20 @@ def validate_observations(record):
         errors.append('canonical_prompt')
     if not any(t.get('status', 'completed') == 'completed' and t.get('stage') == 'completed' for t in tasks):
         errors.append('terminal_event')
+    operations = {t.get('operation') for t in tasks}
+    encoding = 'text_encode' if record['profile'] == 'generate' else 'text_vision_encode'
+    encoding_known = encoding in operations or any('4' in t.get('cached_nodes', []) for t in tasks)
+    if not encoding_known or not {'sampling','vae_decode','backend_save','cleanup'} <= operations:
+        errors.append('operation_coverage')
+    if any(t.get('blocked_reason') == 'events_unavailable' for t in tasks): errors.append('backend_events_unavailable')
+    if any(t.get('observation_errors') for t in tasks): errors.append('task_observation_errors')
+    seqs = [t.get('stage_seq') for t in tasks]
+    if not seqs or any(type(seq) is not int for seq in seqs):
+        errors.append('task_stage_gap')
+    else:
+        unique = sorted(set(seqs))
+        if seqs != sorted(seqs) or unique[0] != 1 or any(b != a+1 for a,b in zip(unique,unique[1:])):
+            errors.append('task_stage_gap')
     expected_host = record.get('expected_host_id')
     if not expected_host or any(r.get('host_id') != expected_host for r in samples+executions+tasks):
         errors.append('host_identity')

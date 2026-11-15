@@ -1,0 +1,52 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_transient_trace_write_fault_invalidates_later_events _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-459/test_tb08_memory_evidence_tran0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe572203134d0>
+
+    def test_tb08_memory_evidence_transient_trace_write_fault_invalidates_later_events(tmp_path, monkeypatch):
+        import json
+        from types import SimpleNamespace
+        from services import image_telemetry
+        from scripts.image_measurement import validate_run
+        directory = tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+        task = {'id':'task-a','owner':'A','kind':'image_generate','status':'running','stage':'loading','stage_seq':2,
+                'options':{'size':'1024x1024','quality':'standard','image_ids':[],'foreground_file_id':None}}
+        store = SimpleNamespace(worker_task=lambda tid:task)
+        write = image_telemetry.write_private_jsonl
+        def fail_one(directory, name, row):
+            if row.get('stage') == 'generating': raise OSError('synthetic one-stage write failure')
+            return write(directory,name,row)
+        monkeypatch.setattr(image_telemetry,'write_private_jsonl',fail_one)
+        image_telemetry.record_task(store,task)
+        task.update(stage='generating',stage_seq=3); image_telemetry.record_task(store,task)
+        task.update(stage='completed',status='completed',stage_seq=4); image_telemetry.record_task(store,task)
+        rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+>       assert rows[-1]['observation_errors'] == ['task_observation_write_failed']
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'observation_errors'
+
+tests/test_tb08_memory_evidence.py:453: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  services.image_telemetry:image_telemetry.py:111 Image task observation unavailable
+_ test_tb08_memory_evidence_noncontiguous_committed_stage_sequence_is_invalid __
+
+    def test_tb08_memory_evidence_noncontiguous_committed_stage_sequence_is_invalid():
+        from scripts.image_measurement import validate_run
+        row=measured_run(); row['task_events'][-1]['stage_seq']=99
+>       assert 'task_stage_gap' in validate_run(row)
+E       AssertionError: assert 'task_stage_gap' in []
+E        +  where [] = <function validate_run at 0xe572203502c0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:461: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_transient_trace_write_fault_invalidates_later_events
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_noncontiguous_committed_stage_sequence_is_invalid
+2 failed, 43 deselected, 1 warning in 0.06s
