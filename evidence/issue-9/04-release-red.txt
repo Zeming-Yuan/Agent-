@@ -1,0 +1,21 @@
+...F                                                                     [100%]
+=================================== FAILURES ===================================
+_________ test_tb08_memory_evidence_release_epoch_waits_for_worker_gc __________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-421/test_tb08_memory_evidence_rele0')
+
+    def test_tb08_memory_evidence_release_epoch_waits_for_worker_gc(tmp_path):
+        from types import SimpleNamespace
+>       from deploy.comfy_lifecycle_probe import LifecycleProbe
+E       ModuleNotFoundError: No module named 'deploy.comfy_lifecycle_probe'
+
+tests/test_tb08_memory_evidence.py:52: ModuleNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_release_epoch_waits_for_worker_gc
+1 failed, 3 passed, 1 warning in 0.02s

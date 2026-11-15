@@ -1,0 +1,39 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_probe_exposes_cache_counts_without_retaining_executor _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-443/test_tb08_memory_evidence_prob0')
+
+    def test_tb08_memory_evidence_probe_exposes_cache_counts_without_retaining_executor(tmp_path):
+        import gc
+        import weakref
+        from types import SimpleNamespace
+        from deploy.comfy_lifecycle_probe import LifecycleProbe
+        class Queue:
+            def get_flags(self, reset=True): return {}
+            def get(self, timeout=None): return None
+            def get_current_queue_volatile(self): return [], []
+        class Executor:
+            def reset(self):
+                self.caches = SimpleNamespace(outputs=SimpleNamespace(all_node_ids=lambda: {'7','9'}),
+                                              objects=SimpleNamespace(all_node_ids=lambda: {'1'}))
+        manager = SimpleNamespace(current_loaded_models=[SimpleNamespace(model_loaded_memory=lambda: 1234)],
+                                  unload_all_models=lambda: None, soft_empty_cache=lambda: None)
+        probe = LifecycleProbe(Queue(), manager, Executor, SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False)),
+                               tmp_path/'obs','host','hash')
+        probe.install(); executor = Executor(); executor.reset()
+        row = probe.snapshot()
+>       assert row['loaded_model_bytes'] == 1234 and row['cached_output_nodes'] == 2 and row['cached_object_nodes'] == 1
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'loaded_model_bytes'
+
+tests/test_tb08_memory_evidence.py:385: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_probe_exposes_cache_counts_without_retaining_executor
+1 failed, 36 deselected, 1 warning in 0.04s

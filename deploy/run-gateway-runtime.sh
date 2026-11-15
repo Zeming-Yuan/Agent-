@@ -3,7 +3,15 @@ set -euo pipefail
 cd /home/clusteradmin/Desktop/Agent多模态服务
 image="$(cat .private/runtime-image-id)"
 mkdir -p .private/runtime
-docker run --name agent-mm-gateway-runtime --network host --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m \
+observation_args=()
+if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
+  mkdir -p "$IMAGE_TELEMETRY_DIR"
+  chmod 700 "$IMAGE_TELEMETRY_DIR"
+  observation_args+=(--mount "type=bind,src=$IMAGE_TELEMETRY_DIR,dst=/observations")
+  observation_args+=(--mount "type=bind,src=/etc/machine-id,dst=/host-machine-id,readonly")
+  observation_args+=(--env IMAGE_TELEMETRY_DIR=/observations --env IMAGE_HOST_ID_FILE=/host-machine-id)
+fi
+docker run "${observation_args[@]}" --name agent-mm-gateway-runtime --network host --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m \
   --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges --memory 2g --pids-limit 128 \
   --mount "type=bind,src=$PWD/services,dst=/work/services,readonly" \
   --mount "type=bind,src=$PWD/.private/runtime,dst=/work/.private/runtime" \

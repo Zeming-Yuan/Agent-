@@ -1,0 +1,85 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-451/test_tb08_memory_evidence_obse0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf4ade2c672e0>, wait_task=<function owner_env.<locals>.wait_task at 0xf4ade2c67420>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4ade2c3c740>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-451/test_tb08_memory_evidence_obse0')
+
+    def test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence(owner_env, monkeypatch, tmp_path):
+        import io
+        import json
+        import subprocess
+        import sys
+        import threading
+        import time
+        import httpx
+        from PIL import Image
+        from services.gateway import create_app
+        from services.image_telemetry import host_identity, write_private_jsonl
+        from image_test_harness import https_server
+        directory = tmp_path/'obs'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        host = host_identity()
+        backend = owner_env.new_backend()
+        png = io.BytesIO(); Image.new('RGB', (1024, 1024), 'green').save(png, format='PNG'); backend.png = png.getvalue()
+        stop = threading.Event()
+        def samples():
+            while not stop.is_set():
+                write_private_jsonl(directory, 'memory.jsonl', {
+                    'utc_ns': time.time_ns(), 'observed_at': time.monotonic(), 'host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'session_id': 'fixture-session',
+                    'available_bytes': 40*1024**3, 'cgroup_current_bytes': 2*1024**3,
+                    'cgroup_peak_bytes': 3*1024**3, 'cgroup_headroom_bytes': 73*1024**3,
+                    'cgroup_limit_bytes': 75*1024**3, 'resident_profiles': None,
+                    'gpu_allocated_bytes': 1024, 'gpu_reserved_bytes': 2048, 'release_epoch': 0,
+                    'running_prompts': [], 'errors': [], 'sampling_gap_seconds': None})
+                stop.wait(.05)
+        async def external(request):
+            result = await backend(request)
+            if request.url.path == '/prompt':
+                body = json.loads(request.content)
+                write_private_jsonl(directory, 'lifecycle.jsonl', {
+                    'event': 'execution_started', 'task_id': body['client_id'], 'prompt_id': body['prompt_id'],
+                    'utc_ns': time.time_ns(), 'observed_at': time.monotonic(), 'host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'session_id': 'fixture-session'})
+            return result
+        app = create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+            identity_mode='staging', transport=httpx.MockTransport(external), run_worker=True,
+            audio_enabled=False, images_enabled=True, event_stream_factory=backend.event_stream)
+        write_private_jsonl(directory, 'environment.jsonl', {'host_id':host, 'runtime_hash':'fixture-runtime',
+            'descriptor': {'comfy_version':'0.33.2','image_id':'fixture-image','model_manifests':{}}})
+        sampler = threading.Thread(target=samples); sampler.start()
+        try:
+            with https_server(app, tmp_path) as (port, cert):
+                key = tmp_path/'personal.key'; key.write_text(owner_env.keys['A']); key.chmod(0o600)
+                config = tmp_path/'observe.json'
+                config.write_text(json.dumps({'base_url': f'https://127.0.0.1:{port}', 'api_key_file': str(key),
+                    'ca_file': str(cert), 'telemetry_source': str(directory), 'expected_host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'timeout_seconds': 5, 'baseline_seconds': .25,
+                    'baseline_tolerance_bytes': 1024, 'options': {'prompt': 'PRIVATE-CLI-PROMPT', 'seed': 17}}))
+                cmd = [sys.executable, '-m', 'scripts.benchmark_images', '--scenario', 'observe',
+                       '--config', str(config), '--report-dir', str(tmp_path/'reports')]
+                outcomes = [subprocess.run(cmd, capture_output=True, text=True, timeout=15) for _ in range(2)]
+                for result in outcomes: assert result.returncode == 0, result.stdout+result.stderr
+        finally:
+            stop.set(); sampler.join(3)
+        runs = sorted((tmp_path/'reports').iterdir())
+        assert len(runs) == 2 and len(backend.jobs) == 2
+        for run in runs:
+            summary = json.loads((run/'summary.json').read_text())
+            environment = json.loads((run/'environment.json').read_text())
+>           assert environment['backend']['descriptor']['comfy_version'] == '0.33.2'
+                   ^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'backend'
+
+tests/test_tb08_memory_evidence.py:273: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence
+1 failed, 38 deselected, 1 warning in 2.18s

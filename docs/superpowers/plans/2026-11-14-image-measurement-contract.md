@@ -47,3 +47,11 @@
 
 每个 run 目录包含 environment.json、attempts.jsonl、memory.jsonl、lifecycle.jsonl、profile-report.json、summary.json 及私有样张。目录由调用者提供、每轮唯一，不覆盖历史记录。若缺少任一原始证据，验证器失败而不是自动填 passed。公开 issue/ADR 只放脱敏结论与可访问的证据索引。
 
+
+## T08 implementation audit — 2026-11-15
+
+Import side effects and implicit historical workload removed. Observe now uses one UUID task request, client monotonic submit/complete/download/fsync timestamps, real PNG validation, complete attempt denominator, private stage/prompt correlation and in-image-container resource reads. See OPERATIONS T08 schema and ADR0003. Offline TLS subprocess evidence is in evidence/issue-9; it uses only external inference/resource substitutes and is not a hardware baseline.
+
+Actual baseline remains **not_run**. Read-only local preflight found LTX active, image failed, guard inactive and~37.6GiB available; no real image task or switch ran. No faster/slower claim; comparative result **inconclusive**. Physical >=5Hz (including observed gaps), container/model/cgroup identity, release and stable baseline need controlled hardware evidence before #9 closes.The collector targets10Hz and rejects evidence gaps above200ms; actual physical >=5Hz still requires real-task evidence. Profile reports remain not_calibrated/enabled=false.
+
+T08 review repair: validate committed sequence continuity and latched observation faults; retain fixed-node encoding/sampling/VAE/save/cleanup markers and explicit owned encoding cache hits. A cached sampler is not measured new work. Source identity includes application workflow/launcher as well as backend/probe/sampler; actual deploy and hardware consistency still未验证.

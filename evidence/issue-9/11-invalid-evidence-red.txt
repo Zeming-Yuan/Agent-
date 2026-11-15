@@ -1,0 +1,334 @@
+FFFFFFFFFFFF                                                             [100%]
+=================================== FAILURES ===================================
+____ test_tb08_memory_evidence_bad_observations_cannot_be_valid[read_error] ____
+
+fault = 'read_error'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_____ test_tb08_memory_evidence_bad_observations_cannot_be_valid[runtime] ______
+
+fault = 'runtime'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_______ test_tb08_memory_evidence_bad_observations_cannot_be_valid[host] _______
+
+fault = 'host'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_______ test_tb08_memory_evidence_bad_observations_cannot_be_valid[gap] ________
+
+fault = 'gap'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+__ test_tb08_memory_evidence_bad_observations_cannot_be_valid[memory_missing] __
+
+fault = 'memory_missing'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+__ test_tb08_memory_evidence_bad_observations_cannot_be_valid[cgroup_missing] __
+
+fault = 'cgroup_missing'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_ test_tb08_memory_evidence_bad_observations_cannot_be_valid[duplicate_execution] _
+
+fault = 'duplicate_execution'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_ test_tb08_memory_evidence_bad_observations_cannot_be_valid[prompt_mismatch] __
+
+fault = 'prompt_mismatch'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_____ test_tb08_memory_evidence_bad_observations_cannot_be_valid[session] ______
+
+fault = 'session'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_ test_tb08_memory_evidence_bad_observations_cannot_be_valid[missing_terminal] _
+
+fault = 'missing_terminal'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+____ test_tb08_memory_evidence_bad_observations_cannot_be_valid[nonfinite] _____
+
+fault = 'nonfinite'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+_ test_tb08_memory_evidence_bad_observations_cannot_be_valid[partial_capture] __
+
+fault = 'partial_capture'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xeaee6c1159e0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:313: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[read_error]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[runtime]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[host]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[gap]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[memory_missing]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[cgroup_missing]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[duplicate_execution]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[prompt_mismatch]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[session]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[missing_terminal]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[nonfinite]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[partial_capture]
+12 failed, 17 deselected, 1 warning in 0.08s

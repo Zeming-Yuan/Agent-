@@ -1,0 +1,20 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_resource_sample_reports_separate_scopes_and_missing _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-417/test_tb08_memory_evidence_reso0')
+
+    def test_tb08_memory_evidence_resource_sample_reports_separate_scopes_and_missing(tmp_path):
+>       from services.image_telemetry import sample_resources
+E       ModuleNotFoundError: No module named 'services.image_telemetry'
+
+tests/test_tb08_memory_evidence.py:19: ModuleNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_resource_sample_reports_separate_scopes_and_missing
+1 failed, 1 passed, 1 warning in 0.02s

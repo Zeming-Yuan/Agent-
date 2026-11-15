@@ -1,0 +1,18 @@
+..F                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_tb08_memory_evidence_sampler_deadlines_and_holes _____________
+
+    def test_tb08_memory_evidence_sampler_deadlines_and_holes():
+>       from services.image_telemetry import collect_samples
+E       ImportError: cannot import name 'collect_samples' from 'services.image_telemetry' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_telemetry.py)
+
+tests/test_tb08_memory_evidence.py:37: ImportError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_sampler_deadlines_and_holes
+1 failed, 2 passed, 1 warning in 0.02s

@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_bad_observations_cannot_be_valid[canonical_prompt] _
+
+fault = 'canonical_prompt'
+
+    @pytest.mark.parametrize('fault', ['read_error','runtime','host','gap','memory_missing','cgroup_missing',
+        'duplicate_execution','canonical_prompt','prompt_mismatch','session','missing_terminal','nonfinite','partial_capture'])
+    def test_tb08_memory_evidence_bad_observations_cannot_be_valid(fault):
+        from scripts.image_measurement import validate_run
+        row = measured_run()
+        if fault == 'read_error': row['source_errors'] = ['memory.jsonl_unavailable']
+        if fault == 'runtime': row['memory_samples'][0]['runtime_hash'] = 'different'
+        if fault == 'host': row['memory_samples'][0]['host_id'] = 'other'
+        if fault == 'gap': row['memory_samples'].pop(4); row['memory_samples'].pop(4)
+        if fault == 'memory_missing': row['memory_samples'][0]['available_bytes'] = None
+        if fault == 'cgroup_missing': row['memory_samples'][0]['cgroup_headroom_bytes'] = None
+        if fault == 'duplicate_execution': row['execution_events'] *= 2
+        if fault == 'canonical_prompt': row['execution_events'][0]['prompt_id'] = 'other-prompt'
+        if fault == 'prompt_mismatch': row['execution_events'][0]['task_id'] = 'other-task'
+        if fault == 'session': row['memory_samples'][0]['session_id'] = 'old-process'
+        if fault == 'missing_terminal': row['task_events'] = []
+        if fault == 'nonfinite': row['memory_samples'][0]['observed_at'] = float('nan')
+        if fault == 'partial_capture': row['memory_samples'] = row['memory_samples'][5:]
+>       assert validate_run(row)
+E       AssertionError: assert []
+E        +  where [] = <function validate_run at 0xf03850d16fc0>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:315: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_bad_observations_cannot_be_valid[canonical_prompt]
+1 failed, 37 deselected, 1 warning in 0.04s

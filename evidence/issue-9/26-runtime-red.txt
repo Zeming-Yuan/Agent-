@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_tb08_memory_evidence_runtime_identity_covers_workflow_and_launcher ____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-465/test_tb08_memory_evidence_runt0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf9c3ed0c7950>
+
+    def test_tb08_memory_evidence_runtime_identity_covers_workflow_and_launcher(tmp_path, monkeypatch):
+        import hashlib
+        from deploy import comfy_lifecycle_probe as adapter
+        # The external Comfy source fixture has a synthetic fingerprint; production
+        # pins stay literal and the real filesystem/runtime identity path runs.
+        source=tmp_path/'main.py'; source.write_text('external source fixture')
+        monkeypatch.setattr(adapter,'SUPPORTED_SOURCE_HASHES',{'main.py':hashlib.sha256(source.read_bytes()).hexdigest()})
+        runtime_hash, descriptor=adapter.runtime_identity(tmp_path,image_id='fixture-image',argv=['--cache-ram','20'])
+>       assert descriptor['worker_sha256'] == hashlib.sha256((Path(adapter.__file__).parents[1]/'services/images.py').read_bytes()).hexdigest()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'worker_sha256'
+
+tests/test_tb08_memory_evidence.py:516: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_runtime_identity_covers_workflow_and_launcher
+1 failed, 49 deselected, 1 warning in 0.05s

@@ -1,0 +1,44 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb08_memory_evidence_import_does_not_start_image_work __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xee829cc371d0>
+
+    def test_tb08_memory_evidence_import_does_not_start_image_work(monkeypatch):
+        def reject_run(coro):
+            coro.close()
+            raise AssertionError('import invoked benchmark main')
+        def reject_write(*args, **kwargs):
+            raise AssertionError('import attempted filesystem write')
+        monkeypatch.setattr(Path, 'mkdir', reject_write)
+        monkeypatch.setattr(asyncio, 'run', reject_run)
+>       runpy.run_module('scripts.benchmark_images', run_name='benchmark_import_probe')
+
+tests/test_tb08_memory_evidence.py:15:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+<frozen runpy>:229: in run_module
+    ???
+<frozen runpy>:88: in _run_code
+    ???
+scripts/benchmark_images.py:7: in <module>
+    BASE=Path(__file__).resolve().parents[1];E=BASE/'evidence/image-deploy-20261114';(E/'samples').mkdir(exist_ok=True)
+                                                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (PosixPath('/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/evidence/image-deploy-20261114/samples'),)
+kwargs = {'exist_ok': True}
+
+    def reject_write(*args, **kwargs):
+>       raise AssertionError('import attempted filesystem write')
+E       AssertionError: import attempted filesystem write
+
+tests/test_tb08_memory_evidence.py:12: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_import_does_not_start_image_work
+1 failed, 1 warning in 0.02s

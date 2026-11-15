@@ -274,3 +274,9 @@ git commit -m "test(image): t08 boundaries and recovery"
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+
+## 2026-11-15 execution record (supersedes planning-only status)
+
+User authorized single-ticket implement+tdd; three public seams and initial d2a9d197 fixed review base confirmed. Controlled source checkout reused, original non-Git product pending selective verified delivery. Import slice118de0c independently reviewed Standards0/Spec0. Further implementation/evidence index: evidence/issue-9/execution.md; design decisions ADR0003; commands/schema OPERATIONS T08.
+
+Software RED/GREEN and affected validation are recorded individually, not inferred from prior T07 results. Physical single-task observe remains **not_run**, model switches not attempted: LTX active/image failed/guard inactive prevents proving a safe controlled starting condition. No performance baseline, actual >=5Hz, profile release or dual-desktop acceptance claim. #9 must remain open until controlled real-task raw evidence is supplied; T09/T11 cannot treat software observations or release_epoch as a safe profile budget/release certificate.

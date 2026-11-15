@@ -305,3 +305,55 @@ submission_unknown或cleanup_unconfirmed时worker退出，health和新图片工�
 回退保留旁表和新增数据，只能使用仍保护owner、终态与清理且显式列写入task_runtime的版本；不得回退到切片A七列VALUES或旧提前cancelled版本。可先停新增事件/展示而保留最终生命周期规则，无需DROP旁表。生产发布、恢复演练、Windows/macOS Harness与真实模型未验证。验证命令、逐AC证据和审查见evidence/issue-8/acceptance.md；仅受影响门禁，未跑全套。
 
 T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。
+
+## T08 measurement implementation (2026-11-15)
+
+`import scripts.benchmark_images` is side-effect free: it does not create output directories, read credentials or launch network work. Direct execution of the historical script remains historical-only until the observe CLI is delivered. Historical records do not establish a new memory baseline. T08 evidence is indexed in `evidence/issue-9/execution.md`; real hardware baseline is **not_run**.
+
+### T08 observe collector (offline implementation; hardware not_run)
+
+Use the supported Python virtualenv and one explicit task:
+
+```bash
+.venv/bin/python -m scripts.benchmark_images --scenario observe --config "<private-config.json>" --report-dir "<private-report-parent>"
+```
+
+The former implicit historical 20-task workload is removed. No arguments now prints argparse usage; importing does no work. Each invocation creates a UUID run directory and a UUID-derived idempotency key, submits exactly one task through the normal authenticated API, polls its terminal state, downloads via the normal owner-protected file route, verifies PNG format/dimensions/full decode, and fsyncs image and directory before stopping the end-to-end timer. There are no automatic submit retries; response loss stays an invalid attempt, not new inference. HTTP rejection, failure, timeout, bad output and save failure all remain in the denominator. Exit0 requires valid raw evidence; invalid attempt exits1, configuration failure exits2. Configuration failures occur before a task attempt and are not included as submitted work.
+
+Private config schema (replace placeholders; keep config/key/report private):
+
+```json
+{
+  "base_url": "https://<gateway-host>:18443",
+  "api_key_file": "/private/personal.key",
+  "ca_file": "/private/agent-root-ca.crt",
+  "telemetry_source": "/private/observations",
+  "expected_host_id": "<host_id from private environment.jsonl>",
+  "runtime_hash": "<runtime_hash from private environment.jsonl>",
+  "timeout_seconds": 900,
+  "baseline_seconds": 3,
+  "baseline_tolerance_bytes": 104857600,
+  "kind": "image_generate",
+  "options": {"prompt": "<private synthetic fixture>", "size": "1024x1024", "seed": 17}
+}
+```
+
+The baseline window/tolerance above are example *observation settings*, not resource budgets, release proof, a signed calibration or permission to start a model. Select and record them for the controlled environment. For one edit task use kind=image_edit, a supported quality and owner-uploaded image_ids; do not run switches merely to obtain samples. No model-switch scenario is delivered by T08.
+
+Sampling installation is opt-in and requires a controlled service restart after normal maintenance checks. Set `IMAGE_TELEMETRY_DIR` to the same absolute private host directory in both existing launchers' service environments. The launchers mount that directory as /observations and host /etc/machine-id read-only; image launcher additionally mounts the read-only probe and services. They retain all existing GPU/memory/cache/disabled-node flags and the 75GiB container limit. No running service or service-unit configuration was changed or restarted this round; launcher source changes await normal controlled deployment. The observer does not start/stop guards or other services. Before hardware use prove image memory guard active, resource headroom and backend idle; current LTX-active preflight does not meet this condition. Never stop other workloads or disable the 20GiB guard for a measurement.
+
+ComfyUI0.33.2's four lifecycle source files are SHA256-pinned. Unknown source refuses opt-in observer startup and needs adapter revalidation. Private environment.jsonl records immutable image ID, source/model-manifest/probe/sampler hashes and launch flags; runtime_hash changes with these inputs. Use its current host_id/runtime_hash in collector config. Capture happens *inside the image cgroup*, not the gateway or benchmark client's cgroup. There is no public telemetry route, custom node or extra network listener. Observation files are0700 directory/0600 files; gateway telemetry contains only salted owner_tag, task/profile/input-size/stage and canonical prompt ID. No original credential, prompt, filename or asset bytes are emitted. The sample PNG is a separate private acceptance artifact; do not publish it or the private configuration.
+
+The sampler targets fixed100ms deadlines (10Hz) to leave scheduling room for the required minimum5Hz. `sampling_gap_seconds` records gaps above200ms, and report validation rejects raw UTC gaps/coverage holes above200ms as well as source errors. Hardware cadence remains unverified until a real-task capture validates these intervals. Never fill missing signals with0. Host MemAvailable, cgroup current/lifetime-peak/limit/headroom, CUDA allocated/reserved and model/cache counts stay distinct; GB10 unified memory must not sum them. GPU/model/cache values may be unavailable. `resident_profiles` and `release_proven` remain null because graph/CPU weight ownership is unproven. `release_epoch` only counts consumed free flags followed by real worker unload/reset and post-GC soft-cache return, not /free HTTP acceptance. An advanced epoch is **not safe release proof** and must not enable a later resource admission.
+
+Run products: environment.json, attempts.jsonl, memory.jsonl, lifecycle.jsonl, summary.json, profile-report.json, memory.svg and private output.png when saved. Summary includes minimum system margin, separate container/GPU maxima, observed stage intervals, release-operation duration and pre/post baseline stability. Loading duration inferred from stage timestamps includes observed loading/wait, not a precise hardware weight-load timer. A container memory.peak is lifetime-wide and may predate the task. profile-report.enabled is always false and baseline_status=not_calibrated. No performance improvement or profile safety claim follows from one task.
+
+Rollback: unset IMAGE_TELEMETRY_DIR in service environments and restart under the existing maintenance procedure; preserve evidence. Code rollback is additive/observer-only; retain owner-aware task semantics, database/files and20GiB guard. No DB migration, seed or destructive recovery is introduced. Actual deployment/physical restart/production rollback, GPU envelope and Windows/macOS Harness are **未验证**.
+
+T08 review repairs: task-observation I/O/read failure latches an observation-health error on the existing Store instance; subsequent records carry it and measurements stay invalid until a fresh gateway/Store instance. This does not change task status or block user work. Validator requires a continuous committed sequence from initial claim to terminal, plus canonical submission/execution and encoding/sampling/decode/save/cleanup evidence. It rejects missing nodes and `events_unavailable`. Node labels are a fixed sanitized map; unowned/unknown node data is discarded. An observed `execution_cached` for encoding is explicitly marked as cached; a cached sampler is a no-op for this benchmark and cannot be a valid fresh-inference sample. Use a controlled input/seed not already in the current sampler cache when requesting new inference; a new HTTP request key alone does not bypass backend computation caching.
+
+Runtime identity additionally includes gateway image-workflow and launcher hashes, host kernel and available NVIDIA driver version. Both launchers must use the same reviewed source during controlled deployment. The source files were prepared locally; no deployed processes or service units were restarted/reconfigured. Stage durations are observational, and old-profile ownership/release proof remainsNone.
+
+Edit encoding has two observed operations: node4=text_vision_encode and node5=negative_text_vision_encode. The latter also processes reference images and is not the generation workflow's simple zero-conditioning operation. Both must execute or have explicit owned cache evidence for a complete edit measurement; an absent negative-encoding boundary is invalid.
+
+Collector timeout/disconnection does not cancel accepted work. Recover with the report's task_id and normal owned task/file API; if needed explicitly cancel that same task and wait for confirmed cleanup. A new observe invocation is a new task and must not be used as a recovery retry. Before the next controlled run, confirm prior work/cleanup ended. Missing acceptance response stays uncertain/invalid; resolve the server's owner-scoped request mapping instead of blindly resubmitting.
