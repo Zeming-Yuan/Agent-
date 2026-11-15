@@ -241,7 +241,7 @@ def test_upload_quota_is_atomic_across_concurrent_requests(tmp_path):
     import asyncio
     app=create_app(tmp_path,'test-secret-token',run_worker=False)
     store=app.state.store
-    store.add_file('file-'+'f'*32,'quota-fixture',2*1024**3-3*1024**2)
+    store.add_file('file-'+'f'*32,'quota-fixture',2*1024**3-3*1024**2, owner='legacy')
     async def check():
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://test') as client:
             result=await asyncio.gather(*(client.post('/v1/files',headers=AUTH,

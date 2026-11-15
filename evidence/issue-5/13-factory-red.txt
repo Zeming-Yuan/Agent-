@@ -1,0 +1,53 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_factory_requires_identity_config_and_never_reads_shared_key _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-224/test_tb04_owner_contract_facto0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf32de924caa0>
+
+    def test_tb04_owner_contract_factory_requires_identity_config_and_never_reads_shared_key(tmp_path, monkeypatch):
+        import services.gateway as gateway
+        from services.identity import KeyRegistry
+        from scripts.migrate_image_owners import contract_ownership
+        from fastapi.testclient import TestClient
+        base = tmp_path / 'source'
+        monkeypatch.setattr(gateway, '__file__', str(base / 'services' / 'gateway.py'))
+        monkeypatch.delenv('AGENT_IDENTITY_MODE', raising=False)
+        with pytest.raises(ValueError, match='explicit.*identity'):
+>           gateway.application()
+
+tests/test_tb04_owner_contract.py:344:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/gateway.py:458: in application
+    return create_app(base/'.private/runtime', (base/'.private/agent-api.key').read_text().strip(),
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1029: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-224/test_tb04_owner_contract_facto0/source/.private/agent-api.key')
+mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-clusteradmin/pytest-224/test_tb04_owner_contract_facto0/source/.private/agent-api.key'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_factory_requires_identity_config_and_never_reads_shared_key
+1 failed, 55 deselected, 1 warning in 0.05s

@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb04_owner_contract_running_task_blocks_contract _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-190/test_tb04_owner_contract_runni0')
+
+    def test_tb04_owner_contract_running_task_blocks_contract(tmp_path):
+>       from scripts.migrate_image_owners import contract_ownership
+E       ModuleNotFoundError: No module named 'scripts.migrate_image_owners'
+
+tests/test_tb04_owner_contract.py:7: ModuleNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_running_task_blocks_contract
+1 failed, 1 warning in 0.01s

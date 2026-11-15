@@ -1,0 +1,54 @@
+..FF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_startup_never_silently_claims_unowned_data[owned-unmapped-legacy] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-232/test_tb04_owner_contract_start2')
+legacy_services = namespace(create_app=<function create_app at 0xfe31f4c5bba0>, Store=<class 't01_legacy_45dabb4f023344788179a56a5f9df53c.store.Store'>)
+mode = 'legacy', state = 'owned-unmapped'
+
+    @pytest.mark.parametrize('mode', ['legacy', 'staging'])
+    @pytest.mark.parametrize('state', ['unowned', 'owned-unmapped'])
+    def test_tb04_owner_contract_startup_never_silently_claims_unowned_data(tmp_path, legacy_services, mode, state):
+        from services.gateway import create_app
+        store = legacy_services.Store(tmp_path)
+        store.save_generated('file-' + 'd' * 32, b'old', 'old.png')
+        store.submit('image_generate', None, {'prompt': 'x'}, 'historical-key')
+        if state == 'owned-unmapped':
+            from services.ownership import expand_ownership
+            expand_ownership(store.db, 'legacy')
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:334: Failed
+_ test_tb04_owner_contract_startup_never_silently_claims_unowned_data[owned-unmapped-staging] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-232/test_tb04_owner_contract_start3')
+legacy_services = namespace(create_app=<function create_app at 0xfe31f4c59440>, Store=<class 't01_legacy_c10d5ed8282e4084aa16a714aad7fba9.store.Store'>)
+mode = 'staging', state = 'owned-unmapped'
+
+    @pytest.mark.parametrize('mode', ['legacy', 'staging'])
+    @pytest.mark.parametrize('state', ['unowned', 'owned-unmapped'])
+    def test_tb04_owner_contract_startup_never_silently_claims_unowned_data(tmp_path, legacy_services, mode, state):
+        from services.gateway import create_app
+        store = legacy_services.Store(tmp_path)
+        store.save_generated('file-' + 'd' * 32, b'old', 'old.png')
+        store.submit('image_generate', None, {'prompt': 'x'}, 'historical-key')
+        if state == 'owned-unmapped':
+            from services.ownership import expand_ownership
+            expand_ownership(store.db, 'legacy')
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:334: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_startup_never_silently_claims_unowned_data[owned-unmapped-legacy]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_startup_never_silently_claims_unowned_data[owned-unmapped-staging]
+2 failed, 2 passed, 65 deselected, 1 warning in 0.35s

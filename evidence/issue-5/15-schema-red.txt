@@ -1,0 +1,123 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[new-column] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_unkno0')
+problem = 'new-column'
+
+    @pytest.mark.parametrize('problem', ['new-column', 'unknown-version', 'implicit-unique'])
+    def test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded(tmp_path, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        with store.connect() as db:
+            if problem == 'new-column':
+                db.execute('ALTER TABLE tasks ADD COLUMN future_state TEXT')
+            elif problem == 'implicit-unique':
+                db.execute('DROP TABLE tasks')
+                db.execute('CREATE TABLE tasks(id TEXT PRIMARY KEY,kind TEXT UNIQUE,file_id TEXT,options TEXT,status TEXT,progress REAL,result TEXT,error TEXT,idem TEXT,fingerprint TEXT,created INTEGER,updated INTEGER)')
+            else:
+                db.execute('CREATE TABLE ownership_migration(version INTEGER PRIMARY KEY,legacy_owner TEXT,backup_dir TEXT)')
+                db.execute("INSERT INTO ownership_migration VALUES(2,'legacy','old-backup')")
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='schema|version'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:490: Failed
+_ test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[unknown-version] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_unkno1')
+problem = 'unknown-version'
+
+    @pytest.mark.parametrize('problem', ['new-column', 'unknown-version', 'implicit-unique'])
+    def test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded(tmp_path, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        with store.connect() as db:
+            if problem == 'new-column':
+                db.execute('ALTER TABLE tasks ADD COLUMN future_state TEXT')
+            elif problem == 'implicit-unique':
+                db.execute('DROP TABLE tasks')
+                db.execute('CREATE TABLE tasks(id TEXT PRIMARY KEY,kind TEXT UNIQUE,file_id TEXT,options TEXT,status TEXT,progress REAL,result TEXT,error TEXT,idem TEXT,fingerprint TEXT,created INTEGER,updated INTEGER)')
+            else:
+                db.execute('CREATE TABLE ownership_migration(version INTEGER PRIMARY KEY,legacy_owner TEXT,backup_dir TEXT)')
+                db.execute("INSERT INTO ownership_migration VALUES(2,'legacy','old-backup')")
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='schema|version'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:490: Failed
+_ test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[implicit-unique] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_unkno2')
+problem = 'implicit-unique'
+
+    @pytest.mark.parametrize('problem', ['new-column', 'unknown-version', 'implicit-unique'])
+    def test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded(tmp_path, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        with store.connect() as db:
+            if problem == 'new-column':
+                db.execute('ALTER TABLE tasks ADD COLUMN future_state TEXT')
+            elif problem == 'implicit-unique':
+                db.execute('DROP TABLE tasks')
+                db.execute('CREATE TABLE tasks(id TEXT PRIMARY KEY,kind TEXT UNIQUE,file_id TEXT,options TEXT,status TEXT,progress REAL,result TEXT,error TEXT,idem TEXT,fingerprint TEXT,created INTEGER,updated INTEGER)')
+            else:
+                db.execute('CREATE TABLE ownership_migration(version INTEGER PRIMARY KEY,legacy_owner TEXT,backup_dir TEXT)')
+                db.execute("INSERT INTO ownership_migration VALUES(2,'legacy','old-backup')")
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='schema|version'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:490: Failed
+_________ test_tb04_owner_contract_removes_explicit_global_idem_index __________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_remov0')
+
+    def test_tb04_owner_contract_removes_explicit_global_idem_index(tmp_path):
+        from scripts.migrate_image_owners import contract_ownership
+        from services.ownership import inspect_contract
+        store = Store(tmp_path)
+        with store.connect() as db:
+            db.execute('CREATE UNIQUE INDEX old_global_key ON tasks(idem)')
+        contract_ownership(store.db, 'legacy')
+>       assert inspect_contract(store.db)['ready'] is True
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb04_owner_contract.py:503:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+services/ownership.py:147: in inspect_contract
+    return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <sqlite3.Connection object at 0xefe5722a35b0>
+files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_remov0/files')
+
+    def validate_contract(db, files: Path, *, legacy_owner: str | None = None) -> dict:
+        if legacy_owner is not None and legacy_owner != 'legacy':
+            raise ValueError('legacy owner must match the existing stable legacy identity')
+        if legacy_owner is None:
+            marker = db.execute("SELECT 1 FROM sqlite_master WHERE name='ownership_migration' AND type='table'").fetchone()
+            if not marker:
+                raise ValueError('owner migration incomplete: contract required')
+            versions = db.execute('SELECT version,legacy_owner FROM ownership_migration').fetchall()
+            if len(versions) != 1 or tuple(versions[0]) != (1, 'legacy'):
+                raise ValueError('owner migration version or legacy identity mismatch')
+            for index in db.execute('PRAGMA index_list(tasks)'):
+                if index['unique'] and [row['name'] for row in db.execute('PRAGMA index_info("' + index['name'].replace('"', '""') + '")')] == ['idem']:
+>                   raise ValueError('owner migration retains global idempotency constraint')
+E                   ValueError: owner migration retains global idempotency constraint
+
+services/ownership.py:135: ValueError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[new-column]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[unknown-version]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_unknown_schema_or_version_is_never_discarded[implicit-unique]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_removes_explicit_global_idem_index
+4 failed, 62 deselected, 1 warning in 0.37s

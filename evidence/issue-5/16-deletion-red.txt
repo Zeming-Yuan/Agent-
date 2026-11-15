@@ -1,0 +1,99 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_strict_restart_preserves_intentional_file_deletion __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-230/test_tb04_owner_contract_stric0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf0481001f9c0>, wait_task=<function owner_env.<locals>.wait_task at 0xf0481001f920>)
+
+    def test_tb04_owner_contract_strict_restart_preserves_intentional_file_deletion(owner_env):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(owner_env.root)
+        contract_ownership(store.db, 'legacy')
+        backend = owner_env.new_backend()
+        with owner_env.client(identity_mode='strict', backend=backend, run_worker=True) as c:
+            source = owner_env.upload(c, 'A')
+            tid = owner_env.submit(c, 'A', kind='image_edit', request_key='deleted-source', image_ids=[source]).json()['id']
+            done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+            result = done['result']['file_id']
+            assert c.delete('/v1/files/' + source, headers=owner_env.auth('A')).status_code == 200
+            assert c.delete('/v1/files/' + result, headers=owner_env.auth('B')).status_code == 404
+            assert c.delete('/v1/files/' + result, headers=owner_env.auth('A')).status_code == 200
+>       with owner_env.client(identity_mode='strict', backend=backend) as c:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb04_owner_contract.py:519:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/conftest.py:74: in client
+    app=create_app(env.root,keys["legacy"],key_registry=registry,
+services/gateway.py:48: in create_app
+    inspect_contract(Path(root) / 'state.sqlite3')
+services/ownership.py:160: in inspect_contract
+    return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/ownership.py:151: in validate_contract
+    counts = validate_ownership(db, files, legacy_owner=legacy_owner)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <sqlite3.Connection object at 0xf0480fc51120>
+files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-230/test_tb04_owner_contract_stric0/runtime/files')
+
+    def validate_ownership(db, files: Path, *, legacy_owner: str | None = None) -> dict:
+        """Validate one SQLite snapshot; optional legacy identity is only for offline contract."""
+        import json
+        if files.is_symlink() or not files.is_dir():
+            raise ValueError('unsafe files directory')
+        tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        owners = {(row['kind'], row['object_id']): row['owner']
+                  for row in db.execute('SELECT * FROM object_owners')} if 'object_owners' in tables else {}
+        file_rows = {row['id']: row for row in db.execute('SELECT * FROM files')}
+        tasks = {row['id']: row for row in db.execute('SELECT * FROM tasks')}
+
+        def owner(kind, oid):
+            value = owners.get((kind, oid), legacy_owner)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(f'unowned {kind} {oid}')
+            return value
+
+        for (kind, oid), value in owners.items():
+            if kind not in ('file', 'task') or oid not in (file_rows if kind == 'file' else tasks):
+                raise ValueError(f'dangling ownership {kind} {oid}')
+            owner(kind, oid)
+        for fid, row in file_rows.items():
+            owner('file', fid)
+            path = files / fid
+            if Path(fid).name != fid or path.is_symlink() or not path.is_file():
+                raise ValueError(f'dangling or unsafe file bytes {fid}')
+            if path.stat().st_size != row['bytes']:
+                raise ValueError(f'file size mismatch {fid}')
+        for tid, task in tasks.items():
+            task_owner = owner('task', tid)
+            try:
+                options = json.loads(task['options']) if task['options'] else {}
+                result = json.loads(task['result']) if task['result'] else {}
+                if not isinstance(options, dict) or not isinstance(result, (dict, list)):
+                    raise ValueError
+                images = options.get('image_ids', [])
+                if not isinstance(images, list):
+                    raise ValueError
+                refs = [task['file_id'], options.get('foreground_file_id'), *images]
+                if isinstance(result, dict):
+                    refs.extend([result.get('file_id'), result.get('source_file_id')])
+                if any(ref is not None and (not isinstance(ref, str) or not ref) for ref in refs):
+                    raise ValueError
+            except (ValueError, TypeError):
+                raise ValueError(f'invalid references in task {tid}') from None
+            for fid in filter(None, refs):
+                if fid not in file_rows:
+>                   raise ValueError(f'dangling file reference in task {tid}: {fid}')
+E                   ValueError: dangling file reference in task task-f8d562741ef94c57991744dfb424affd: file-5cafbee1cb3e4929a1f32ac32abe23a0
+
+services/ownership.py:98: ValueError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_strict_restart_preserves_intentional_file_deletion
+1 failed, 66 deselected, 1 warning in 0.48s

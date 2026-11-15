@@ -19,9 +19,9 @@ def test_restart_marks_running_failed_but_preserves_queued(tmp_path):
     store=Store(tmp_path)
     fid='file-'+'0'*32
     store.save_generated(fid,b'hello','name',owner='legacy')
-    running=store.submit('transcribe',fid,{},'r')['id']
-    queued=store.submit('transcribe',fid,{},'q')['id']
+    running=store.submit('transcribe',fid,{},'r', owner='legacy')['id']
+    queued=store.submit('transcribe',fid,{},'q', owner='legacy')['id']
     store.update(running,status='running')
     store.recover()
-    assert store.task(running)['status']=='failed'
-    assert store.task(queued)['status']=='queued'
+    assert store.task(running, owner='legacy')['status']=='failed'
+    assert store.task(queued, owner='legacy')['status']=='queued'

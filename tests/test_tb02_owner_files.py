@@ -254,7 +254,7 @@ def test_tb02_global_upload_quota_is_atomic_between_app_instances(owner_env):
     import threading
     with owner_env.client() as first, owner_env.client() as second:
         # Sparse logical occupancy is test setup; real HTTP uploads race the remaining capacity.
-        first.app.state.store.add_file('file-' + 'e'*32, 'quota-fixture', 2*1024**3 - 3*1024**2)
+        first.app.state.store.add_file('file-' + 'e'*32, 'quota-fixture', 2*1024**3 - 3*1024**2, owner='legacy')
         barrier = threading.Barrier(2)
         def upload(c, owner):
             barrier.wait(timeout=3)

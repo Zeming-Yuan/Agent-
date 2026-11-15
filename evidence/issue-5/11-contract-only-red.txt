@@ -1,0 +1,59 @@
+F..F...                                                                  [100%]
+=================================== FAILURES ===================================
+_____ test_tb04_owner_contract_new_requests_only_use_owner_scoped_mapping ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-218/test_tb04_owner_contract_new_r0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfa63359d6e80>, wait_task=<function owner_env.<locals>.wait_task at 0xfa63359d6f20>)
+
+    def test_tb04_owner_contract_new_requests_only_use_owner_scoped_mapping(owner_env):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(owner_env.root)
+        contract_ownership(store.db, 'legacy')
+        with owner_env.client(identity_mode='strict') as c:
+            created = owner_env.submit(c, 'legacy', request_key='private-key')
+            assert created.status_code == 202
+            replay = owner_env.submit(c, 'legacy', request_key='private-key')
+            assert replay.json()['id'] == created.json()['id']
+            with store.connect() as db:
+>               assert db.execute('SELECT idem FROM tasks WHERE id=?', (created.json()['id'],)).fetchone()[0] is None
+E               AssertionError: assert 'private-key' is None
+
+tests/test_tb04_owner_contract.py:291: AssertionError
+_ test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating[missing-request] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-218/test_tb04_owner_contract_stric2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfa6335750180>, wait_task=<function owner_env.<locals>.wait_task at 0xfa6335751620>)
+problem = 'missing-request'
+
+    @pytest.mark.parametrize('problem', ['unowned', 'running', 'missing-request', 'wrong-version', 'global-index', 'dangling'])
+    def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating(owner_env, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(owner_env.root)
+        task = store.submit('image_generate', None, {'prompt': 'x'}, 'one', owner='legacy')
+        contract_ownership(store.db, 'legacy')
+        with store.connect() as db:
+            if problem == 'unowned':
+                db.execute('DELETE FROM object_owners')
+            elif problem == 'running':
+                db.execute("UPDATE tasks SET status='running'")
+            elif problem == 'missing-request':
+                db.execute('DELETE FROM task_requests')
+            elif problem == 'wrong-version':
+                db.execute('UPDATE ownership_migration SET version=2')
+            elif problem == 'global-index':
+                db.execute('CREATE UNIQUE INDEX global_idem ON tasks(idem)')
+            else:
+                db.execute("UPDATE tasks SET file_id='file-missing'")
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:315: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_new_requests_only_use_owner_scoped_mapping
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating[missing-request]
+2 failed, 5 passed, 46 deselected, 1 warning in 0.93s

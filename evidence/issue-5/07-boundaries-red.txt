@@ -1,0 +1,2020 @@
+.......FFF                                                               [100%]
+=================================== FAILURES ===================================
+__ test_tb04_owner_contract_backup_refuses_unsafe_filesystem[orphan-symlink] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-202/test_tb04_owner_contract_backu0')
+unsafe = 'orphan-symlink'
+
+    @pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'nested-backup'])
+    def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
+        from scripts.migrate_image_owners import backup_state
+        store = Store(tmp_path / 'runtime')
+        outside = tmp_path / 'outside'; outside.mkdir()
+        (outside / 'private').write_bytes(b'private')
+        target = tmp_path / 'backup'
+        if unsafe == 'orphan-symlink':
+            (store.files / 'orphan').symlink_to(outside / 'private')
+        elif unsafe == 'files-symlink':
+            store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+        else:
+            target = store.files / 'backup'
+>       with pytest.raises(ValueError, match='unsafe'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:217: Failed
+___ test_tb04_owner_contract_backup_refuses_unsafe_filesystem[files-symlink] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-202/test_tb04_owner_contract_backu1')
+unsafe = 'files-symlink'
+
+    @pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'nested-backup'])
+    def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
+        from scripts.migrate_image_owners import backup_state
+        store = Store(tmp_path / 'runtime')
+        outside = tmp_path / 'outside'; outside.mkdir()
+        (outside / 'private').write_bytes(b'private')
+        target = tmp_path / 'backup'
+        if unsafe == 'orphan-symlink':
+            (store.files / 'orphan').symlink_to(outside / 'private')
+        elif unsafe == 'files-symlink':
+            store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+        else:
+            target = store.files / 'backup'
+>       with pytest.raises(ValueError, match='unsafe'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:217: Failed
+___ test_tb04_owner_contract_backup_refuses_unsafe_filesystem[nested-backup] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-202/test_tb04_owner_contract_backu2')
+unsafe = 'nested-backup'
+
+    @pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'nested-backup'])
+    def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
+        from scripts.migrate_image_owners import backup_state
+        store = Store(tmp_path / 'runtime')
+        outside = tmp_path / 'outside'; outside.mkdir()
+        (outside / 'private').write_bytes(b'private')
+        target = tmp_path / 'backup'
+        if unsafe == 'orphan-symlink':
+            (store.files / 'orphan').symlink_to(outside / 'private')
+        elif unsafe == 'files-symlink':
+            store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+        else:
+            target = store.files / 'backup'
+        with pytest.raises(ValueError, match='unsafe'):
+>           backup_state(store.db, target)
+
+tests/test_tb04_owner_contract.py:218:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts/migrate_image_owners.py:73: in backup_state
+    shutil.copytree(db_path.parent / 'files', target / 'files')
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:536: in _copytree
+    copytree(srcobj, dstname, symlinks, ignore, copy_function,
+/usr/lib/python3.12/shutil.py:600: in copytree
+    return _copytree(entries=entries, src=src, dst=dst, symlinks=symlinks,
+/usr/lib/python3.12/shutil.py:498: in _copytree
+    os.makedirs(dst, exist_ok=dirs_exist_ok)
+<frozen os>:210: in makedirs
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+p = '/tmp/pytest-of-clusteradmin/pytest-202/test_tb04_owner_contract_backu2/runtime/files/backup/files/backup/files/backup...p/files/backup/files/backup/files/backup/files/backup/files/backup/files/backup/files/backup/files/backup/files/backup'
+
+>   ???
+E   RecursionError: maximum recursion depth exceeded
+
+<frozen posixpath>:104: RecursionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_backup_refuses_unsafe_filesystem[orphan-symlink]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_backup_refuses_unsafe_filesystem[files-symlink]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_backup_refuses_unsafe_filesystem[nested-backup]
+3 failed, 7 passed, 25 deselected, 1 warning in 4.10s

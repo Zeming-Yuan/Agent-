@@ -14,7 +14,7 @@ def test_tb01_legacy_expand_preserves_positional_writes(tmp_path):
     with store.connect() as db:
         db.execute('INSERT INTO files VALUES(?,?,?,?)',
                    ('file-' + 'b' * 32, 'new.png', 4, 1))
-    assert store.file(fid)['bytes'] == 3
+    assert store.file(fid, owner='legacy')['bytes'] == 3
     assert preflight_ownership(store.db)['unowned_files'] == 1
     expand_ownership(store.db, 'legacy')
     assert preflight_ownership(store.db)['unowned_files'] == 0
@@ -87,7 +87,7 @@ def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
     assert store.db.read_bytes() == before
 
 
-def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog, legacy_services):
+def test_tb01_legacy_expand_explicit_contract_precedes_modern_gateway(tmp_path, caplog, legacy_services):
     from fastapi.testclient import TestClient
     from services.gateway import create_app
     from services.ownership import preflight_ownership
@@ -97,6 +97,8 @@ def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path,
     store.save_generated(fid, b'old result', 'result.png')
     task = store.submit('image_generate', None, {}, 'old-request')
     store.update(task['id'], status='completed', result={'file_id': fid})
+    from scripts.migrate_image_owners import contract_ownership
+    contract_ownership(store.db, 'legacy')
     import logging
     caplog.set_level(logging.INFO, logger='agent-mm')
     with TestClient(create_app(tmp_path, 'test-secret-token', run_worker=False)) as client:
@@ -108,7 +110,7 @@ def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path,
             'unowned_idempotency_records': 0, 'running_tasks': 0,
         }
 
-    assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in caplog.text
+    assert 'ownership_preflight unowned_files=0 unowned_tasks=0 unowned_idempotency_records=0 running_tasks=0' in caplog.text
     assert 'old-request' not in caplog.text
     assert 'test-secret-token' not in caplog.text
 
@@ -228,7 +230,7 @@ def test_tb01_legacy_expand_registry_concurrent_registration_keeps_one_identity(
     assert registry.resolve(key) == principals[0]
 
 
-def test_tb01_legacy_expand_old_and_new_complete_image_flow_on_same_copy(owner_env, legacy_services):
+def test_tb01_legacy_expand_frozen_old_workers_keep_positional_compatibility(owner_env, legacy_services):
     import io
     from PIL import Image
     import httpx
@@ -263,14 +265,11 @@ def test_tb01_legacy_expand_old_and_new_complete_image_flow_on_same_copy(owner_e
     expand_ownership(old_store.db, 'legacy')
     assert preflight_ownership(old_store.db)['running_tasks'] == 1
     prior_results = []
-    for version in ('old', 'new', 'old'):
-        options = dict(transport=httpx.MockTransport(backend), audio_enabled=False, images_enabled=True)
-        if version == 'old':
-            application = legacy(root, owner_env.keys['legacy'], **options)
-        else:
-            from services.gateway import create_app
-            application = create_app(root, owner_env.keys['legacy'], key_registry=owner_env.registry,
-                                     identity_mode='legacy', **options)
+    # Historical expand compatibility is tested with frozen writers, not modern defaults.
+    # T04 separately covers the one-way transition into the modern strict service.
+    for _ in range(3):
+        application = legacy(root, owner_env.keys['legacy'], transport=httpx.MockTransport(backend),
+                             audio_enabled=False, images_enabled=True)
         with TestClient(application) as client:
             interrupted = client.get('/v1/tasks/' + stopped['id'], headers=auth).json()
             assert interrupted['status'] == 'failed'
@@ -379,7 +378,7 @@ def test_tb01_legacy_expand_serializes_with_old_positional_writer(tmp_path):
             job = pool.submit(expand)
             assert started.wait(timeout=3)
         job.result(timeout=3)
-    assert store.file('old-writer')['bytes'] == 1
+    assert store.file('old-writer', owner='legacy')['bytes'] == 1
     assert preflight_ownership(store.db)['unowned_files'] == 0
 
 
