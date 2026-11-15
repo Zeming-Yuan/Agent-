@@ -14,8 +14,8 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-216/tes
         with pytest.raises(ValueError, match='explicit key registry'):
 >           create_app(owner_env.root, owner_env.keys['legacy'], identity_mode='strict', run_worker=False)
 
-tests/test_tb04_owner_contract.py:270: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb04_owner_contract.py:270:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-216/test_tb04_owner_contract_stric0/runtime')
 token = 'j9dAXu_qjmuWNQ9rr35q0jO48tj6OBw4T3nyBMza4UY'

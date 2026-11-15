@@ -21,7 +21,7 @@ legacy_services = namespace(create_app=<function create_app at 0xea8f28bca0c0>, 
             assert replay.status_code == 202, replay.text
 >           assert replay.json()['id'] == original
 E           AssertionError: assert 'task-aa9ebc3...ce5a67f9b6512' == 'task-b27fb42...1dc1d5437e759'
-E             
+E
 E             - task-b27fb428395b4fe8b2c1dc1d5437e759
 E             + task-aa9ebc322b1c4037a66ce5a67f9b6512
 

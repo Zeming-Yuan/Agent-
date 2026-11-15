@@ -16,15 +16,15 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf32de924caa0>
         with pytest.raises(ValueError, match='explicit.*identity'):
 >           gateway.application()
 
-tests/test_tb04_owner_contract.py:344: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb04_owner_contract.py:344:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 services/gateway.py:458: in application
     return create_app(base/'.private/runtime', (base/'.private/agent-api.key').read_text().strip(),
                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /usr/lib/python3.12/pathlib.py:1029: in read_text
     with self.open(mode='r', encoding=encoding, errors=errors) as f:
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-224/test_tb04_owner_contract_facto0/source/.private/agent-api.key')
 mode = 'r', buffering = -1, encoding = 'locale', errors = None, newline = None

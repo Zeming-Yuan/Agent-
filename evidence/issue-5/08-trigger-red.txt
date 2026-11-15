@@ -15,7 +15,7 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-205/test_tb04_owner_con
         with store.connect() as db:
 >           assert [row[0] for row in db.execute('SELECT task_id FROM task_audit')] == [created['id']]
 E           AssertionError: assert [] == ['task-87aab8...49a3c08b2b66']
-E             
+E
 E             Right contains one more item: 'task-87aab82846a94afaa96b49a3c08b2b66'
 E             Use -v to get more diff
 

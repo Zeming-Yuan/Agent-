@@ -1,0 +1,45 @@
+{
+  "note": "Only trailing whitespace normalized in captured pytest text. Failure/pass outcomes, source lines and diagnostic content preserved. Original SHA256 retained for audit. No failing outcome rewritten.",
+  "files": [
+    {
+      "path": "evidence/issue-5/07-boundaries-red.txt",
+      "original_sha256": "3b5a98d4ac8ab1882f67c87303f2c59df9a3170d00afcbcbb2cafd51d399e53e",
+      "normalized_sha256": "50997c3792e343a2e4dc6d07cd70dfcb563ac68e4f0fc232f7a92aa3bb31eb30"
+    },
+    {
+      "path": "evidence/issue-5/b-compat-initial.txt",
+      "original_sha256": "1a04e8ff710f36241f4ac3138c43fbd7527d523cde20b617cb9d71eacd4a2266",
+      "normalized_sha256": "06a678424aad7e014a86fd995f874e33fc406ab0655ad99d00fb589d83c80224"
+    },
+    {
+      "path": "evidence/issue-5/13-factory-red.txt",
+      "original_sha256": "68ce62162dc9ab4a2d970a7996e7161a7c8b855b58c16e6418866a26e5644ea9",
+      "normalized_sha256": "7983af9db02aa263b7a0e548c0ef84fc6fc1e41fa1975a000855fed656b16a5b"
+    },
+    {
+      "path": "evidence/issue-5/08-trigger-red.txt",
+      "original_sha256": "d3916d5e5ef6dcef0051de6c0fb53898de29cfe1486c113b3836f3a3b5456fa9",
+      "normalized_sha256": "1b3e35fe258c326c42f9cefddab69537434685139014e0b387aa83b656ac04cf"
+    },
+    {
+      "path": "evidence/issue-5/10-strict-red.txt",
+      "original_sha256": "b0f67dce0ab1d20ab71a7c49c8072283a22cadfc954e6489c04758876f8d41a3",
+      "normalized_sha256": "32fba94510a5d31780fc9e1a3d06da9353de2fed2965a015fee73c31cbdd9211"
+    },
+    {
+      "path": "evidence/issue-5/15-schema-red.txt",
+      "original_sha256": "5f7509ab504e0fff38a795fdbf370fdab609203316613787581fc3981960f1af",
+      "normalized_sha256": "047eabbde58471144173441944f42c7257611bf51b1eabd65ad511e0101b4113"
+    },
+    {
+      "path": "evidence/issue-5/16-deletion-red.txt",
+      "original_sha256": "713ec5495e3a2c8b1a45de3dd766757143f8a5926009fdbfaf0810a4288efd34",
+      "normalized_sha256": "7e38b43ca2c62c5d34a981a8d29acca1b111b300b3d605cb23497904ad59b56a"
+    },
+    {
+      "path": "evidence/issue-5/09-owner-required-red.txt",
+      "original_sha256": "ae2c5cc06e0f70ab1c737a03a516eca5d26a8c6574736bc90aefb7b948685295",
+      "normalized_sha256": "f262c727aced7eade95c59e44dbb1f7a572c1202e59c1606f1c6abb92f71477e"
+    }
+  ]
+}

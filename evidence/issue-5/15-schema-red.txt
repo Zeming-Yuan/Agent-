@@ -83,12 +83,12 @@ tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_con
 >       assert inspect_contract(store.db)['ready'] is True
                ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb04_owner_contract.py:503: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb04_owner_contract.py:503:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 services/ownership.py:147: in inspect_contract
     return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xefe5722a35b0>
 files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-228/test_tb04_owner_contract_remov0/files')

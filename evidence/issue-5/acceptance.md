@@ -27,6 +27,6 @@ N/A (not configured): type checker, static lint, build/CI, Compose, seed, securi
 
 ## Review and recovery
 
-Two independent reviewer contexts per slice, fixed nonempty diffs only. Slice A details in review-a.md (initial Standards2P2/Spec1P2, both repairs red→green and fixed range0/0). Slice B review is recorded in review-b.md after completion; until then not claimed passed.
+Two independent reviewer contexts per slice, fixed nonempty diffs only. Slice A details in review-a.md (initial Standards2P2/Spec1P2, both repairs red→green and fixed range0/0). Slice B fixed54ab202...17913dd review is recorded in review-b.md:Standards0/Spec0, independently69 focused tests passed; no unhandled important findings or deferred minors.
 
 Recover only with T04 or an equivalent owner-aware implementation supporting task_requests and file_tombstones. Stop admission/all writers, confirm backend idle, preserve the current complete DB/files/registry in a new verified private archive, inspect the pre-cutover backup in another directory, validate the latest complete archive under isolated strict auth, then make an explicit production decision. Do not deploy a shared-access pre-owner version or overwrite newer writes/revocations with an old backup. Automated incremental merge and production cutover are outside this offline delivery.

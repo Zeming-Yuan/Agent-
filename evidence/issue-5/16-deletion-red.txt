@@ -20,8 +20,8 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-230/tes
 >       with owner_env.client(identity_mode='strict', backend=backend) as c:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb04_owner_contract.py:519: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb04_owner_contract.py:519:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 tests/conftest.py:74: in client
     app=create_app(env.root,keys["legacy"],key_registry=registry,
 services/gateway.py:48: in create_app
@@ -32,7 +32,7 @@ services/ownership.py:160: in inspect_contract
 services/ownership.py:151: in validate_contract
     counts = validate_ownership(db, files, legacy_owner=legacy_owner)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xf0480fc51120>
 files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-230/test_tb04_owner_contract_stric0/runtime/files')
@@ -47,13 +47,13 @@ files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-230/test_tb04_owner_contra
                   for row in db.execute('SELECT * FROM object_owners')} if 'object_owners' in tables else {}
         file_rows = {row['id']: row for row in db.execute('SELECT * FROM files')}
         tasks = {row['id']: row for row in db.execute('SELECT * FROM tasks')}
-    
+
         def owner(kind, oid):
             value = owners.get((kind, oid), legacy_owner)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f'unowned {kind} {oid}')
             return value
-    
+
         for (kind, oid), value in owners.items():
             if kind not in ('file', 'task') or oid not in (file_rows if kind == 'file' else tasks):
                 raise ValueError(f'dangling ownership {kind} {oid}')
