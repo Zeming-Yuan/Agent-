@@ -1,0 +1,282 @@
+{
+  "run_id": "t03-live-20261115T025108Z",
+  "started_utc": "2026-11-15T02:51:08.518856+00:00",
+  "scope": "real localhost HTTPS using existing project CA, real processes/SQLite/files/CPU PDF worker/MCP stdio; NO model loading",
+  "not_verified": [
+    "physical image generation/editing",
+    "Windows/macOS actual Harness",
+    "production release/recovery",
+    "memory calibration"
+  ],
+  "checks": [
+    {
+      "name": "port-initially-unused-18018",
+      "passed": true
+    },
+    {
+      "name": "port-initially-unused-18444",
+      "passed": true
+    },
+    {
+      "name": "port-initially-unused-18013",
+      "passed": true
+    },
+    {
+      "name": "image-model-not-running",
+      "passed": true
+    },
+    {
+      "name": "key-files-private",
+      "passed": true
+    },
+    {
+      "name": "trusted-existing-CA-real-HTTPS",
+      "passed": true,
+      "http": "HTTP/1.1"
+    },
+    {
+      "name": "untrusted-CA-rejected",
+      "passed": true
+    },
+    {
+      "name": "unknown-key401",
+      "passed": true
+    },
+    {
+      "name": "unknown-key401",
+      "passed": true
+    },
+    {
+      "name": "B-own-identity",
+      "passed": true
+    },
+    {
+      "name": "upload-own-file",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "upload-own-file",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "same-content-separate-owner-files",
+      "passed": true
+    },
+    {
+      "name": "foreign-file-GET-uniform404",
+      "passed": true
+    },
+    {
+      "name": "foreign-file-DELETE-uniform404",
+      "passed": true
+    },
+    {
+      "name": "foreign-media-reference-uniform404",
+      "passed": true
+    },
+    {
+      "name": "A-task-accepted",
+      "passed": true
+    },
+    {
+      "name": "CPU-worker-completed-real-task",
+      "passed": true,
+      "task_id": "task-39c3801df38142bb8233494d4a7b9f83",
+      "status": "completed"
+    },
+    {
+      "name": "A-real-PDF-text",
+      "passed": true
+    },
+    {
+      "name": "A-real-file-byte-download",
+      "passed": true
+    },
+    {
+      "name": "upload-own-file",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "A-content-replay-new-upload-ID",
+      "passed": true
+    },
+    {
+      "name": "A-changed-payload409",
+      "passed": true
+    },
+    {
+      "name": "B-task-accepted",
+      "passed": true
+    },
+    {
+      "name": "CPU-worker-completed-real-task",
+      "passed": true,
+      "task_id": "task-0e1c444bc08e43b3a303dea6e95eff74",
+      "status": "completed"
+    },
+    {
+      "name": "B-real-PDF-text",
+      "passed": true
+    },
+    {
+      "name": "B-real-file-byte-download",
+      "passed": true
+    },
+    {
+      "name": "upload-own-file",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "name": "B-content-replay-new-upload-ID",
+      "passed": true
+    },
+    {
+      "name": "B-changed-payload409",
+      "passed": true
+    },
+    {
+      "name": "cross-owner-same-request-key-independent",
+      "passed": true
+    },
+    {
+      "name": "A-foreign-task-GET-uniform404",
+      "passed": true
+    },
+    {
+      "name": "A-foreign-task-POST-uniform404",
+      "passed": true
+    },
+    {
+      "name": "B-foreign-task-GET-uniform404",
+      "passed": true
+    },
+    {
+      "name": "B-foreign-task-POST-uniform404",
+      "passed": true
+    },
+    {
+      "name": "revoked-key401",
+      "passed": true
+    },
+    {
+      "name": "rotation-retains-owner-and-original-result",
+      "passed": true
+    },
+    {
+      "name": "rotated-key-original-file200",
+      "passed": true
+    },
+    {
+      "name": "forged-owner422",
+      "passed": true
+    },
+    {
+      "name": "real-offline-image-backend503",
+      "passed": true,
+      "detail": "Image backend unavailable; do not repeatedly submit new tasks"
+    },
+    {
+      "name": "real-MCP-stdio-tool-discovery",
+      "passed": true,
+      "protocol": "2025-11-25"
+    },
+    {
+      "name": "MCP-generate_image-expected-503",
+      "passed": true,
+      "expected_http": 503
+    },
+    {
+      "name": "MCP-edit_image-expected-503",
+      "passed": true,
+      "expected_http": 503
+    },
+    {
+      "name": "MCP-get_image_task-expected-404",
+      "passed": true,
+      "expected_http": 404
+    },
+    {
+      "name": "MCP-cancel_image_task-expected-404",
+      "passed": true,
+      "expected_http": 404
+    },
+    {
+      "name": "global-slot-0",
+      "passed": true
+    },
+    {
+      "name": "global-slot-1",
+      "passed": true
+    },
+    {
+      "name": "global-slot-2",
+      "passed": true
+    },
+    {
+      "name": "global-slot-3",
+      "passed": true
+    },
+    {
+      "name": "full-queue-replay-does-not-occupy-slot",
+      "passed": true
+    },
+    {
+      "name": "global-fifth429-retry-after",
+      "passed": true
+    },
+    {
+      "name": "foreign-cancel-cannot-free-slot",
+      "passed": true
+    },
+    {
+      "name": "queue-still-full-after-foreign-cancel",
+      "passed": true
+    },
+    {
+      "name": "own-cancel200",
+      "passed": true
+    },
+    {
+      "name": "own-cancel-frees-one-slot",
+      "passed": true
+    }
+  ],
+  "services_before": {
+    "ltx-worker": "active",
+    "ltx-resource-guard": "active",
+    "agent-mm-image": "failed",
+    "agent-mm-image-memory-guard": "inactive",
+    "agent-mm-gateway": "inactive",
+    "agent-mm-https": "inactive"
+  },
+  "trusted_ca_sha256": "86add5dc332c9c6c759318cb67826779d9994e8c667a8cb32550983c3733cfb8",
+  "task_ids": {
+    "A": "task-39c3801df38142bb8233494d4a7b9f83",
+    "B": "task-0e1c444bc08e43b3a303dea6e95eff74"
+  },
+  "pdf_result_sha256": "79cec49e872c620fe25d308f5a1deec601596cdf916f54e906819e925de19b8b",
+  "status": "passed-with-model-and-desktop-tests-not-run",
+  "cleanup": {
+    "owned_processes_stopped": true,
+    "test_keys_revoked": true,
+    "services_after": {
+      "ltx-worker": "active",
+      "ltx-resource-guard": "active",
+      "agent-mm-image": "failed",
+      "agent-mm-image-memory-guard": "inactive",
+      "agent-mm-gateway": "inactive",
+      "agent-mm-https": "inactive"
+    },
+    "original_service_states_preserved": true
+  },
+  "trusted_ca_unchanged": true,
+  "raw_credentials_absent_from_service_logs": true,
+  "min_available_gib_observed": 54.984,
+  "sampling_note": "1Hz observed availability only; not a profile/memory-safety calibration",
+  "finished_utc": "2026-11-15T02:51:11.071859+00:00",
+  "checks_passed": 55
+}

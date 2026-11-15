@@ -1,0 +1,24 @@
+{
+  "id": "task-ccfd18f445534bfc859b984972d88156",
+  "kind": "pdf",
+  "file_id": "file-f62619c23fc94e16a228ed3abd6ba7bf",
+  "options": {
+    "language": "zh",
+    "prompt": "fixture"
+  },
+  "status": "completed",
+  "progress": 1.0,
+  "result": {
+    "source_file_id": "file-f62619c23fc94e16a228ed3abd6ba7bf",
+    "pages": [
+      {
+        "page": 1,
+        "text": "Live T03 private document. Selectable text verifies actual CPU PDF extraction without any vision model.",
+        "truncated": false
+      }
+    ]
+  },
+  "error": null,
+  "created": 1794711194,
+  "updated": 1794711194
+}
