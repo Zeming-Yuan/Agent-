@@ -1,0 +1,278 @@
+{
+  "base": "ea6092f33bc394315a6801166180cabb2a70694e",
+  "source_head": "f822c9eb40d2849f3d6d2e41da7e4caf60ae0288",
+  "product": "/home/clusteradmin/Desktop/Agent多模态服务",
+  "paths": [
+    {
+      "path": "OPERATIONS.md",
+      "before": "08aa5adfb618a9187f32dd3665590155d051d61ded648a8d55aaa5de03f0e797",
+      "after": "20a6bf70fff6999b3a4f0a35ebfb950bda052a940f9b9d279693bd7b90b82646"
+    },
+    {
+      "path": "docs/IMAGE-SERVICE.md",
+      "before": "73de187f1d7447ec6885a22c9773fb9f94507e24b62f217f70b4faea0f6b9d83",
+      "after": "86da487d87154933910dabad5d6ea4f64523d76536a8ae8ec12e49c9dfc88e67"
+    },
+    {
+      "path": "docs/adr/0001-owner-scoped-storage.md",
+      "before": "2039c5de5f6d0cf40889eca576cdb53441811044a6d4f08ff843bb39378fad2e",
+      "after": "cdd306fdabdc5a807e248eb29486284c1702222f95a193c162e7afaa15db897d"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-14-image-05-server-resume.md",
+      "before": "0ca5f990c78282be2bfd666b4a11343abbd5b5fad5c616757c4440435fc291cc",
+      "after": "c1c43c13ded3e550638f9d67b64563dd2496d115655e97198d4c2e73355aa271"
+    },
+    {
+      "path": "evidence/issue-6/01-offline-green.txt",
+      "before": null,
+      "after": "f482980009886c61e6879881aac4b252ee47e2718e312e63c5f885993ab42392"
+    },
+    {
+      "path": "evidence/issue-6/01-offline-red.txt",
+      "before": null,
+      "after": "bf564c313311173962cf243604631d9837a0aded0a3f391c38f553bb0831dd22"
+    },
+    {
+      "path": "evidence/issue-6/02-pagination-green.txt",
+      "before": null,
+      "after": "61fec4234215399b1bac2718fd3dc1df545c59bd9fd6c8669f03a3d98f78671a"
+    },
+    {
+      "path": "evidence/issue-6/02-pagination-red.txt",
+      "before": null,
+      "after": "d5c96a349897aa948f01ea0bcb09c980099b832d11945a96234846ff5ebff959"
+    },
+    {
+      "path": "evidence/issue-6/03-list-validation-green.txt",
+      "before": null,
+      "after": "f9443ffefa0e66dbe5765e68f482a1d49292dff2fc5eb52978e295a4431b05b5"
+    },
+    {
+      "path": "evidence/issue-6/03-list-validation-red.txt",
+      "before": null,
+      "after": "c847fa0a5f7469bf2d29498d466a43de38e76b7b09531a321f6c424712bc32f3"
+    },
+    {
+      "path": "evidence/issue-6/04-disconnect-green.txt",
+      "before": null,
+      "after": "5634958840a8302e4d7f785653a1b8f89b422ba463d47d7ee8142d0717e60862"
+    },
+    {
+      "path": "evidence/issue-6/04-disconnect-harness-invalid.txt",
+      "before": null,
+      "after": "831cd5f51d7d59819e305484ac506cfb9ded3360ce9baf0246c0662f57565c9d"
+    },
+    {
+      "path": "evidence/issue-6/04-disconnect-harness-timeout.txt",
+      "before": null,
+      "after": "77a944435da722e2b5b5d4f312221194af55318753bcffc3acf7b4ee68395bdf"
+    },
+    {
+      "path": "evidence/issue-6/04-disconnect-red.txt",
+      "before": null,
+      "after": "53f822a42df70a9446af95f045ca4f0d427f11838dac1dd55ba97e773da85156"
+    },
+    {
+      "path": "evidence/issue-6/05-sync-offline-green.txt",
+      "before": null,
+      "after": "f10d0ac260b2fc79be4132d45dd18babf40647e2c211cdac4383555766ffedee"
+    },
+    {
+      "path": "evidence/issue-6/05-sync-offline-red.txt",
+      "before": null,
+      "after": "1d30c1db9ece5a609aa6b72daee092024108504eb4bd1f1199759bfb803e1449"
+    },
+    {
+      "path": "evidence/issue-6/06-timeout-lost-existing.txt",
+      "before": null,
+      "after": "69cfaff6483d0cab155311651480af4b8bb4198f72627810209973b128ac84e9"
+    },
+    {
+      "path": "evidence/issue-6/07-migration-regression.txt",
+      "before": null,
+      "after": "56e1de1d1ef5fc37055a57b4915c261d3a75d9384a270d7941b52e98d14dced4"
+    },
+    {
+      "path": "evidence/issue-6/07-strict-crash-green.txt",
+      "before": null,
+      "after": "cda1f1a274cadc55e48453288f7da069363ac93ffe0c980357b3138febb86195"
+    },
+    {
+      "path": "evidence/issue-6/07-strict-crash-red.txt",
+      "before": null,
+      "after": "63ceb048c8126cbf61196d0207d7cd112a2049a7063299a92180e052a29e8e42"
+    },
+    {
+      "path": "evidence/issue-6/08-boundaries-existing.txt",
+      "before": null,
+      "after": "2e556ead9f3fe6574b12d6128542f8b2e03a37b108b701b78145da54b4340a1c"
+    },
+    {
+      "path": "evidence/issue-6/09-worker-key-existing.txt",
+      "before": null,
+      "after": "d7272b7ac64e737b009777f2d7823cfa583418f43067367582b76b601fcc2787"
+    },
+    {
+      "path": "evidence/issue-6/10-strict-running-corruption.txt",
+      "before": null,
+      "after": "7d2e2de451995eb631a69b9ee0e0bb5a0afdd7a911671508a8e907d6ffc7a2f8"
+    },
+    {
+      "path": "evidence/issue-6/11-factory-crash-green.txt",
+      "before": null,
+      "after": "87c4917b3f59152802c0da287f6f921d69c6555e3b47ab759cf1465efb2c5d3d"
+    },
+    {
+      "path": "evidence/issue-6/11-factory-crash-red.txt",
+      "before": null,
+      "after": "72206a8367d3ee3e5063344b6bf5bdc7f49554b4e85776c566fe40d47cbbeae9"
+    },
+    {
+      "path": "evidence/issue-6/a-final.txt",
+      "before": null,
+      "after": "1ec5d60a078bd625a2ef2c2c613b770a7b96101d661690be8d3c9db8d3b12bd2"
+    },
+    {
+      "path": "evidence/issue-6/a-regression.txt",
+      "before": null,
+      "after": "79489ce59b652ba1210e211d760490f812fac0c2e9c9850aad5d5d08314aa928"
+    },
+    {
+      "path": "evidence/issue-6/a-review-contract-green.txt",
+      "before": null,
+      "after": "f6cf3d456fb4bf7965d80a8b8e42f94bcb2b94902caa79995c14b2b8fcb30ab7"
+    },
+    {
+      "path": "evidence/issue-6/a-review-contract-red.txt",
+      "before": null,
+      "after": "524b9172fa739ad157f5ce986cdee9f62a498cbbd625283305a20d00969d7fce"
+    },
+    {
+      "path": "evidence/issue-6/a-review-race-green.txt",
+      "before": null,
+      "after": "02765252582670bf2ca2243e56514dab0286da5fb78320a85706d4138a002178"
+    },
+    {
+      "path": "evidence/issue-6/a-review-race-red.txt",
+      "before": null,
+      "after": "2ed896f90348560049abce27ee67fbc0fa326968c8b2be1f003c7ec686934d56"
+    },
+    {
+      "path": "evidence/issue-6/a-review-regression.txt",
+      "before": null,
+      "after": "4b031becc6b6a0e25230009166bf17a9306ff192b6e50b2dee8d6f38739e6174"
+    },
+    {
+      "path": "evidence/issue-6/acceptance.md",
+      "before": null,
+      "after": "f52bd65e176d238662f6ad975cd30828eae0a9e874e1cc289f2ab0ad5dc270c4"
+    },
+    {
+      "path": "evidence/issue-6/b-affected.txt",
+      "before": null,
+      "after": "ebc58f2c962dacce962acdb002759fb8a6b6b87cf5cf293c8f448d33db403937"
+    },
+    {
+      "path": "evidence/issue-6/b-before-review.txt",
+      "before": null,
+      "after": "b2f436f15e5adaef82b74da74ea9e1a5b58d3d9e7eac9d6f4b7b6c0f23623eb7"
+    },
+    {
+      "path": "evidence/issue-6/b-commit-affected.txt",
+      "before": null,
+      "after": "54c6b65a1d90f62f637d1cead4f8323aa6eb2991f7cdea3e74662abec4ba016a"
+    },
+    {
+      "path": "evidence/issue-6/b-focused-final.txt",
+      "before": null,
+      "after": "8e03b69059fc18e02b22777459039fe8dd9acbc510b72fa2192bc8e02330c686"
+    },
+    {
+      "path": "evidence/issue-6/b-focused.txt",
+      "before": null,
+      "after": "826c1532998c3d8c7a501de47dcec018fb77b2e5266717ae32a4b2ab054fc269"
+    },
+    {
+      "path": "evidence/issue-6/b-interim-regression.txt",
+      "before": null,
+      "after": "491bc4991ed916b5f4bade2049cb92d1c374949ec955fafb553858b9677629a7"
+    },
+    {
+      "path": "evidence/issue-6/baseline-tests.txt",
+      "before": null,
+      "after": "dd0ffee7a9f8ef5e670ced602213d44cbc77aa03c35eb0161278854c7e16d5b5"
+    },
+    {
+      "path": "evidence/issue-6/baseline.json",
+      "before": null,
+      "after": "f9a99540c9c479f4a30ed0461f6008c751b7724dcbdfbf193c5cda8604001692"
+    },
+    {
+      "path": "evidence/issue-6/collect.txt",
+      "before": null,
+      "after": "6cde0d05e52bab2daa35c5a2f8b46f6497dfd1b4a1e9b4adb2a83a7ce069d497"
+    },
+    {
+      "path": "evidence/issue-6/final-affected.txt",
+      "before": null,
+      "after": "17a834b36f85ab82dce6b4bf9a1637de18350c13b6ae7d49ff6474ed9fad9c90"
+    },
+    {
+      "path": "evidence/issue-6/final-collect.txt",
+      "before": null,
+      "after": "ebfc07fe95d47faa5fe10b26fe8c44c7534fd115f18f28d6741012257d9e7a76"
+    },
+    {
+      "path": "evidence/issue-6/progress.md",
+      "before": null,
+      "after": "35c86975e495a6ae0886de71599bc7663ecbb3917f1f8c9b73aff174feb708d6"
+    },
+    {
+      "path": "evidence/issue-6/review-a.md",
+      "before": null,
+      "after": "e1267ee0426a708f8416ed4d5005167f2736871b2686db75b6e4cd064485e100"
+    },
+    {
+      "path": "evidence/issue-6/review-b.md",
+      "before": null,
+      "after": "1461d51d08065a1393e443df3208fba83e317d592e680d654c17e2ff114eb17c"
+    },
+    {
+      "path": "services/gateway.py",
+      "before": "998b97cc5994b57ee163ecbfe2074fc656ad07a063206af78a47b91d80223c19",
+      "after": "de977d3742d7a59a3270bc4161522a57082a0372a2fee30f264c1574b69e8f96"
+    },
+    {
+      "path": "services/image_routes.py",
+      "before": "f96d8092940a45380f09ca4b3aaeb049a19cd5ca36107f872e13343c33ab6d2c",
+      "after": "b5084abb64eafd59f5bdf95da2ced47e7f8307377c45a2f78177a8af22d61c54"
+    },
+    {
+      "path": "services/ownership.py",
+      "before": "e0dafe5f9bb90e807174b1a607cc4477d41373de4131358af9df4530444e4f8a",
+      "after": "83692d605414aa938f8d73616fe1739c384453240c9725104acd3253c14fe3f7"
+    },
+    {
+      "path": "services/store.py",
+      "before": "9b578f559bdb78ee1b2b9e89ad64c148840a1b826431212983129f8bf5efefbf",
+      "after": "47f19d931940642763ae51e1e45b592b554bdae27b96ddb4129d711da2678c06"
+    },
+    {
+      "path": "tests/test_tb04_owner_contract.py",
+      "before": "7cd46d4223a3f453d85022afa6278d8e35d36e28e6f8b83524d41c06d4ea76a6",
+      "after": "c23b34f42deec7e395e148d14e740a5d0c03ed6a661e575b1ac4f8e766423308"
+    },
+    {
+      "path": "tests/test_tb05_server_resume.py",
+      "before": null,
+      "after": "6eb65f9790ec75532c8d5e317581b3d5964a372d63dd0cad11dc7cd214f90b4d"
+    },
+    {
+      "path": "evidence/issue-6/product-final.txt",
+      "before": "07a4de558eceba1bf3f302eebc80bc13f0fbf5475c334a0f59c371118d11c0d4",
+      "after": "07a4de558eceba1bf3f302eebc80bc13f0fbf5475c334a0f59c371118d11c0d4"
+    }
+  ],
+  "note": "Per-path delivery only; no deployment/private data. source_head identifies the reviewed snapshot; hashes also include later delivery evidence. Manifest excludes itself."
+}

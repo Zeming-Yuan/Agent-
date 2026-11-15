@@ -37,7 +37,7 @@ N/A (not configured): typechecking, static lint, build/CI, Compose, seed, securi
 
 No schema migration is introduced. Before rollback, stop new work/writers, preserve latest database/files/registry together, confirm backend work is stopped/cleaned, then use an owner-aware version retaining task_requests and deletion tombstones. Keep disconnect-does-not-cancel behavior; old T04 strict may require explicit maintenance reconciliation before restart. Do not overwrite newer writes/revocations with an earlier backup, delete request maps, restore shared access or blindly re-run failed work.
 
-Product delivery must verify each changed path against base before replacing, then compare SHA256. Only scoped code/tests/docs/sanitized evidence, no private data or config. baseline.json records controlled checkout inputs (product matched before implementation); final sync-manifest.json records actual selective delivery when performed. Until recorded, delivery and product-cwd verification remain pending.
+Product delivery must verify each changed path against base before replacing, then compare SHA256. Only scoped code/tests/docs/sanitized evidence, no private data or config. baseline.json records controlled checkout inputs (product matched before implementation); final sync-manifest.json records actual selective delivery when performed. Selective delivery has now been recorded and verified below.
 
 Additional factory-path RED→GREEN:11-factory-crash-red reproduced the separate application() precheck refusal; factory now uses the same runtime inspection as create_app.11-factory-crash-green verifies both direct reconstruction and isolated factory restore,2passed. b-commit-affected235passed precedes this final one-line factory change; b-before-review is the fresh affected factory/plan selection. Final postreview14-file result will supersede prior counts.
 
@@ -48,3 +48,9 @@ Additional factory-path RED→GREEN:11-factory-crash-red reproduced the separate
 - b-before-review.txt:38passed/202deselected includes final factory path and planned regression.
 - Whole-range diff hygiene found only captured pytest-log trailing spaces; normalized whitespace in sanitized evidence, preserving diagnostics. Fresh final-range check is required after committing these evidence changes.
 - Final scope excludes four existing audio-only tests; fullsuite was not run. No unconfigured gate or physical acceptance is implied.
+
+## Final selective delivery
+
+53 reviewed committed payload paths were checked against the approved base in the original non-Git product cwd, then copied per-file and SHA256 verified (sync-manifest.json). No baseline conflicts. Original product cwd fresh14-file command:236passed,1existing warning (product-final.txt); this is separate from source-checkout final-affected.txt236passed. Final evidence additions and updates are synchronized separately and included in the manifest; manifest excludes its own hash.
+
+Both slices independently reviewed at fixed nonempty ranges: A Standards0/Spec0 after repairs; B Standards0/Spec0. No deferred minor or unhandled important issue. Whole task range diff-check passes after whitespace-only normalization of diagnostic captures; scoped credential/private/link marker inspection found0 (not a configured security scanner). Code/tests/API documentation/operations/ADR/plan context and evidence are synchronized. No unrequested/private files added, no source push or deployment. Offline #6 implementation is complete; physical/platform/production gates remain unverified under existing #4/#5/#12–#15, parent spec remains open and unchanged.
