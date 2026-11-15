@@ -7,7 +7,6 @@ import os
 import time
 import uuid
 from pathlib import Path
-import anyio
 from PIL import Image, ImageDraw, ImageFont
 
 LOG=logging.getLogger('agent-mm.images')
@@ -174,13 +173,23 @@ async def process_image(item,store,client,url,*,unload_models=True):
             await asyncio.sleep(.5)
         raise TimeoutError('Image inference timeout')
     finally:
-        try:
-            if pid:
-                with anyio.CancelScope(shield=True):
+        async def cleanup():
+            try:
+                if pid:
                     await clear_backend(client,url,pid)
-                    await client.post(url+'/history',json={'delete':[pid]},timeout=10)
-        finally:
-            cleanup_scratch(store,tid,names)
+                    response=await client.post(url+'/history',json={'delete':[pid]},timeout=10)
+                    response.raise_for_status()
+            finally:
+                cleanup_scratch(store,tid,names)
+        cleanup_job=asyncio.create_task(cleanup())
+        interrupted=False
+        while not cleanup_job.done():
+            try:
+                await asyncio.shield(cleanup_job)
+            except asyncio.CancelledError:
+                interrupted=True
+        cleanup_job.result()
+        if interrupted:raise asyncio.CancelledError
 
 
 async def image_worker(store,client,url,active):
@@ -204,13 +213,18 @@ async def image_worker(store,client,url,active):
         job=asyncio.create_task(process_image(item,store,client,url,unload_models=last_kind!=profile));active[tid]=job
         try:
             result=await job
-            store.transition(tid,status='completed',stage='completed',
-                             expected_seq=store.worker_task(tid)['stage_seq'],result=result)
+            task=store.worker_task(tid)
+            if task['cancel_requested']:
+                store.delete_file(result['file_id'],owner=store.worker_task(tid)['owner'])
+                store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
+            else:
+                store.transition(tid,status='completed',stage='completed',expected_seq=task['stage_seq'],result=result)
             last_kind=profile
         except asyncio.CancelledError:
             task=store.worker_task(tid)
             if task['cancel_requested']:
                 store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
+                if asyncio.current_task().cancelling():raise
             else:
                 store.update(tid,status='failed',error='Image worker interrupted');raise
         except SubmissionUncertain:

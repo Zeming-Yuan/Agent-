@@ -1,0 +1,86 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_tb07_cancel_and_completion_have_one_terminal _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-350/test_tb07_cancel_and_completio0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe83f9e6cf060>, wait_task=<function owner_env.<locals>.wait_task at 0xe83f9e6cf100>)
+
+    def test_tb07_cancel_and_completion_have_one_terminal(owner_env):
+        import asyncio
+        import json
+        import threading
+    
+        backend = owner_env.new_backend()
+        cleanup_entered = threading.Event()
+        cancel_entered = threading.Event()
+        release = threading.Event()
+        gates = {}
+        async def external(request):
+            if request.url.path == '/history' and json.loads(request.content).get('delete'):
+                cleanup_entered.set()
+                await asyncio.to_thread(release.wait, 3)
+                gates['cancel'].set()
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            # A request-delivery gate at the HTTP boundary models cancellation
+            # arriving exactly as the last external cleanup request returns.
+            for route in c.app.routes:
+                if getattr(route, 'path', None) == '/v1/tasks/{tid}/cancel':
+                    original = route.dependant.call
+                    async def delayed(tid, request):
+                        gates['cancel'] = asyncio.Event()
+                        jobs = [t for t in asyncio.all_tasks() if t.get_coro().__name__ == 'process_image']
+                        assert len(jobs) == 1
+                        job = jobs[0]
+                        cancel_entered.set()
+                        await gates['cancel'].wait()
+                        while not job.done():
+                            await asyncio.sleep(0)
+                        response = await original(tid, request)
+                        assert response['status'] == 'running'
+                        assert response['stage'] == 'cancelling'
+                        return response
+                    route.dependant.call = delayed
+                    break
+            tid = owner_env.submit(c).json()['id']
+            assert cleanup_entered.wait(2)
+            responses = []
+            sender = threading.Thread(target=lambda: responses.append(c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))))
+            sender.start()
+            try:
+                assert cancel_entered.wait(2)
+            finally:
+                release.set()
+            sender.join(3)
+            assert not sender.is_alive()
+            route.dependant.call = original
+>           done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('completed', 'cancelled'))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:109: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+c = <starlette.testclient.TestClient object at 0xe83f9dc99e80>
+tid = 'task-b7d50c1cc0ec472cb59e036800db38b1', owner = 'A'
+predicate = <function test_tb07_cancel_and_completion_have_one_terminal.<locals>.<lambda> at 0xe83f9dbffba0>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-b7d50c1cc0ec472cb59e036800db38b1', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'running', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794721425, 'updated': 1794721425, 'stage': 'cancelling', 'stage_seq': 2, 'stage_started_at': 1794721425.3792136, 'stage_updated_at': 1794721425.3792136, 'blocked_reason': None, 'cancel_requested': True}
+
+tests/conftest.py:97: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancel_and_completion_have_one_terminal
+1 failed, 3 deselected, 1 warning in 3.42s

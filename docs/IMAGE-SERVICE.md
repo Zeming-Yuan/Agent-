@@ -142,3 +142,5 @@ T06 Windows路径保护补充：拒绝路径分量末尾点/空格、Windows保�
 ## T07 切片 A：取消清理
 
 运行图片任务的显式取消返回 running/cancelling；cancel_requested 持久化，重复取消保持同一 stage_seq，不二次打断清理。只有定向停止及 scratch 清理返回后才 cancelled，再选择下一单。queued 可直接 cancelled。HTTP 查询仍按 owner 隔离；任务阶段存 task_runtime 旁表，状态/结果和阶段使用同一 BEGIN IMMEDIATE/CAS 更新。阶段事件及 MCP 中文展示由本票切片 B 补齐，本节不是整票验收声明。
+
+T07 A审查修复：原生 asyncio 重复取消不得打断清理；清理结算后向上继续传播服务关闭。取消与已返回结果相遇时明确 cancelled，回收尚未交付结果，不滞留 cancelling。状态和阶段以单条 JOIN 读取同一提交快照。

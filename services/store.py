@@ -191,7 +191,9 @@ class Store:
                     'next_cursor': page[-1]['id'] if len(rows) > limit else None}
 
     def _task(self, db, tid):
-        row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
+        row = db.execute('''SELECT t.*,r.stage,r.stage_seq,r.stage_started_at,r.stage_updated_at,
+            r.blocked_reason,r.cancel_requested FROM tasks t LEFT JOIN task_runtime r ON r.task_id=t.id
+            WHERE t.id=?''', (tid,)).fetchone()
         if row is None:
             raise HTTPException(404, 'Task not found')
         item = dict(row)
@@ -199,10 +201,7 @@ class Store:
             item[key] = json.loads(item[key]) if item[key] else None
         for key in ('idem', 'fingerprint'):
             item.pop(key)
-        runtime = db.execute('SELECT * FROM task_runtime WHERE task_id=?', (tid,)).fetchone()
-        if runtime:
-            item.update({k: runtime[k] for k in runtime.keys() if k != 'task_id'})
-            item['cancel_requested'] = bool(item['cancel_requested'])
+        item['cancel_requested'] = bool(item['cancel_requested'])
         return item
 
     def request_fingerprint(self, kind, fid, options, *, owner):
