@@ -16,7 +16,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-548/tes
             owner_env.wait_task(c, b1, 'B', lambda t: t['status'] == 'completed')
 >           assert [job['client_id'] for job in backend.jobs] == [a1, b1, a2]
 E           AssertionError: assert ['task-b7ec4e...8b797a989f83'] == ['task-b7ec4e...0105279447bc']
-E             
+E
 E             At index 1 diff: 'task-4a2b146c8f5743f1a3940105279447bc' != 'task-997a25bc901d4c0ab1e78b797a989f83'
 E             Use -v to get more diff
 

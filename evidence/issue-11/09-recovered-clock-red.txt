@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb10_recovered_head_waits_for_occupied_turn_without_expiring _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-563/test_tb10_recovered_head_waits0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xeb6aab3716c0>, wait_task=<function owner_env.<locals>.wait_task at 0xeb6aab371760>)
+
+    def test_tb10_recovered_head_waits_for_occupied_turn_without_expiring(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        recovered = threading.Event()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid), available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        a, b = seed_blocked_pair(owner_env, backend, config)
+        with configured_client(owner_env, backend, config) as c:
+            try:
+                assert backend.started.wait(1)
+                recovered.set()
+                # The resource condition recovers before its own deadline; a longer
+                # unrelated inference must not count as continued resource waiting.
+                threading.Event().wait(.4)
+                state = c.get('/v1/tasks/'+a, headers=owner_env.auth('A')).json()
+>               assert state['status'] == 'queued', state
+E               AssertionError: {'blocked_reason': 'resource_wait_expired', 'cancel_requested': False, 'created': 1794732548, 'error': 'Image resource wait expired: system_memory', ...}
+E               assert 'failed' == 'queued'
+E
+E                 - queued
+E                 + failed
+
+tests/test_tb10_fair_queue.py:165: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_recovered_head_waits_for_occupied_turn_without_expiring
+1 failed, 7 deselected, 1 warning in 0.72s

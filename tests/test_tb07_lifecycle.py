@@ -478,7 +478,9 @@ def test_tb07_late_internal_update_cannot_overwrite_terminal(owner_env):
         # A failed terminal must have the same protection as cancellation.
         other = owner_env.submit(c).json()['id']
         store = c.app.state.store
-        failed = store.event(other, {'type': 'failed', 'error': 'fixture'})
+        store.event(other, {'type': 'failed', 'error': 'fixture'})
+        failed = c.get('/v1/tasks/' + other, headers=owner_env.auth('A')).json()
+        assert failed['status'] == 'failed' and failed['error'] == 'fixture'
         store.update(other, status='running')
         assert c.get('/v1/tasks/' + other, headers=owner_env.auth('A')).json() == failed
 

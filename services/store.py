@@ -63,10 +63,12 @@ class Store:
               task_id TEXT NOT NULL UNIQUE);
             CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
               last_owner TEXT, claimed_task TEXT);
-            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_schedule(singleton,last_owner,claimed_task) VALUES(1,NULL,NULL);
             INSERT OR IGNORE INTO image_enqueues(task_id)
               SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
             ''')
+            if 'prompt_id' not in {row['name'] for row in db.execute('PRAGMA table_info(image_schedule)')}:
+                db.execute('ALTER TABLE image_schedule ADD COLUMN prompt_id TEXT')
             columns = {row['name'] for row in db.execute('PRAGMA table_info(task_runtime)')}
             for name in ('step', 'steps'):
                 if name not in columns:
@@ -178,7 +180,7 @@ class Store:
         with self.connect() as db:
             db.execute('BEGIN')
             require_owner(db, 'task', tid, owner)
-            return self._queue_task(db, self._task(db, tid), self._image_snapshot(db))
+            return self._queue_task(self._task(db, tid), self._image_snapshot(db))
 
     def lookup_request(self, owner, request_key, fingerprint):
         """Read an existing owner request without requiring backend readiness."""
@@ -193,7 +195,7 @@ class Store:
             if row['fingerprint'] != fingerprint:
                 raise HTTPException(409, 'Idempotency key reused with different request')
             require_owner(db, 'task', row['task_id'], owner)
-            return self._queue_task(db, self._task(db, row['task_id']), self._image_snapshot(db))
+            return self._queue_task(self._task(db, row['task_id']), self._image_snapshot(db))
 
     def list_tasks(self, owner, *, status=None, after=None, limit=20):
         if status is not None and status not in ('queued', 'running', 'completed', 'failed', 'cancelled'):
@@ -219,7 +221,7 @@ class Store:
                 ' ORDER BY t.created,t.rowid LIMIT ?', (*params, limit + 1)).fetchall()
             page = rows[:limit]
             snapshot = self._image_snapshot(db)
-            return {'object': 'list', 'data': [self._queue_task(db, self._task(db, row['id']), snapshot) for row in page],
+            return {'object': 'list', 'data': [self._queue_task(self._task(db, row['id']), snapshot) for row in page],
                     'has_more': len(rows) > limit,
                     'next_cursor': page[-1]['id'] if len(rows) > limit else None}
 
@@ -349,7 +351,7 @@ class Store:
     def recover(self):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            db.execute('UPDATE image_schedule SET claimed_task=NULL WHERE singleton=1')
+            db.execute('UPDATE image_schedule SET claimed_task=NULL,prompt_id=NULL WHERE singleton=1')
             for row in db.execute("SELECT id FROM tasks WHERE status='running'").fetchall():
                 self._event_tx(db, row['id'], {'type': 'failed', 'error': 'Service restarted during processing'})
 
@@ -389,25 +391,25 @@ class Store:
             if tid is None:
                 return None
             owner = next(row['owner'] for row in heads if row['id'] == tid)
-            db.execute('UPDATE image_schedule SET last_owner=?,claimed_task=? WHERE singleton=1', (owner, tid))
+            db.execute('UPDATE image_schedule SET last_owner=?,claimed_task=?,prompt_id=NULL WHERE singleton=1', (owner, tid))
             item = self._task(db, tid)
             item['owner'] = owner
             return item
 
     def release_image_claim(self, tid):
         with self.connect() as db:
-            db.execute('UPDATE image_schedule SET claimed_task=NULL WHERE singleton=1 AND claimed_task=?', (tid,))
+            db.execute('UPDATE image_schedule SET claimed_task=NULL,prompt_id=NULL WHERE singleton=1 AND claimed_task=?', (tid,))
 
     def _image_snapshot(self, db):
         schedule = db.execute('SELECT * FROM image_schedule WHERE singleton=1').fetchone()
         rows = self._image_rows(db)
         for row in rows:
-            decision = self.image_resource_view(self._task(db, row['id'])) if self.image_resource_view else None
+            decision = self.image_resource_view(self._task(db, row['id']), occupied_prompt=schedule['prompt_id']) if self.image_resource_view else None
             row.update(eligible=decision is None or decision.allowed,
                        reason=decision.reason if decision else 'ready')
         return rows, schedule['last_owner'], schedule['claimed_task']
 
-    def _queue_task(self, db, item, snapshot):
+    def _queue_task(self, item, snapshot):
         from .image_queue import queue_ahead
         if item['kind'] not in ('image_generate','image_edit'):
             return item
@@ -415,15 +417,19 @@ class Store:
         item['queue_ahead'] = (queue_ahead(rows,item['id'],last_owner,claimed)
                                if item['status'] in ('queued','running') else None)
         row = next((row for row in rows if row['id'] == item['id']), None)
-        item['queue_reason'] = row['reason'] if row and not row['eligible'] else None
+        head = next((head for head in rows if row and head['owner'] == row['owner']), None)
+        blocker = (row if row and (not row['eligible'] or row['reason'] == 'release_required')
+                   else head if head and (not head['eligible'] or head['reason'] == 'release_required') else None)
+        if blocker and item['status'] == 'queued':item['queue_ahead'] = None
+        item['queue_reason'] = blocker['reason'] if blocker and item['queue_ahead'] is None else None
         return item
 
-    def expire_image_waits(self, timeout):
+    def refresh_image_waits(self, timeout):
         """Expire only owner heads, independently of other owners' inference clocks."""
         reasons = []
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            schedule = db.execute('SELECT claimed_task FROM image_schedule WHERE singleton=1').fetchone()
+            schedule = db.execute('SELECT * FROM image_schedule WHERE singleton=1').fetchone()
             seen = set()
             for row in self._image_rows(db):
                 if row['owner'] in seen:
@@ -432,10 +438,21 @@ class Store:
                 if row['id'] == schedule['claimed_task']:
                     continue
                 task = self._task(db, row['id'])
-                if task['stage'] == 'waiting_resources' and time.time()-task['stage_started_at'] >= timeout:
+                decision = self.image_resource_view(task, occupied_prompt=schedule['prompt_id']) if self.image_resource_view else None
+                if decision is None or decision.allowed:
+                    if task['stage'] == 'waiting_resources':
+                        self._event_tx(db, row['id'], {'type':'resource_ready'})
+                    continue
+                task = self._event_tx(db, row['id'], {'type':'resource_wait','reason':decision.reason})
+                if time.time()-task['stage_started_at'] >= timeout:
                     reason = task['blocked_reason']
                     category = 'resource_wait_expired' if reason in ('system_memory','container_memory') else 'release_unconfirmed'
                     self._event_tx(db, row['id'], {'type':'failed','error':'Image resource wait expired: '+str(reason),
                                                  'blocked_reason':category})
                     reasons.append(category)
         return reasons
+
+    def bind_image_prompt(self, tid, prompt_id):
+        """Associate only the current owned slot; never treat another prompt as ours."""
+        with self.connect() as db:
+            db.execute('UPDATE image_schedule SET prompt_id=? WHERE singleton=1 AND claimed_task=?', (prompt_id, tid))

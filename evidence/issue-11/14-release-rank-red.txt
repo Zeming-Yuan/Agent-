@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_tb10_snapshot_counts_the_same_pending_release_turn_as_claim _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-580/test_tb10_snapshot_counts_the_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe47f643af420>, wait_task=<function owner_env.<locals>.wait_task at 0xe47f643af560>)
+
+    def test_tb10_snapshot_counts_the_same_pending_release_turn_as_claim(owner_env):
+        backend=owner_env.new_backend()
+        config=blocked_config()
+        original=config['resource_sampler']
+        config['resource_sampler']=lambda tid:dataclasses.replace(original(tid),available_bytes=25*1024**3,resident_profiles=frozenset({'high'}))
+        with configured_client(owner_env,backend,config,run_worker=False) as c:
+            ref=owner_env.upload(c)
+            a=owner_env.submit(c,'A',kind='image_edit',image_ids=[ref],quality='high').json()
+            b=owner_env.submit(c,'B').json()
+            assert a['queue_ahead'] is None and a['queue_reason']=='release_required'
+>           assert b['queue_ahead']==1  # A must first own the controlled release turn
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           assert 0 == 1
+
+tests/test_tb10_fair_queue.py:428: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_snapshot_counts_the_same_pending_release_turn_as_claim
+1 failed, 25 deselected, 1 warning in 0.37s

@@ -1,0 +1,42 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_tb10_releases_known_resident_before_evaluating_cold_capacity[None] ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-584/test_tb10_releases_known_resid1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf45792173560>, wait_task=<function owner_env.<locals>.wait_task at 0xf457921732e0>)
+prior_residents = None
+
+    @pytest.mark.parametrize('prior_residents', [frozenset({'high'}), None])
+    def test_tb10_releases_known_resident_before_evaluating_cold_capacity(owner_env,prior_residents):
+        backend = owner_env.new_backend()
+        freed = threading.Event()
+        config = synthetic_resources(wait_timeout=.3)
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            available_bytes=(60 if freed.is_set() else 25)*1024**3,
+            resident_profiles=frozenset() if freed.is_set() else prior_residents)
+        calls = []
+        async def external(request):
+            if request.url.path == '/free':calls.append('free');freed.set()
+            return await backend(request)
+        with TestClient(create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+                identity_mode='staging', transport=httpx.MockTransport(external), images_enabled=True,
+                audio_enabled=False, event_stream_factory=backend.event_stream, **config)) as c:
+            tid = owner_env.submit(c).json()['id']
+            done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('completed','failed'))
+>           assert done['status'] == 'completed', done
+E           AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794733234, 'error': 'Image resource wait expired: release_unconfirmed', ...}
+E           assert 'failed' == 'completed'
+E
+E             - completed
+E             + failed
+
+tests/test_tb10_fair_queue.py:119: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_releases_known_resident_before_evaluating_cold_capacity[None]
+1 failed, 1 passed, 25 deselected, 1 warning in 1.07s

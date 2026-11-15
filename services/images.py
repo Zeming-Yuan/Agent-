@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import HTTPException
 
-from .image_resources import ReleaseUnconfirmed, ResourceWaitExpired
+from .image_resources import ReleaseUnconfirmed, ResourceDeferred, ResourceWaitExpired
 from .image_telemetry import record_cached_nodes, record_current_task, task_event, task_transition
 
 LOG=logging.getLogger('agent-mm.images')
@@ -188,6 +188,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
         if admission is None:task_event(store,tid,{'type':'stage','stage':'loading'})
         # ComfyUI requires a canonical UUID. Hold it before sending any bytes.
         pid=str(uuid.uuid4())
+        store.bind_image_prompt(tid,pid)
         if event_stream_factory is not None:
             from .comfy_events import normalize_event
             try:
@@ -284,6 +285,27 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
 
 
 async def image_worker(store,client,url,active,*,event_stream_factory=None,admission=None):
+    async def watch_waits():
+        try:
+            while True:
+                expired = store.refresh_image_waits(admission.settings['wait_timeout'])
+                if 'release_unconfirmed' in expired:
+                    admission.unavailable_reason = 'Image resource evidence unavailable; operator recovery required'
+                    return
+                await asyncio.sleep(.05)
+        except Exception:
+            admission.unavailable_reason = 'Image queue observation failed; operator recovery required'
+            LOG.exception('image queue observation failed')
+    watcher = asyncio.create_task(watch_waits()) if admission is not None else None
+    try:
+        await _run_image_worker(store,client,url,active,event_stream_factory=event_stream_factory,admission=admission)
+    finally:
+        if watcher is not None:
+            watcher.cancel()
+            with contextlib.suppress(asyncio.CancelledError):await watcher
+
+
+async def _run_image_worker(store,client,url,active,*,event_stream_factory=None,admission=None):
     initialized=False
     while True:
         if not initialized:
@@ -296,7 +318,8 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None,admis
                 LOG.warning('Image startup cleanup unconfirmed; admission stopped')
                 return
         if admission is not None:
-            expired = store.expire_image_waits(admission.settings['wait_timeout'])
+            if admission.unavailable_reason:return
+            expired = store.refresh_image_waits(admission.settings['wait_timeout'])
             if 'release_unconfirmed' in expired:
                 admission.unavailable_reason = 'Image resource evidence unavailable; operator recovery required'
                 return
@@ -335,6 +358,8 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None,admis
             task_event(store,tid,{'type':'failed','error':'Model release unconfirmed; operator recovery required',
                                   'blocked_reason':'release_unconfirmed'})
             return
+        except ResourceDeferred:
+            pass  # Proven idle; retain queued identity and let other owners run.
         except ResourceWaitExpired as exc:
             task_event(store,tid,{'type':'failed','error':str(exc),'blocked_reason':'resource_wait_expired'})
         except SubmissionUncertain:

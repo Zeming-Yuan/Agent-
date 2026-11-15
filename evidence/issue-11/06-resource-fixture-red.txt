@@ -22,7 +22,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-555/tes
 >           assert done['status']=='completed',done
 E           AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794732158, 'error': 'Model release unconfirmed; operator recovery required', ...}
 E           assert 'failed' == 'completed'
-E             
+E
 E             - completed
 E             + failed
 
@@ -61,8 +61,8 @@ fault = 'wrong_session', reason = 'release_unconfirmed', degraded = True
 >           done=owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed')
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb09_safe_admission.py:466: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb09_safe_admission.py:466:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 c = <starlette.testclient.TestClient object at 0xfee5e5495400>
 tid = 'task-31c64600ad42422c8a37c50a9a608c21', owner = 'A'

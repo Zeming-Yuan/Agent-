@@ -86,6 +86,10 @@ import time
 from .image_telemetry import record_current_task, task_event
 
 
+class ResourceDeferred(RuntimeError):
+    """Release is proven; the queued owner can yield while memory is insufficient."""
+
+
 class ResourceWaitExpired(RuntimeError):
     pass
 
@@ -150,15 +154,26 @@ class ImageAdmission:
         except Exception:
             return None
 
-    def queue_decision(self, item):
+    def queue_decision(self, item, *, occupied_prompt=None):
         """Read-only conservative capacity preview; never authorizes /prompt."""
         if not self.configured(item):
             return AdmissionDecision(False, 'invalid_budget')
         sample = self.sample(item['id'])
         if sample is not None and sample.runtime_hash != self.runtime_hash:
             return AdmissionDecision(False, 'missing_evidence')
-        return admit(sample, self.budget(item), now=time.monotonic(), runtime_hash=self.runtime_hash,
-                     released=True, max_age=self.settings['max_age'])
+        from dataclasses import replace
+        if sample is not None and occupied_prompt and sample.running_prompts == (occupied_prompt,):
+            sample = replace(sample, running_prompts=())
+        unknown_residency = sample is not None and sample.resident_profiles is None and sample.running_prompts == ()
+        capacity_sample = replace(sample, resident_profiles=frozenset()) if unknown_residency else sample
+        decision = admit(capacity_sample, self.budget(item), now=time.monotonic(), runtime_hash=self.runtime_hash,
+                         released=True, max_age=self.settings['max_age'])
+        # Preview only: known-idle backend control may establish residency by a
+        # real release. This replacement never reaches prepare/recheck proof.
+        if (unknown_residency and decision.reason in ('ready','system_memory','container_memory')
+                or decision.reason in ('system_memory','container_memory') and sample.resident_profiles):
+            return AdmissionDecision(True, 'release_required')
+        return decision
 
     async def prepare(self, item, store, client, url):
         from .images import settled_post, settle
@@ -239,6 +254,8 @@ class ImageAdmission:
                     record_current_task(store,tid,operation='release',event='release_proof_confirmed')
                     return True
             task_event(store, tid, {'type': 'resource_wait', 'reason': decision.reason})
+            if proven and decision.reason in ('system_memory','container_memory'):
+                raise ResourceDeferred(decision.reason)
             if now-start >= self.settings['wait_timeout']:
                 if not proven:
                     raise ReleaseUnconfirmed('Model release evidence unconfirmed')

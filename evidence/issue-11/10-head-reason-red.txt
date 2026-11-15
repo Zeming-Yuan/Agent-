@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb10_follower_explains_owner_head_resource_block _____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-565/test_tb10_follower_explains_ow0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef9499421800>, wait_task=<function owner_env.<locals>.wait_task at 0xef94994218a0>)
+
+    def test_tb10_follower_explains_owner_head_resource_block(owner_env):
+        backend = owner_env.new_backend()
+        config = blocked_config()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),available_bytes=25*1024**3)
+        with configured_client(owner_env, backend, config, run_worker=False) as c:
+            ref = owner_env.upload(c)
+            owner_env.submit(c, 'A', kind='image_edit', image_ids=[ref], quality='high')
+            follower = owner_env.submit(c, 'A').json()
+            assert follower['queue_ahead'] is None
+>           assert follower['queue_reason'] == 'system_memory'
+E           AssertionError: assert None == 'system_memory'
+
+tests/test_tb10_fair_queue.py:182: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_follower_explains_owner_head_resource_block
+1 failed, 8 deselected, 1 warning in 0.24s

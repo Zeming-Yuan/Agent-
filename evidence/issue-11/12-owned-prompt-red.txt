@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb10_running_resource_sample_still_counts_the_owned_slot _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-572/test_tb10_running_resource_sam0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe392fd4619e0>, wait_task=<function owner_env.<locals>.wait_task at 0xe392fd461a80>)
+
+    def test_tb10_running_resource_sample_still_counts_the_owned_slot(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            running_prompts=tuple(sorted(backend.running)), resident_profiles=frozenset({'generate'}) if backend.running else frozenset())
+        with configured_client(owner_env, backend, config) as c:
+            a = owner_env.submit(c, 'A').json()['id']
+            try:
+                assert backend.started.wait(1)
+                b = owner_env.submit(c, 'B').json()['id']
+                state = c.get('/v1/tasks/'+b,headers=owner_env.auth('B')).json()
+>               assert state['queue_ahead'] == 1, state
+E               AssertionError: {'blocked_reason': None, 'cancel_requested': False, 'created': 1794732682, 'error': None, ...}
+E               assert None == 1
+
+tests/test_tb10_fair_queue.py:225: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_running_resource_sample_still_counts_the_owned_slot
+1 failed, 10 deselected, 1 warning in 0.47s

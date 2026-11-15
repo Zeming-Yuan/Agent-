@@ -1,0 +1,20 @@
+# Issue #11 / T10 offline acceptance
+
+User-approved baseline5e64eb080341a28b35e912e52e8273e16e2fbcd2; controlled source /home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115, branch feat/issue-11-fair-queue. User expressly allows offline implementation while #10 remains OPEN; scheduler policy, actual HTTP/auth/SQLite/worker, and MCP output seams confirmed. No production/GPU/guard/config/key actions. Original product is non-Git and receives only reviewed selective delivery after preimage and hash checks.
+
+| #11 criterion | Automated offline evidence | Remaining real acceptance |
+|---|---|---|
+|1 owner turns, no preemption, FIFO/no affinity starvation |01/02 selector+HTTP A1→B1→A2; selector matrix; held inference/cancel control count; simultaneous acceptance FIFO |Real backend mixed-owner A1→B1→A2, #15 |
+|2 blocked head preserved, other eligible owner runs, next recovered turn |05/09/10/11 HTTP blocked/high A1 and small B1; proven idle yield; follower diagnosis; 07 necessary resident release |Physical capacity/release inputs remain #26/#12 |
+|3 stable cursor over restart/cancel/same-time submission |concurrent equal-created HTTP submits; cancel+same-DB restart and stopped-store copy restore retains B→A; additive durable enqueue/claim |Production backup/restore and actual platform recovery #15 |
+|4 queue_ahead same fair snapshot including occupied slot, image-only, owner-only |03/04; immutable policy snapshot; 12 exact owned running prompt;14 necessary-release turn; nonimage exclusion; queued cancel while/free unsettled; actual stdio/TLS list/get/cancel/download/save |Windows/macOS actual Harness with real HTTPS/backend #15; no ETA/performance claim |
+|5 global capacity4/429 Retry-After, replay no extra slot, no personal quota |global_capacity_is_not_personal_quota: A4/B429/replay202 and originaltaskid; owner-scoped regression |No change to existing2GiB storage/global limits |
+|6 no executable owner waits rather than repeated loading/release |all_blocked...read-only wait no/free or/prompt, then same IDs run on resource event;11 one necessary release yields to B without retrying |Actual node observation/guard/model control remains unverified |
+
+Review A found Standards2P2 / Spec1P1+1P2.07—10 reproduce and repair all four,11—14 strengthen follow-on safety/consistency. Final independent re-review and fresh affected outputs appended after a fixed commit exists.
+
+No new dependencies. Configured commands discovered from README, T10 plan and prior ticket development evidence. User affected-only scope overrides skill full-suite defaults. Type checker, static lint, build/CI, Compose, seed, security scan, mutation gates:N/A (not configured). Additive SQLite tables/column only; no destructive migration. Synthetic restart/new-directory backup restore exercised; production release/restore/physical rollback:未验证. Entire project gates not run. No physical baseline (baseline_status=not_run), before/after comparison inconclusive, no speed/memory improvement claim.
+
+Recovery: pause new scheduling, preserve DB+files+KeyRegistry and scheduling tables, settle existing inference/control calls, then maintenance. Never overwrite new writes using an older backup, disable20GiB guard, bypass T09 proof, lose owner isolation or silently restore global FIFO in multiowner mode. A single owner controlled recovery is the permitted temporary fallback. Real profile release producer#26, physical calibration#12, and double-platform/full AC acceptance#15 stay open; #11 cannot be called fully accepted from these substitutes.
+
+Fresh slice B source validation:27ticket tests collected (b-collect.txt); explicit17affected files392passed, one existing AnyIO warning (b-final-affected.txt). No source changed during that run; tested-source-hashes.json freezes10changed source/client/test files. git diff --check0. Earlier failed/partial counts are historical TDD/debug evidence and are superseded by this final output. Final independent fixed-commit review pending.
