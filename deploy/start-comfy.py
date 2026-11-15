@@ -29,4 +29,3 @@ try:
     runpy.run_path('/opt/ComfyUI/main.py',run_name='__main__')
 finally:
     if restore_observer is not None: restore_observer()
-
