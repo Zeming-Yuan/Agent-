@@ -30,3 +30,16 @@ N/A (not configured): type checker, static lint, build/CI, Compose, seed, securi
 Two independent reviewer contexts per slice, fixed nonempty diffs only. Slice A details in review-a.md (initial Standards2P2/Spec1P2, both repairs red→green and fixed range0/0). Slice B fixed54ab202...17913dd review is recorded in review-b.md:Standards0/Spec0, independently69 focused tests passed; no unhandled important findings or deferred minors.
 
 Recover only with T04 or an equivalent owner-aware implementation supporting task_requests and file_tombstones. Stop admission/all writers, confirm backend idle, preserve the current complete DB/files/registry in a new verified private archive, inspect the pre-cutover backup in another directory, validate the latest complete archive under isolated strict auth, then make an explicit production decision. Do not deploy a shared-access pre-owner version or overwrite newer writes/revocations with an old backup. Automated incremental merge and production cutover are outside this offline delivery.
+
+
+## Final delivery verification
+
+Fresh issue selector69passed/133deselected (final-focused.txt); fresh planned regression153passed/49deselected (final-plan-regression.txt). After selective delivery, the original product cwd ran the affected command below:198passed,1 existing warning (product-final.txt). product-final-first.txt is an earlier run with absolute product test paths but source cwd, retained for transparency; it is not the evidence for original-cwd delivery verification.
+
+```bash
+python -m pytest -q tests/test_gateway.py tests/test_gateway_validation.py tests/test_images.py tests/test_image_gateway.py tests/test_media.py tests/test_image_cancel.py tests/test_image_uncertain.py tests/test_image_admission.py tests/test_tb01_legacy_expand.py tests/test_tb02_owner_files.py tests/test_tb03_owner_tasks.py tests/test_image_bridge.py tests/test_tb04_owner_contract.py
+```
+
+All delivered payload paths had their original bytes verified against the fixed base, then were replaced per-file and SHA256 compared. sync-manifest.json records before/after hashes; no conflicting product files overwritten. Only code/tests/docs/sanitized evidence copied, no private configuration/credentials/models/production data. AST inventory found0 production Store calls missing owner. Scoped credential-marker/path inspection found0 suspicious/private/linked payload paths; no configured scanner result is implied. Whole committed range git diff --check passes after documented log whitespace normalization.
+
+Offline implementation and review are complete; full #5 production acceptance is not. #4/#5 remain OPEN, no source push or deployment/activation occurred. Existing #4 and final #15 cover actual entry/physical/Harness evidence; #5 retains production takeover/backup/release/recovery approval and evidence. Future factory startup without explicit AGENT_IDENTITY_MODE refuses; prepare that deployment configuration separately when production gates clear.
