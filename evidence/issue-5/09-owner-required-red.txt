@@ -1,0 +1,202 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[file-args0] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_0')
+method = 'file', args = ('file-missing',)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+        with pytest.raises(TypeError, match='owner'):
+>           getattr(store, method)(*args)
+
+tests/test_tb04_owner_contract.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/store.py:64: in file
+    require_owner(db, 'file', fid, owner)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xe817d8992c50>, kind = 'file'
+object_id = 'file-missing', owner = 'legacy'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[path-args1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_1')
+method = 'path', args = ('file-missing',)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+        with pytest.raises(TypeError, match='owner'):
+>           getattr(store, method)(*args)
+
+tests/test_tb04_owner_contract.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/store.py:71: in path
+    self.file(fid, owner=owner)
+services/store.py:64: in file
+    require_owner(db, 'file', fid, owner)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xe817d8992e30>, kind = 'file'
+object_id = 'file-missing', owner = 'legacy'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[add_file-args2] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_2')
+method = 'add_file', args = ('file-missing', 'x', 0)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+>       with pytest.raises(TypeError, match='owner'):
+E       Failed: DID NOT RAISE <class 'TypeError'>
+
+tests/test_tb04_owner_contract.py:258: Failed
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[save_generated-args3] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_3')
+method = 'save_generated', args = ('file-missing', b'x', 'x')
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+>       with pytest.raises(TypeError, match='owner'):
+E       Failed: DID NOT RAISE <class 'TypeError'>
+
+tests/test_tb04_owner_contract.py:258: Failed
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[delete_file-args4] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_4')
+method = 'delete_file', args = ('file-missing',)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+        with pytest.raises(TypeError, match='owner'):
+>           getattr(store, method)(*args)
+
+tests/test_tb04_owner_contract.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/store.py:128: in delete_file
+    require_owner(db, 'file', fid, owner)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xe817d861d300>, kind = 'file'
+object_id = 'file-missing', owner = 'legacy'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[task-args5] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_5')
+method = 'task', args = ('task-missing',)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+        with pytest.raises(TypeError, match='owner'):
+>           getattr(store, method)(*args)
+
+tests/test_tb04_owner_contract.py:259: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+services/store.py:141: in task
+    require_owner(db, 'task', tid, owner)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xe817d861d5d0>, kind = 'task'
+object_id = 'task-missing', owner = 'legacy'
+
+    def require_owner(db, kind: str, object_id: str, owner: str) -> None:
+        found = db.execute('''SELECT 1 FROM object_owners
+            WHERE kind=? AND object_id=? AND owner=?''', (kind, object_id, owner)).fetchone()
+        if not found:
+>           raise HTTPException(404, 'Object not found')
+E           fastapi.exceptions.HTTPException: 404: Object not found
+
+services/ownership.py:48: HTTPException
+_ test_tb04_owner_contract_user_store_methods_require_explicit_owner[submit-args6] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-214/test_tb04_owner_contract_user_6')
+method = 'submit', args = ('image_generate', None, {'prompt': 'x'}, None)
+
+    @pytest.mark.parametrize('method,args', [
+        ('file', ('file-missing',)), ('path', ('file-missing',)),
+        ('add_file', ('file-missing', 'x', 0)), ('save_generated', ('file-missing', b'x', 'x')),
+        ('delete_file', ('file-missing',)), ('task', ('task-missing',)),
+        ('submit', ('image_generate', None, {'prompt': 'x'}, None)),
+    ])
+    def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path, method, args):
+        store = Store(tmp_path)
+>       with pytest.raises(TypeError, match='owner'):
+E       Failed: DID NOT RAISE <class 'TypeError'>
+
+tests/test_tb04_owner_contract.py:258: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[file-args0]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[path-args1]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[add_file-args2]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[save_generated-args3]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[delete_file-args4]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[task-args5]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_user_store_methods_require_explicit_owner[submit-args6]
+7 failed, 38 deselected, 1 warning in 0.41s

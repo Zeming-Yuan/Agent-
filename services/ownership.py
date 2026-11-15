@@ -58,6 +58,7 @@ def validate_ownership(db, files: Path, *, legacy_owner: str | None = None) -> d
               for row in db.execute('SELECT * FROM object_owners')} if 'object_owners' in tables else {}
     file_rows = {row['id']: row for row in db.execute('SELECT * FROM files')}
     tasks = {row['id']: row for row in db.execute('SELECT * FROM tasks')}
+    deleted = {row['file_id']: row['owner'] for row in db.execute('SELECT * FROM file_tombstones')} if 'file_tombstones' in tables else {}
 
     def owner(kind, oid):
         value = owners.get((kind, oid), legacy_owner)
@@ -95,9 +96,13 @@ def validate_ownership(db, files: Path, *, legacy_owner: str | None = None) -> d
             raise ValueError(f'invalid references in task {tid}') from None
         for fid in filter(None, refs):
             if fid not in file_rows:
+                if (task['status'] in ('completed', 'failed', 'cancelled') and deleted.get(fid) == task_owner):
+                    continue  # Proven owner deletion, not an unaccounted dangling association.
                 raise ValueError(f'dangling file reference in task {tid}: {fid}')
             if owner('file', fid) != task_owner:
                 raise ValueError(f'cross-owner file reference in task {tid}: {fid}')
+    if legacy_owner is None:
+        require_scoped_requests(db)
     if 'task_requests' in tables:
         requests = {(r['owner'], r['request_key']): r['task_id'] for r in db.execute('SELECT * FROM task_requests')}
         for tid, task in tasks.items():
@@ -118,9 +123,32 @@ def validate_ownership(db, files: Path, *, legacy_owner: str | None = None) -> d
     return {'files': len(file_rows), 'tasks': len(tasks)}
 
 
+TASK_COLUMNS = 'id,kind,file_id,options,status,progress,result,error,idem,fingerprint,created,updated'
+
+
+def global_idem_indexes(db) -> set[str]:
+    return {index['name'] for index in db.execute('PRAGMA index_list(tasks)') if index['unique']
+            and [row['name'] for row in db.execute('PRAGMA index_info("' + index['name'].replace('"', '""') + '")')] == ['idem']}
+
+
 def validate_contract(db, files: Path, *, legacy_owner: str | None = None) -> dict:
     if legacy_owner is not None and legacy_owner != 'legacy':
         raise ValueError('legacy owner must match the existing stable legacy identity')
+    if [row['name'] for row in db.execute('PRAGMA table_info(tasks)')] != TASK_COLUMNS.split(','):
+        raise ValueError('unsupported task schema; preserve data and use a matching migration version')
+    allowed_auto = global_idem_indexes(db)
+    for index in db.execute('PRAGMA index_list(tasks)'):
+        if index['origin'] == 'u' and index['name'] not in allowed_auto:
+            raise ValueError('unsupported task schema implicit unique constraint')
+    marker = db.execute("SELECT 1 FROM sqlite_master WHERE name='ownership_migration' AND type='table'").fetchone()
+    if marker:
+        versions = db.execute('SELECT version,legacy_owner FROM ownership_migration').fetchall()
+        if len(versions) != 1 or tuple(versions[0]) != (1, 'legacy'):
+            raise ValueError('owner migration version or legacy identity mismatch')
+    elif legacy_owner is None:
+        raise ValueError('owner migration incomplete: contract required')
+    if legacy_owner is None and allowed_auto:
+        raise ValueError('owner migration retains global idempotency constraint')
     if db.execute("SELECT 1 FROM tasks WHERE status='running' LIMIT 1").fetchone():
         raise ValueError('running tasks must be reconciled before owner migration')
     counts = validate_ownership(db, files, legacy_owner=legacy_owner)
@@ -133,3 +161,17 @@ def inspect_contract(db_path: Path, *, legacy_owner: str | None = None) -> dict:
         db.row_factory = sqlite3.Row
         db.execute('BEGIN')
         return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
+
+
+def require_scoped_requests(db) -> None:
+    """Old global records must be explicitly mapped before any modern writer starts."""
+    mapped = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_requests'").fetchone()
+    if mapped:
+        missing = db.execute('''SELECT t.id FROM tasks t
+            LEFT JOIN object_owners o ON o.kind='task' AND o.object_id=t.id
+            LEFT JOIN task_requests r ON r.owner=o.owner AND r.request_key=t.idem
+            WHERE t.idem IS NOT NULL AND (r.task_id IS NULL OR r.task_id!=t.id) LIMIT 1''').fetchone()
+    else:
+        missing = db.execute('SELECT id FROM tasks WHERE idem IS NOT NULL LIMIT 1').fetchone()
+    if missing:
+        raise ValueError(f'owner migration required: missing request mapping for task {missing[0]}')

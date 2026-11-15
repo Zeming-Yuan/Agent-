@@ -1,8 +1,10 @@
 ---
-status: proposed
+status: accepted
 ---
 
-# 用旁表扩展对象归属，保留旧版写入
+# 对象归属旁表与 owner 范围请求映射（T04 contract）
+
+下列 T01—T03 段落记录历史阶段；当前约束以末尾 T04 决策为准。accepted 表示架构决策已采纳，不代表生产验收通过。
 
 T01 使用 `object_owners(kind, object_id, owner)` 旁表，保留 files 的 4 列和 tasks 的 12 列及原有全局 idem 唯一约束。直接增加 owner 列会破坏旧版位置 INSERT；旁表允许旧版在 expand 后继续上传、写任务和保存结果。
 
@@ -32,3 +34,12 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 
 
 T04 切片 A 在离线维护事务中收口：先验证全部归属和文件关联，再保存独占私有备份，回填历史 task_requests，并重建 tasks 删除全局 idem 唯一约束；原 rowid/ID/引用、列值、显式索引和触发器保留。旁表仍是权威归属。业务指纹提取为 Store 与迁移共用的 task_fingerprint，避免历史重放与在线提交采用不同算法。运行中任务及悬空/跨人引用拒绝迁移；不会自动重跑或把异常数据公开。当前 strict/runtime 收口尚待切片 B，ADR 暂仍 proposed；生产启用另等 #4 验收及明确接管记录。
+
+
+T04 切片 B 接受决策：所有用户 Store 文件/任务方法必须显式传 owner；worker_task 保留内部身份 seam。HTTP/图片/媒体调用方均已显式传持久 Principal.owner。新请求只写 task_requests，tasks.idem/fingerprint 历史列保留原值供恢复审计，但不再做全局查询/键写入。删除默认归属和 factory 自动 expand；旧无归属库或未映射全局请求必须先在维护窗口显式迁移，不能因启动而静默接管。
+
+strict 在任何 Store/注册表初始化前只读验证 contract v1、稳定 legacy 身份、owner/请求/摘要/文件关联与非运行状态；拒绝残留全局 idem 唯一索引。create_app strict 必须提供显式注册表，忽略旧 token；生产 factory 必须配置 AGENT_IDENTITY_MODE，strict 使用已存在的私有 keys.sqlite3，不读取共享 agent-api.key。配置缺失拒绝，生产启动环境尚未修改/验证。
+
+为同时满足父规格既有文件删除生命周期与严格悬空检查，新增 file_tombstones(file_id,owner)。只在本人删除操作的同一 SQLite 事务中记录，伴随 digest/owner/文件记录删除；不新增生命周期状态机。只有终态任务与同 owner 主动删除记录匹配时，缺失引用才是可解释的已删除对象，继续返回404而不重新推理。排队/运行引用仍不能删除；无记录或跨人记录仍阻止切换/启动。该表随主库备份和恢复。
+
+T04 旧格式兼容验证改为固定旧服务/SQL副本；现代服务不再保证反向运行旧写入者。仅允许保留相同 owner 检查与请求映射的 T04 或等价版本回滚。恢复先归档切换后的主库/files/注册表/新写入，在新目录验证；不把预切换备份覆盖新数据，不用旧注册表复活已撤销 Key。生产启用、接管人员映射与发布/恢复仍待 #4 和后续实际门禁，详见 evidence/issue-5/acceptance.md。

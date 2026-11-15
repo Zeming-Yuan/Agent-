@@ -24,7 +24,7 @@ def test_tb03_different_upload_ids_same_material_replay(owner_env):
         assert one.json()['id'] == two.json()['id']
 
 
-def test_tb03_expand_preserves_legacy_request_replay(owner_env, legacy_services):
+def test_tb03_contract_migrates_legacy_request_replay(owner_env, legacy_services):
     import httpx
     from fastapi.testclient import TestClient
     backend = owner_env.new_backend()
@@ -34,12 +34,14 @@ def test_tb03_expand_preserves_legacy_request_replay(owner_env, legacy_services)
             transport=httpx.MockTransport(backend)))
     with old_client() as c:
         original = owner_env.submit(c, 'legacy', request_key='old').json()['id']
-    with owner_env.client() as c:
+    from scripts.migrate_image_owners import contract_ownership
+    contract_ownership(owner_env.root / 'state.sqlite3', 'legacy')
+    with owner_env.client(identity_mode='strict') as c:
         replay = owner_env.submit(c, 'legacy', request_key='old')
         assert replay.status_code == 202, replay.text
         assert replay.json()['id'] == original
         new = owner_env.submit(c, 'legacy', request_key='new').json()['id']
-    with old_client() as c:
+    with owner_env.client(identity_mode='strict') as c:
         replay = owner_env.submit(c, 'legacy', request_key='new')
         assert replay.status_code == 202, replay.text
         assert replay.json()['id'] == new
@@ -218,7 +220,7 @@ def test_tb03_media_worker_reads_owner_source_and_keeps_result_private(owner_env
             assert c.get('/v1/tasks/' + tid, headers=owner_env.auth(stranger)).status_code == 404
 
 
-def test_tb03_legacy_missing_material_conflicts_with_recoverable_task(owner_env, legacy_services):
+def test_tb03_legacy_missing_material_blocks_contract_without_losing_result(owner_env, legacy_services):
     import httpx
     from fastapi.testclient import TestClient
     backend = owner_env.new_backend()
@@ -231,11 +233,15 @@ def test_tb03_legacy_missing_material_conflicts_with_recoverable_task(owner_env,
         done = owner_env.wait_task(c, tid, 'legacy', lambda t: t['status'] == 'completed')
         result_id = done['result']['file_id']
         assert c.delete('/v1/files/' + fid, headers=owner_env.auth('legacy')).status_code == 200
-    with owner_env.client(backend=backend, run_worker=True) as c:
-        new_fid = owner_env.upload(c, 'legacy')
-        replay = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[new_fid])
-        assert replay.status_code == 409
-        assert replay.json()['detail']['task_id'] == tid
+    from scripts.migrate_image_owners import contract_ownership
+    before = (owner_env.root / 'state.sqlite3').read_bytes()
+    with pytest.raises(ValueError, match='dangling'):
+        contract_ownership(owner_env.root / 'state.sqlite3', 'legacy')
+    assert (owner_env.root / 'state.sqlite3').read_bytes() == before
+    # Frozen single-owner fixture proves history was not lost; never deploy it to mixed data.
+    with TestClient(legacy_services.create_app(owner_env.root, owner_env.keys['legacy'],
+                    images_enabled=True, audio_enabled=False, run_worker=False,
+                    transport=httpx.MockTransport(backend))) as c:
         assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('legacy')).json()['status'] == 'completed'
         assert c.get('/v1/files/' + result_id + '/content', headers=owner_env.auth('legacy')).status_code == 200
         assert len(backend.jobs) == 1

@@ -1,0 +1,60 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_tb04_owner_contract_strict_accepts_only_contracted_explicit_registry ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-216/test_tb04_owner_contract_stric0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xff1b435163e0>, wait_task=<function owner_env.<locals>.wait_task at 0xff1b43516340>)
+
+    def test_tb04_owner_contract_strict_accepts_only_contracted_explicit_registry(owner_env):
+        from scripts.migrate_image_owners import contract_ownership
+        from services.gateway import create_app
+        store = Store(owner_env.root)
+        with pytest.raises(ValueError, match='owner migration'):
+            owner_env.client(identity_mode='strict')
+        contract_ownership(store.db, 'legacy')
+        with pytest.raises(ValueError, match='explicit key registry'):
+>           create_app(owner_env.root, owner_env.keys['legacy'], identity_mode='strict', run_worker=False)
+
+tests/test_tb04_owner_contract.py:270: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-216/test_tb04_owner_contract_stric0/runtime')
+token = 'j9dAXu_qjmuWNQ9rr35q0jO48tj6OBw4T3nyBMza4UY'
+
+    def create_app(root: Path, token: str, *, transport=None, run_worker=True,
+                   max_upload_bytes=64*1024*1024, max_pending=4, context_window=32768,
+                   audio_enabled=True, images_enabled=False,
+                   key_registry: KeyRegistry | None = None, identity_mode: str = 'legacy'):
+        if identity_mode not in ('legacy', 'staging', 'strict'):
+            raise ValueError('identity_mode must be legacy, staging or strict')
+        if identity_mode == 'strict':
+>           raise ValueError('strict requires completed owner migration (T02/T03/T04)')
+E           ValueError: strict requires completed owner migration (T02/T03/T04)
+
+services/gateway.py:46: ValueError
+
+During handling of the above exception, another exception occurred:
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-216/test_tb04_owner_contract_stric0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xff1b435163e0>, wait_task=<function owner_env.<locals>.wait_task at 0xff1b43516340>)
+
+    def test_tb04_owner_contract_strict_accepts_only_contracted_explicit_registry(owner_env):
+        from scripts.migrate_image_owners import contract_ownership
+        from services.gateway import create_app
+        store = Store(owner_env.root)
+        with pytest.raises(ValueError, match='owner migration'):
+            owner_env.client(identity_mode='strict')
+        contract_ownership(store.db, 'legacy')
+>       with pytest.raises(ValueError, match='explicit key registry'):
+E       AssertionError: Regex pattern did not match.
+E         Expected regex: 'explicit key registry'
+E         Actual message: 'strict requires completed owner migration (T02/T03/T04)'
+
+tests/test_tb04_owner_contract.py:269: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_strict_accepts_only_contracted_explicit_registry
+1 failed, 45 deselected, 1 warning in 0.14s

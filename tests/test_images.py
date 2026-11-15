@@ -93,9 +93,9 @@ def test_upload_storage_quota_rechecks_generated_file_commit(tmp_path):
     import pytest
     store=Store(tmp_path)
     # A competing generated result already used the remaining allocation.
-    store.add_file('file-'+'f'*32,'existing.png',2*1024**3-4)
+    store.add_file('file-'+'f'*32,'existing.png',2*1024**3-4, owner='legacy')
     with pytest.raises(HTTPException) as failure:
-        store.add_file('file-'+'a'*32,'upload.png',5)
+        store.add_file('file-'+'a'*32,'upload.png',5, owner='legacy')
     assert failure.value.status_code==413
 
 
@@ -105,7 +105,7 @@ def test_image_submission_uses_uuid_and_cancel_during_post_cleans_up(tmp_path):
     from services.store import Store
     from services.image_options import ImageOptions
     store=Store(tmp_path)
-    item=store.submit('image_generate',None,ImageOptions(prompt='x').model_dump(),None)
+    item=store.submit('image_generate',None,ImageOptions(prompt='x').model_dump(),None, owner='legacy')
     accepted=[];interrupted=[];running=[]
     async def check():
         entered=asyncio.Event();release=asyncio.Event()
@@ -160,8 +160,8 @@ def test_failed_reference_upload_removes_previous_comfy_scratch(tmp_path):
     from services.images import process_image
     from services.image_options import ImageOptions
     store=Store(tmp_path);ids=['file-'+'1'*32,'file-'+'2'*32]
-    for fid,color in zip(ids,['red','blue']):store.save_generated(fid,png(color),fid+'.png')
-    item=store.submit('image_edit',ids[0],ImageOptions(prompt='x',image_ids=ids).model_dump(),None)
+    for fid,color in zip(ids,['red','blue']):store.save_generated(fid,png(color),fid+'.png', owner='legacy')
+    item=store.submit('image_edit',ids[0],ImageOptions(prompt='x',image_ids=ids).model_dump(),None, owner='legacy')
     folder=store.root/'comfy'/'input';folder.mkdir(parents=True)
     uploaded=[]
     def backend(req):

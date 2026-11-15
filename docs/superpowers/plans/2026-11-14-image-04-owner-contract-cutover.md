@@ -310,3 +310,14 @@ def test_tb04_backup_does_not_overwrite_previous_snapshot(tmp_path):
 ## Legacy 接管身份说明
 
 本计划示例的稳定 legacy owner 为 `legacy`。人员接管通过向指定人员发放映射到该既有 owner 的新独立 Key 完成，不是把已经归属的行改成另一个 owner。CLI 的 legacy-owner 必须与 T01 记录的稳定 owner 一致；不一致在写入前拒绝。把旧数据合并进另一个已经存在的 owner 是额外数据迁移，不在本次 contract 隐式执行。
+
+
+## 2026-11-15 授权与执行记录
+
+用户确认使用单票 implement + TDD，公开 seam 为迁移函数/CLI、真实SQLite/files副本、strict启动及HTTP；固定基线cf25676799312be86fc5e6cb5c6278c605e88cef。明确允许#4保持OPEN时先实现#5离线行为，生产切换继续阻塞。原生串行实现，逐切片独立双轴审查；只运行受影响验证，不运行完整门禁。前文“只批准计划”是发布计划时的历史状态，本段覆盖实现授权，不扩展为生产部署。
+
+Task1：b762c70迁移/备份；54ab202修复审查发现的注册表及files根符号链接。固定差异复审Standards0/Spec0，38项聚焦、122项计划回归通过。Task2：取消默认owner/全局幂等回退、strict只读门禁、显式生产身份配置、file_tombstones维护主动删除生命周期、恢复新写入演练。详情见evidence/issue-5/execution.md、acceptance.md及review-a.md/review-b.md。
+
+调整：旧格式兼容用冻结旧服务/SQL，不再把现代API当作旧版；legacy稳定身份固定，不隐式重新分配给另一个owner。主动删除留下owner证明，不是未解释悬空引用；没有证明的历史缺失仍拒绝。未知任务列/隐式唯一约束或迁移版本拒绝，防止重建静默丢弃未知数据。全局idem显式/隐式唯一索引移除，其余显式索引和触发器保留。
+
+尚未验收：生产接管名单、启用记录、备份/发布/恢复、实际物理图片与双端Harness；#4、#5继续OPEN，父规格不改写。无性能/内存结论。

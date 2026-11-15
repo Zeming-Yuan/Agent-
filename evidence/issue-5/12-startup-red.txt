@@ -1,0 +1,44 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_startup_never_silently_claims_unowned_data[legacy] __
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-221/test_tb04_owner_contract_start0')
+legacy_services = namespace(create_app=<function create_app at 0xe0dad0929760>, Store=<class 't01_legacy_0eb3fb427b25491dab7b92bd0acf093a.store.Store'>)
+mode = 'legacy'
+
+    @pytest.mark.parametrize('mode', ['legacy', 'staging'])
+    def test_tb04_owner_contract_startup_never_silently_claims_unowned_data(tmp_path, legacy_services, mode):
+        from services.gateway import create_app
+        store = legacy_services.Store(tmp_path)
+        store.save_generated('file-' + 'd' * 32, b'old', 'old.png')
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:329: Failed
+_ test_tb04_owner_contract_startup_never_silently_claims_unowned_data[staging] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-221/test_tb04_owner_contract_start1')
+legacy_services = namespace(create_app=<function create_app at 0xe0dacdf7da80>, Store=<class 't01_legacy_535def04118f465cb6bdfc0b1a86e35e.store.Store'>)
+mode = 'staging'
+
+    @pytest.mark.parametrize('mode', ['legacy', 'staging'])
+    def test_tb04_owner_contract_startup_never_silently_claims_unowned_data(tmp_path, legacy_services, mode):
+        from services.gateway import create_app
+        store = legacy_services.Store(tmp_path)
+        store.save_generated('file-' + 'd' * 32, b'old', 'old.png')
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:329: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_startup_never_silently_claims_unowned_data[legacy]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_startup_never_silently_claims_unowned_data[staging]
+2 failed, 53 deselected, 1 warning in 0.22s

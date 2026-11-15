@@ -8,21 +8,20 @@ import uuid
 from contextlib import closing
 from pathlib import Path
 from services.store import task_fingerprint
-from services.ownership import validate_contract, inspect_contract
+from services.ownership import TASK_COLUMNS, global_idem_indexes, validate_contract, inspect_contract
 
-
-TASK_COLUMNS = 'id,kind,file_id,options,status,progress,result,error,idem,fingerprint,created,updated'
 
 
 def remove_global_idem_constraint(db):
-    schema = db.execute("SELECT sql FROM sqlite_master WHERE type IN ('index','trigger') AND tbl_name='tasks' AND sql IS NOT NULL").fetchall()
+    removed = global_idem_indexes(db)
+    schema = [row['sql'] for row in db.execute("SELECT name,sql FROM sqlite_master WHERE type IN ('index','trigger') AND tbl_name='tasks' AND sql IS NOT NULL") if row['name'] not in removed]
     db.execute("""CREATE TABLE tasks_next(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
         options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
         idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER)""")
     db.execute('INSERT INTO tasks_next(rowid,' + TASK_COLUMNS + ') SELECT rowid,' + TASK_COLUMNS + ' FROM tasks ORDER BY rowid')
     db.execute('DROP TABLE tasks')
     db.execute('ALTER TABLE tasks_next RENAME TO tasks')
-    for (sql,) in schema:
+    for sql in schema:
         db.execute(sql)
 
 
@@ -49,7 +48,7 @@ def contract_ownership(db_path: Path, legacy_owner: str, *, backup_dir: Path | N
         for task in db.execute('SELECT t.*,o.owner FROM tasks t JOIN object_owners o ON o.kind=\'task\' AND o.object_id=t.id WHERE t.idem IS NOT NULL').fetchall():
             mapped = db.execute('SELECT 1 FROM task_requests WHERE owner=? AND request_key=?', (task['owner'], task['idem'])).fetchone()
             if not mapped:
-                fingerprint = task_fingerprint(db_path.parent / 'files', task['kind'], task['file_id'], json.loads(task['options']))
+                fingerprint = task_fingerprint(db_path.parent / 'files', task['kind'], task['file_id'], json.loads(task['options'] or '{}'))
                 db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (task['owner'], task['idem'], fingerprint, task['id']))
         remove_global_idem_constraint(db)
         db.execute('CREATE TABLE IF NOT EXISTS ownership_migration(version INTEGER PRIMARY KEY, legacy_owner TEXT NOT NULL, backup_dir TEXT NOT NULL)')

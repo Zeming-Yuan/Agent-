@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import re
+import sqlite3
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -17,7 +18,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from pydantic import BaseModel, ConfigDict, Field
 from .store import Store
 from .identity import KeyRegistry
-from .ownership import expand_ownership, preflight_ownership
+from .ownership import preflight_ownership, inspect_contract, require_scoped_requests
 from .image_options import ImageOptions
 
 LOG = logging.getLogger('agent-mm')
@@ -43,8 +44,20 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     if identity_mode not in ('legacy', 'staging', 'strict'):
         raise ValueError('identity_mode must be legacy, staging or strict')
     if identity_mode == 'strict':
-        raise ValueError('strict requires completed owner migration (T02/T03/T04)')
-    if len(token) < 16:
+        try:
+            inspect_contract(Path(root) / 'state.sqlite3')
+        except (OSError, sqlite3.Error):
+            raise ValueError('strict requires completed owner migration') from None
+        if key_registry is None:
+            raise ValueError('strict requires explicit key registry')
+    if identity_mode != 'strict' and (Path(root) / 'state.sqlite3').exists():
+        report = preflight_ownership(Path(root) / 'state.sqlite3')
+        if any(report[key] for key in ('unowned_files', 'unowned_tasks', 'unowned_idempotency_records')):
+            raise ValueError('owner migration required; startup cannot claim unowned data')
+        uri = (Path(root) / 'state.sqlite3').resolve().as_uri() + '?mode=ro'
+        with contextlib.closing(sqlite3.connect(uri, uri=True)) as db:
+            require_scoped_requests(db)
+    if identity_mode != 'strict' and len(token) < 16:
         raise ValueError('Agent token must contain at least 16 characters')
     if type(context_window) is not int or not 1 <= context_window <= 262144:
         raise ValueError('Context window must be within the model native limit')
@@ -56,7 +69,6 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     LOG.info('ownership_preflight unowned_files=%s unowned_tasks=%s unowned_idempotency_records=%s running_tasks=%s',
              ownership_report['unowned_files'], ownership_report['unowned_tasks'],
              ownership_report['unowned_idempotency_records'], ownership_report['running_tasks'])
-    expand_ownership(store.db, 'legacy')
     active = {}
     main_slots = asyncio.Semaphore(2)
     audio_slots = asyncio.Semaphore(1)
@@ -445,8 +457,22 @@ async def acquire(semaphore):
 
 def application():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
+    mode = os.getenv('AGENT_IDENTITY_MODE')
+    if mode not in ('legacy', 'staging', 'strict'):
+        raise ValueError('explicit valid identity mode required (AGENT_IDENTITY_MODE)')
     base = Path(__file__).resolve().parents[1]
-    return create_app(base/'.private/runtime', (base/'.private/agent-api.key').read_text().strip(),
+    root = base / '.private' / 'runtime'
+    registry = None
+    if mode == 'strict':
+        inspect_contract(root / 'state.sqlite3')
+        registry_path = root / 'keys.sqlite3'
+        if registry_path.is_symlink() or not registry_path.is_file():
+            raise ValueError('strict requires existing explicit key registry')
+        registry = KeyRegistry(registry_path)
+        token = ''  # strict authenticates only the supplied registry, never the shared key file.
+    else:
+        token = (base / '.private' / 'agent-api.key').read_text().strip()
+    return create_app(root, token, key_registry=registry, identity_mode=mode,
                       context_window=int(os.getenv('MAIN_CONTEXT_TOKENS','200000')),
                       audio_enabled=os.getenv('AUDIO_ENABLED','0')=='1',
                       images_enabled=os.getenv('IMAGES_ENABLED','1')=='1')

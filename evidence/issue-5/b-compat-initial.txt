@@ -1,0 +1,139 @@
+.....................................................F...............F.. [ 52%]
+...................................F.........................F...        [100%]
+=================================== FAILURES ===================================
+_______________ test_tb03_expand_preserves_legacy_request_replay _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-220/test_tb03_expand_preserves_leg0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xea8f28bf5800>, wait_task=<function owner_env.<locals>.wait_task at 0xea8f28bf62a0>)
+legacy_services = namespace(create_app=<function create_app at 0xea8f28bca0c0>, Store=<class 't01_legacy_9394b2686e644fd1bdc2df2ad55fa6b7.store.Store'>)
+
+    def test_tb03_expand_preserves_legacy_request_replay(owner_env, legacy_services):
+        import httpx
+        from fastapi.testclient import TestClient
+        backend = owner_env.new_backend()
+        def old_client():
+            return TestClient(legacy_services.create_app(owner_env.root, owner_env.keys['legacy'],
+                run_worker=False, images_enabled=True, audio_enabled=False,
+                transport=httpx.MockTransport(backend)))
+        with old_client() as c:
+            original = owner_env.submit(c, 'legacy', request_key='old').json()['id']
+        with owner_env.client() as c:
+            replay = owner_env.submit(c, 'legacy', request_key='old')
+            assert replay.status_code == 202, replay.text
+>           assert replay.json()['id'] == original
+E           AssertionError: assert 'task-aa9ebc3...ce5a67f9b6512' == 'task-b27fb42...1dc1d5437e759'
+E             
+E             - task-b27fb428395b4fe8b2c1dc1d5437e759
+E             + task-aa9ebc322b1c4037a66ce5a67f9b6512
+
+tests/test_tb03_owner_tasks.py:40: AssertionError
+______ test_tb03_legacy_missing_material_conflicts_with_recoverable_task _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-220/test_tb03_legacy_missing_mater0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xea8f2b08b060>, wait_task=<function owner_env.<locals>.wait_task at 0xea8f2b08b560>)
+legacy_services = namespace(create_app=<function create_app at 0xea8f2b08b740>, Store=<class 't01_legacy_550216741e3146a590d67d5fe195c2a8.store.Store'>)
+
+    def test_tb03_legacy_missing_material_conflicts_with_recoverable_task(owner_env, legacy_services):
+        import httpx
+        from fastapi.testclient import TestClient
+        backend = owner_env.new_backend()
+        with TestClient(legacy_services.create_app(owner_env.root, owner_env.keys['legacy'],
+                        images_enabled=True, audio_enabled=False,
+                        transport=httpx.MockTransport(backend))) as c:
+            fid = owner_env.upload(c, 'legacy')
+            response = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[fid])
+            tid = response.json()['id']
+            done = owner_env.wait_task(c, tid, 'legacy', lambda t: t['status'] == 'completed')
+            result_id = done['result']['file_id']
+            assert c.delete('/v1/files/' + fid, headers=owner_env.auth('legacy')).status_code == 200
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            new_fid = owner_env.upload(c, 'legacy')
+            replay = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[new_fid])
+>           assert replay.status_code == 409
+E           assert 202 == 409
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb03_owner_tasks.py:237: AssertionError
+_ test_tb04_owner_contract_preflight_rejects_invalid_state[conflicting-request] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-220/test_tb04_owner_contract_prefl10')
+problem = 'conflicting-request'
+
+    @pytest.mark.parametrize('problem', ['wrong-legacy', 'missing-bytes', 'symlink', 'bad-options', 'empty-owner',
+                                          'orphan-owner', 'orphan-request', 'cross-request', 'orphan-digest', 'cross-digest', 'conflicting-request'])
+    def test_tb04_owner_contract_preflight_rejects_invalid_state(tmp_path, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path / 'runtime')
+        fid = 'file-' + 'd' * 32
+        store.save_generated(fid, b'old', 'old.png', owner='legacy')
+        task = store.submit('image_generate', None, {'prompt': 'x'}, 'old-key', owner='legacy')
+        legacy = 'another' if problem == 'wrong-legacy' else 'legacy'
+        with store.connect() as db:
+            if problem == 'missing-bytes':
+                (store.files / fid).unlink()
+            elif problem == 'symlink':
+                secret = tmp_path / 'outside'; secret.write_bytes(b'old')
+                (store.files / fid).unlink(); (store.files / fid).symlink_to(secret)
+            elif problem == 'bad-options':
+                db.execute("UPDATE tasks SET options='[]'")
+            elif problem == 'empty-owner':
+                db.execute("UPDATE object_owners SET owner=' '")
+            elif problem == 'orphan-owner':
+                db.execute("INSERT INTO object_owners VALUES('file','missing','legacy')")
+            elif problem == 'orphan-request':
+                db.execute("UPDATE task_requests SET task_id='missing'")
+            elif problem == 'cross-request':
+                db.execute("UPDATE task_requests SET owner='B'")
+            elif problem == 'conflicting-request':
+                other = 'task-' + 'f' * 32
+                db.execute('INSERT INTO tasks(id,options,status) VALUES(?,?,?)', (other, '{}', 'failed'))
+                db.execute("INSERT INTO object_owners VALUES('task',?,'legacy')", (other,))
+                db.execute('UPDATE task_requests SET task_id=?', (other,))
+            elif problem == 'orphan-digest':
+                db.execute("INSERT INTO file_digests VALUES('legacy','digest','missing')")
+            elif problem == 'cross-digest':
+                db.execute("INSERT INTO file_digests VALUES('B','digest',?)", (fid,))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:131: Failed
+_ test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating[missing-request] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-220/test_tb04_owner_contract_stric3/runtime'), registry=<...tion owner_env.<locals>.submit at 0xea8f28558860>, wait_task=<function owner_env.<locals>.wait_task at 0xea8f2855b420>)
+problem = 'missing-request'
+
+    @pytest.mark.parametrize('problem', ['unowned', 'running', 'missing-request', 'wrong-version', 'global-index', 'dangling'])
+    def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating(owner_env, problem):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(owner_env.root)
+        task = store.submit('image_generate', None, {'prompt': 'x'}, 'one', owner='legacy')
+        contract_ownership(store.db, 'legacy')
+        with store.connect() as db:
+            if problem == 'unowned':
+                db.execute('DELETE FROM object_owners')
+            elif problem == 'running':
+                db.execute("UPDATE tasks SET status='running'")
+            elif problem == 'missing-request':
+                db.execute('DELETE FROM task_requests')
+            elif problem == 'wrong-version':
+                db.execute('UPDATE ownership_migration SET version=2')
+            elif problem == 'global-index':
+                db.execute('CREATE UNIQUE INDEX global_idem ON tasks(idem)')
+            else:
+                db.execute("UPDATE tasks SET file_id='file-missing'")
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:315: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_expand_preserves_legacy_request_replay
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_legacy_missing_material_conflicts_with_recoverable_task
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_preflight_rejects_invalid_state[conflicting-request]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating[missing-request]
+4 failed, 133 passed, 49 deselected, 1 warning in 21.43s
