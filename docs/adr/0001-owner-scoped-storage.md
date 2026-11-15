@@ -25,3 +25,5 @@ T03 切片 A 增加 `task_requests(owner,request_key,fingerprint,task_id)` 旁�
 调用方清单：gateway 的任务提交/查询/取消显式传入鉴权 owner；image_routes 的提交/等待/结果路径显式传 owner；Store 内部 update/next_task 不借用默认用户查询，图片和媒体 worker 通过 worker_task 读取持久身份并传入素材/结果接口。既有测试 legacy 默认仅作为 expand 兼容接口保留，T04 再移除默认值。权限404、业务冲突409、全局满载429/Retry-After保持明确区分。未引入新状态机、队列公平性或个人配额。
 
 T03 旧数据恢复边界：若 T03 之前的任务尚无内容指纹，且原素材已被删除，无法证明新上传内容等价。此时重用旧键返回409，detail含本人原 task_id，继续查询原任务/下载已有结果；不会重跑推理或猜测内容。需要重新创作时使用新键。已有 T03 内容指纹的请求不受此历史限制，删除原参考图后重传相同内容仍复用原任务。
+
+T03 切片 B 的 `/v1/me` 只公开 Principal.owner。Key CLI 复用 KeyRegistry，`issue_to_file` 将一次性凭证排他写入0600私有文件，仅返回 key_id；创建/写入失败撤销新 Key，清理仅限本次创建的文件。轮换为先发同 owner 新 Key并验证，再撤销旧编号；撤销重复执行幂等。未增加 HTTP 管理接口或客户端可选 owner。任务、文件、参考图、请求映射、注册表在离线副本恢复后仍维持同一归属；生产 strict 与 contract 尚待 T04，状态保持 proposed。

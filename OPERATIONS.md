@@ -191,3 +191,18 @@ T02 已接入 HTTP 文件读/删/引用及 worker 结果归属，修正同步编
 测试 seam、基线、red/green 和审查记录见 evidence/issue-4/。类型检查、静态检查、构建/CI、Compose、安全扫描、变异测试、seed 均未配置，标为 N/A；物理模型、真实 HTTPS、双端 Harness、生产备份发布/回滚仍未验证。仅执行受影响测试，不以离线接口结果宣称完整 AC 或性能验收。
 
 T03 旧数据恢复边界：若 T03 之前的任务尚无内容指纹，且原素材已被删除，无法证明新上传内容等价。此时重用旧键返回409，detail含本人原 task_id，继续查询原任务/下载已有结果；不会重跑推理或猜测内容。需要重新创作时使用新键。已有 T03 内容指纹的请求不受此历史限制，删除原参考图后重传相同内容仍复用原任务。
+
+## T03 个人 Key 发放、撤销、轮换与遗失恢复
+
+以下仅为已实现运维命令，不在当前生产库执行。先确定独立受控副本、稳定 IMAGE_OWNER、注册表 IMAGE_KEY_DB 与新文件 IMAGE_KEY_OUT（父目录应为受限私有目录）。同一人轮换时必须沿用原 owner；禁止为方便轮换新建另一个 owner。
+
+```bash
+.venv/bin/python -m services.identity --db "$IMAGE_KEY_DB" issue --owner "$IMAGE_OWNER" --out "$IMAGE_KEY_OUT"
+.venv/bin/python -m services.identity --db "$IMAGE_KEY_DB" revoke --key-id "$IMAGE_OLD_KEY_ID"
+```
+
+发放只向 stdout 返回公开 key_id，原始 Key 只进入新私有文件，勿粘贴进聊天/日志。目标存在或写入失败会非零退出、撤销本次凭证，既有文件保持原样。错误只报告异常类别；本次创建的残片会删除。保留 owner/key_id 的运维记录与私有交付路径，原始 Key 不可由摘要恢复。
+
+轮换顺序：先用不同目标文件为同一 owner 发放新 Key，通过私有渠道交付；验证新 Key 的 `/v1/me` 与原任务/结果访问后，再按旧 key_id 撤销旧 Key。失败时原 Key 继续有效，除非已明确撤销。遗失凭证时重新发放同 owner Key，并按已保存 key_id 撤销遗失凭证；若同时遗失注册表，则从完整私有备份恢复映射，不能把历史任务重新归给所有人。撤销不可“复活”，只能发放新 Key。
+
+离线演练：子进程真实运行 CLI 发放→同 owner 再发放→重复撤销旧 Key，HTTP 验证旧401、新 Key 读原结果200、其他 owner404，输出无原始 Key。新目录副本恢复 SQLite、文件库和 KeyRegistry 后再次验证撤销、任务/result 与相同业务请求 ID。此为合成数据副本演练，不代表生产恢复/发布验收。

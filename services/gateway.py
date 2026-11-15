@@ -150,6 +150,10 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         LOG.info('%s %s %s %s', rid, request.method, request.url.path, response.status_code)
         return response
 
+    @app.get('/v1/me')
+    async def me(request: Request):
+        return {'owner': request.state.principal.owner}
+
     @app.get('/health')
     async def health():
         async def check(url):

@@ -20,3 +20,11 @@ Test correction: forged owner options initially collided with fixture's owner ar
 Slice A verification: approved affected12-file command in a-affected.txt →114 passed, one existing Starlette/AnyIO deprecation. Type/lint/build gates N/A (none configured). git diff --check exit0. Slice A code/tests/docs ready for independent fixed-diff review; Key CLI and /v1/me are slice B.
 
 Slice A review fix: historical deleted material now409 with original owner-scoped task_id; new content-fingerprint replay after source deletion remains202/same task. Public red→green recorded, affected116 passed in a-review-green.txt.
+
+Slice A re-review at f56cf69: Standards0/Spec0. Historical data ruling remains explicit in review-a.md and user docs; no unhandled important findings.
+
+## Slice B
+
+Base: f56cf69. GET /v1/me red404→owner-only response; rotation preserves original result while revoked/unknown401. issue_to_file red missing public function→private0600/digest-only; write-failure red left partial target→revoked/cleaned; pre-existing target preserved. CLI red no target (module had no entrypoint)→real subprocess issue/rotate/revoke with private output and same-owner HTTP access. Full focused task module28 passed (b-focused.txt). No production keys issued.
+
+Slice B verification: collected28/128; issue selector28 passed; plan-regression31 passed; affected124 passed, one existing warning. No full gates. git diff --check exit0. Key/identity slice ready for fixed-diff review.

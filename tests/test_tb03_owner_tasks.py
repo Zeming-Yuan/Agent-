@@ -253,3 +253,180 @@ def test_tb03_new_request_replays_after_original_material_deleted(owner_env):
         assert replay.status_code == 202 and replay.json()['id'] == tid
         assert replay.json()['result'] == done['result']
         assert len(backend.jobs) == 1
+
+
+def test_tb03_me_and_rotated_key_retain_owner_and_existing_result(owner_env, caplog):
+    import logging
+    backend = owner_env.new_backend()
+    with caplog.at_level(logging.INFO, logger='agent-mm'), owner_env.client(backend=backend, run_worker=True) as c:
+        assert c.get('/v1/me', headers=owner_env.auth('A')).json() == {'owner': 'A'}
+        tid = owner_env.submit(c, 'A').json()['id']
+        done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        old = owner_env.registry.resolve(owner_env.keys['A'])
+        new_key = owner_env.registry.issue('A')
+        new_auth = {'Authorization': 'Bearer ' + new_key}
+        owner_env.registry.revoke(old.key_id)
+        assert c.get('/v1/me', headers=new_auth).json() == {'owner': 'A'}
+        assert c.get('/v1/tasks/' + tid, headers=new_auth).json()['result'] == done['result']
+        assert c.get('/v1/files/' + done['result']['file_id'] + '/content', headers=new_auth).status_code == 200
+        for auth in [owner_env.auth('A'), {'Authorization': 'Bearer unknown-revoked-key'}]:
+            rejected = c.get('/v1/tasks/' + tid, headers=auth)
+            assert rejected.status_code == 401 and rejected.headers['www-authenticate'] == 'Bearer'
+            assert rejected.headers['x-request-id']
+        assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('B')).status_code == 404
+        assert new_key not in caplog.text and owner_env.keys['A'] not in caplog.text
+
+
+def test_tb03_issue_to_private_file_persists_only_digest_and_owner(owner_env, tmp_path):
+    import stat
+    from services.identity import issue_to_file, KeyRegistry
+    target = tmp_path / 'personal.key'
+    key_id = issue_to_file(owner_env.registry, 'A', target)
+    raw = target.read_text().strip()
+    principal = KeyRegistry(owner_env.registry.db_path).resolve(raw)
+    assert principal.owner == 'A' and principal.key_id == key_id
+    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert raw.encode() not in owner_env.registry.db_path.read_bytes()
+
+
+@pytest.mark.parametrize('fault', ['open', 'write'])
+def test_tb03_failed_key_delivery_revokes_and_preserves_existing_files(owner_env, tmp_path, monkeypatch, fault):
+    import os
+    import secrets
+    from services.identity import issue_to_file
+    raw = 'ephemeral-test-credential-never-delivered'
+    monkeypatch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+    target = tmp_path / 'key-output'
+    if fault == 'open':
+        target.write_text('existing key must survive')
+    else:
+        fdopen = os.fdopen
+        class BrokenOutput:
+            def __init__(self, stream):
+                self.stream = stream
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                self.stream.close()
+            def write(self, value):
+                self.stream.write(value[:4])
+                raise OSError('synthetic disk full')
+        monkeypatch.setattr(os, 'fdopen', lambda *a, **kw: BrokenOutput(fdopen(*a, **kw)))
+    with pytest.raises(OSError):
+        issue_to_file(owner_env.registry, 'A', target)
+    assert owner_env.registry.resolve(raw) is None
+    if fault == 'open':
+        assert target.read_text() == 'existing key must survive'
+    else:
+        assert not target.exists()
+
+
+def test_tb03_key_cli_issue_rotate_revoke_and_http_access(owner_env, tmp_path):
+    import subprocess
+    import sys
+    from services.identity import KeyRegistry
+    def cli(*args):
+        return subprocess.run([sys.executable, '-m', 'services.identity', '--db', str(owner_env.registry.db_path),
+                               *map(str, args)], capture_output=True, text=True, timeout=5)
+    first_path, second_path = tmp_path / 'first.key', tmp_path / 'second.key'
+    first = cli('issue', '--owner', 'A', '--out', first_path)
+    assert first.returncode == 0, first.stderr
+    assert first_path.exists()
+    first_key = first_path.read_text().strip()
+    first_id = first.stdout.strip()
+    assert owner_env.registry.resolve(first_key).key_id == first_id
+    backend = owner_env.new_backend()
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        submitted = c.post('/v1/tasks', headers={'Authorization': 'Bearer ' + first_key},
+                           json={'kind': 'image_generate', 'options': {'prompt': 'fixture'}})
+        assert submitted.status_code == 202
+        tid = submitted.json()['id']
+        done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        second = cli('issue', '--owner', 'A', '--out', second_path)
+        assert second.returncode == 0, second.stderr
+        second_key = second_path.read_text().strip()
+        assert second.stdout.strip() != first_id
+        assert cli('revoke', '--key-id', first_id).returncode == 0
+        assert cli('revoke', '--key-id', first_id).returncode == 0  # revocation is idempotent
+        assert KeyRegistry(owner_env.registry.db_path).resolve(first_key) is None
+        assert c.get('/v1/tasks/' + tid, headers={'Authorization': 'Bearer ' + first_key}).status_code == 401
+        rotated = {'Authorization': 'Bearer ' + second_key}
+        assert c.get('/v1/me', headers=rotated).json() == {'owner': 'A'}
+        assert c.get('/v1/files/' + done['result']['file_id'] + '/content', headers=rotated).status_code == 200
+        assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('B')).status_code == 404
+    collision = cli('issue', '--owner', 'A', '--out', second_path)
+    assert collision.returncode != 0
+    assert second_path.read_text().strip() == second_key
+    for result in [first, second, collision]:
+        assert first_key not in result.stdout + result.stderr
+        assert second_key not in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize('kind', ['image_generate', 'image_edit'])
+def test_tb03_sync_and_async_share_owner_request_identity(owner_env, kind):
+    backend = owner_env.new_backend()
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        task_ids = []
+        for owner in ['A', 'B']:
+            opts = {'image_ids': [owner_env.upload(c, owner)]} if kind == 'image_edit' else {}
+            response = owner_env.submit(c, owner, kind=kind, request_key='shared', **opts)
+            assert response.status_code == 202
+            tid = response.json()['id']
+            done = owner_env.wait_task(c, tid, owner, lambda t: t['status'] == 'completed')
+            headers = {**owner_env.auth(owner), 'Idempotency-Key': 'shared'}
+            if kind == 'image_edit':
+                replay = c.post('/v1/images/edits', headers=headers, data={'prompt': 'fixture'},
+                                files={'image': ('renamed.png', backend.png, 'image/png')})
+            else:
+                replay = c.post('/v1/images/generations', headers=headers, json={'prompt': 'fixture'})
+            assert replay.status_code == 200, replay.text
+            assert replay.json()['task_id'] == tid
+            assert replay.json()['data'][0]['file_id'] == done['result']['file_id']
+            task_ids.append(tid)
+        assert task_ids[0] != task_ids[1]
+        assert len(backend.jobs) == 2
+
+
+def test_tb03_restart_and_restored_copy_keep_task_identity_and_revocation(owner_env, tmp_path):
+    import shutil
+    import sqlite3
+    from contextlib import closing
+    from fastapi.testclient import TestClient
+    from services.gateway import create_app
+    from services.identity import KeyRegistry
+    import httpx
+    backend = owner_env.new_backend()
+    tasks = {}
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        for owner in ['A', 'B']:
+            fid = owner_env.upload(c, owner)
+            tid = owner_env.submit(c, owner, kind='image_edit', request_key='persisted', image_ids=[fid]).json()['id']
+            tasks[owner] = owner_env.wait_task(c, tid, owner, lambda t: t['status'] == 'completed')
+    old = owner_env.registry.resolve(owner_env.keys['A'])
+    rotated_key = owner_env.registry.issue('A')
+    owner_env.registry.revoke(old.key_id)
+    restored = tmp_path / 'restored'
+    restored.mkdir()
+    for source, target in [(owner_env.root / 'state.sqlite3', restored / 'state.sqlite3'),
+                           (owner_env.registry.db_path, restored / 'keys.sqlite3')]:
+        with closing(sqlite3.connect(source)) as src, closing(sqlite3.connect(target)) as dst:
+            src.backup(dst)
+    shutil.copytree(owner_env.root / 'files', restored / 'files')
+    for root, registry in [(owner_env.root, KeyRegistry(owner_env.registry.db_path)),
+                           (restored, KeyRegistry(restored / 'keys.sqlite3'))]:
+        app = create_app(root, owner_env.keys['legacy'], key_registry=registry, identity_mode='staging',
+                         images_enabled=True, audio_enabled=False, transport=httpx.MockTransport(backend))
+        with TestClient(app) as c:
+            assert c.get('/v1/me', headers=owner_env.auth('A')).status_code == 401
+            for owner in ['A', 'B']:
+                headers = {'Authorization': 'Bearer ' + rotated_key} if owner == 'A' else owner_env.auth(owner)
+                tid = tasks[owner]['id']
+                assert c.get('/v1/tasks/' + tid, headers=headers).json()['result'] == tasks[owner]['result']
+                assert c.get('/v1/files/' + tasks[owner]['result']['file_id'] + '/content', headers=headers).status_code == 200
+                other_headers = owner_env.auth('B') if owner == 'A' else {'Authorization': 'Bearer ' + rotated_key}
+                assert c.get('/v1/tasks/' + tid, headers=other_headers).status_code == 404
+                fid = c.post('/v1/files', headers=headers, files={'file': ('new.png', backend.png, 'image/png')}).json()['id']
+                replay = c.post('/v1/tasks', headers={**headers, 'Idempotency-Key': 'persisted'},
+                                json={'kind': 'image_edit', 'options': {'prompt': 'fixture', 'image_ids': [fid]}})
+                assert replay.status_code == 202 and replay.json()['id'] == tid
+    assert len(backend.jobs) == 2

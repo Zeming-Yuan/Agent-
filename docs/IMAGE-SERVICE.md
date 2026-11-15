@@ -69,3 +69,11 @@ MCP工具：generate_image、edit_image、get_image_task、cancel_image_task。�
 `task_requests` 旁表与任务、归属在同一 BEGIN IMMEDIATE 中写入；保留原 tasks 12 列和全局 idem UNIQUE，非 legacy 写 NULL。legacy 新写入保留旧指纹表示；旧幂等记录经 owner 校验后补入旁表，冻结旧版双向兼容测试覆盖只含 legacy 的副本。混合 owner 库不能交给旧版运行。生产仍 legacy，strict 仍拒绝启动；任务列表/contract 收口及生产多人开放不属于此切片。
 
 T03 旧数据恢复边界：若 T03 之前的任务尚无内容指纹，且原素材已被删除，无法证明新上传内容等价。此时重用旧键返回409，detail含本人原 task_id，继续查询原任务/下载已有结果；不会重跑推理或猜测内容。需要重新创作时使用新键。已有 T03 内容指纹的请求不受此历史限制，删除原参考图后重传相同内容仍复用原任务。
+
+## T03 身份查询与 Key 运维（切片 B）
+
+`GET /v1/me` 返回 `{"owner":"当前身份"}`，只来自已验证凭证；同一 owner 的多把有效 Key 返回相同身份。未知/撤销 Key 返回401，并保留请求 ID 与 WWW-Authenticate。换 Key 不改变任务、参考图与结果归属。请求体或 options 伪造 owner/key_id 返回422。
+
+维护者在本地通过 `python -m services.identity --db <注册表路径> issue --owner <稳定身份> --out <新私有文件>` 发放凭证；命令只输出 key_id，原始值只写独占创建的0600文件。`revoke --key-id <公开编号>` 可重复执行。服务器注册表仅存摘要和映射；命令参数、日志和恢复记录不传原始凭证。文件交付失败会撤销本次 Key 并清理本次新建的残片，不覆盖或删除既有文件。
+
+临时 Key CLI、同步/异步相同请求身份、轮换后原结果访问、重启以及新的隔离副本恢复均已有自动化证据，见 `evidence/issue-4/acceptance.md`。尚未验证真实 HTTPS/MCP、物理图片后端、Windows/macOS Harness 或生产切换；完整交付仍等待后续门禁。

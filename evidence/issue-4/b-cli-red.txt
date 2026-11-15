@@ -1,0 +1,32 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb03_key_cli_issue_rotate_revoke_and_http_access _____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-168/test_tb03_key_cli_issue_rotate0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfc7e1c8a9080>, wait_task=<function owner_env.<locals>.wait_task at 0xfc7e1c8a9120>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-168/test_tb03_key_cli_issue_rotate0')
+
+    def test_tb03_key_cli_issue_rotate_revoke_and_http_access(owner_env, tmp_path):
+        import subprocess
+        import sys
+        from services.identity import KeyRegistry
+        def cli(*args):
+            return subprocess.run([sys.executable, '-m', 'services.identity', '--db', str(owner_env.registry.db_path),
+                                   *map(str, args)], capture_output=True, text=True, timeout=5)
+        first_path, second_path = tmp_path / 'first.key', tmp_path / 'second.key'
+        first = cli('issue', '--owner', 'A', '--out', first_path)
+        assert first.returncode == 0, first.stderr
+>       assert first_path.exists()
+E       AssertionError: assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-clusteradmin/pytest-168/test_tb03_key_cli_issue_rotate0/first.key').exists
+
+tests/test_tb03_owner_tasks.py:334: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_key_cli_issue_rotate_revoke_and_http_access
+1 failed, 24 deselected, 1 warning in 0.13s

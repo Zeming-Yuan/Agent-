@@ -1,0 +1,22 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb03_issue_to_private_file_persists_only_digest_and_owner ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-164/test_tb03_issue_to_private_fil0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xec4ced2009a0>, wait_task=<function owner_env.<locals>.wait_task at 0xec4ced200a40>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-164/test_tb03_issue_to_private_fil0')
+
+    def test_tb03_issue_to_private_file_persists_only_digest_and_owner(owner_env, tmp_path):
+        import stat
+>       from services.identity import issue_to_file, KeyRegistry
+E       ImportError: cannot import name 'issue_to_file' from 'services.identity' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/identity.py)
+
+tests/test_tb03_owner_tasks.py:282: ImportError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_issue_to_private_file_persists_only_digest_and_owner
+1 failed, 21 deselected, 1 warning in 0.09s
