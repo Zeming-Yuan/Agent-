@@ -3,7 +3,7 @@
 Fixed base: 443fc6022af58f9679b99bc3fb2b40cbc616138c.
 Initial HEAD: f1f8084b13d349b711ddffc15b12f481403b63c6; re-review HEAD: 0d555b5.
 Diff command: git diff 443fc6022af58f9679b99bc3fb2b40cbc616138c...HEAD
-Scope: only slice A changes; independent reviewer contexts, reviewer role gpt-6.1-sol / high as configured by collaboration tool. No full gate run by reviewers.
+Scope: only slice A changes; independent reviewer contexts, reviewer role requested through collaboration tool (backend model identity not returned). No full gate run by reviewers.
 
 ## Standards
 
