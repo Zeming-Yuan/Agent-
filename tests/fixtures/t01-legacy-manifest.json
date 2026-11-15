@@ -1,0 +1,13 @@
+{
+  "source_commit": "443fc6022af58f9679b99bc3fb2b40cbc616138c",
+  "files": {
+    "services/audio_backend.py": "d27ec12dbbf501d1cd36efb71876651f0ecc379e5899112ef92b582d0715af09",
+    "services/audio_utils.py": "1cf52b1c78298d9d211279ea2db7e24d69c1305442256eb9a8341810368239c7",
+    "services/gateway.py": "ab2564c68992aea9bdd342eb58759c210d0f31b0fec6ba23c1801189f34d650a",
+    "services/image_options.py": "0cbd02cc0416a5b45249e3f6c3730ec7d771e933dba7774450efd0b949c57fb7",
+    "services/image_routes.py": "2294f8292c8741b94c9e7d761074efff67b972cd9e1d91957e64d5156dd41240",
+    "services/images.py": "43f36af162502c456f2250383fe7e4a1c2eeb0176fba4075a22d73113ebd176e",
+    "services/media.py": "20e5581ac4081d1d46cb1f740c10b2cd21d9bde02c75e9f3e2b3c5225f7057c6",
+    "services/store.py": "1b2e396554b76b39d2aadff523e56584468eeb20c44b416f8e77758354ac3b43"
+  }
+}

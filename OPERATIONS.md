@@ -142,6 +142,7 @@ journalctl --user -u agent-mm-image -n 50 --no-pager
 Mac遇到queued时继续查原任务ID；若/health的image unavailable或接口503，请维护者查guard日志并恢复服务。不要反复建新任务。恢复证据位于evidence/image-queue-recovery-20261114。
 
 恢复后新的电脑生图任务已完成，含网关重启后的释放/重载耗时181.088秒，采样期间MemAvailable最低44.48GiB；不能把之前热请求约12秒当作每次首图时间。Mac日志中多次约80秒取消并重建，因此工具说明/私有包补充：20秒为单次查询等待，queued/running持续查原任务，勿按80秒自动取消。
+
 # T01：兼容归属 expand（2026-11-15，离线副本验证）
 
 本阶段只扩展旁表，不启用生产多用户；原 files/tasks 列数、任务 ID、结果引用、全局 4 单与 2GiB 边界保持原契约。`create_app` 初始化将现有无归属对象补为 `legacy`。新旧版写入暂仍使用旧表示，维护者在停写后再次 expand；只读预检会显示这些未归属行。文件/任务写入迁移属于 T02/T03。
@@ -163,3 +164,13 @@ print(preflight_ownership(database))
 回退路径：停接单并保存新增任务和素材，确认后台无运行推理，再切回已验证的单用户旧版应用；保留旁表，不 DROP 数据或恢复旧快照覆盖新增写入。仅限仍属于 legacy 的数据；已有多个 owner 时只能回退到具备相应 owner 校验的版本。备份恢复先在另一副本检查原任务、素材和结果，再由维护者决定生产切换。
 
 切片 A 证据：`evidence/issue-2/a-*-red.txt` 与 `a-*-green.txt` 记录逐切片 red/green；`a-green.txt` 为计划指定的受影响回归，11 passed。ADR 见 `docs/adr/0001-owner-scoped-storage.md`。目前仅离线合成数据验证；旧/过渡版完整图片链路和恢复验证由切片 B 补齐，生产数据、实机后端、Windows/macOS Harness 未验收。
+
+T01 身份接线：`create_app(root, token)` 保留旧位置参数，默认在 root/keys.sqlite3 只持久化 legacy Key 的 SHA256 摘要和 owner/key_id，原始 Key 仍由私有配置交付。传入显式 `key_registry` 时只信该注册表，位置 token 不成为额外回退凭证。KeyRegistry 的 issue 返回一次性随机 Key；register 对同 owner/key 幂等，跨 owner 重绑报 ValueError；revoke 后即使重新注册或重启也不会恢复授权。同 owner 的新 Key 保留 owner、使用不同 key_id。未知、撤销或非 legacy owner 在 legacy 模式返回 401，保留 WWW-Authenticate 与请求 ID。
+
+`identity_mode='staging'` 只允许在明确隔离的测试数据副本中使用。本票尚未完成文件/任务 owner 校验，staging 不是生产访问控制，不能暴露给用户；生产 application() 仍固定默认 legacy，不能由请求选择身份模式。`strict` 在 T02/T03/T04 完成前启动即 ValueError，非法模式同样在创建数据库前失败，避免半迁移入口。测试身份 A/B 的存在不表示跨人文件与任务隔离已交付。
+
+旧版回退只能用于单一 legacy 数据及仍有效的单 Key；旧版不理解注册表撤销，撤销/轮换后回退需同步更换旧版私有 token 并验证失效 Key 被拒绝。多个 owner 数据、完整个人凭证与隔离上线由后续票收口。
+
+切片 B 在合成旧格式库中验证：独立冻结的旧版完整服务 → 过渡版 → 旧版均上传、执行和取回可解码 PNG；原排队参考图/透明前景关联、历史结果和幂等 task_id 跨重启保留，running 仍按原恢复规则变为 failed，后端实际工作总数为 5（两个原排队任务、三次新生成），没有幂等重放推理。另验证旧/新版原上传及 task_idempotency 用例、旁表迁移注入失败后原子回滚与重试、并发旧写入、并发 Key 注册、数据库/文件/注册表备份恢复到新目录。证据与验收映射见 `evidence/issue-2/acceptance.md`。
+
+本轮离线最终验证：29 项 T01 测试已采集，计划指定受影响回归 31 passed，pytest 全套 79 passed（1 项既有 Starlette/AnyIO 弃用警告）。未配置类型检查/静态检查/构建门禁，标记 N/A；实机、生产与平台链路仍未验证。

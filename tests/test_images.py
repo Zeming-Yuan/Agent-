@@ -135,8 +135,9 @@ def test_image_submission_uses_uuid_and_cancel_during_post_cleans_up(tmp_path):
     assert len(accepted)==1 and interrupted==accepted and not running
 
 
-def test_rejected_edit_releases_only_new_unreferenced_uploads(tmp_path):
-    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1)) as c:
+def test_rejected_edit_releases_only_new_unreferenced_uploads(tmp_path, owner_env):
+    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1,
+                               transport=httpx.MockTransport(owner_env.new_backend()))) as c:
         c.post('/v1/tasks',headers=AUTH,json={'kind':'image_generate','options':{'prompt':'x'}})
         r=c.post('/v1/images/edits',headers=AUTH,data={'prompt':'edit'},files={'image':('new.png',png())})
         assert r.status_code==429
@@ -145,8 +146,9 @@ def test_rejected_edit_releases_only_new_unreferenced_uploads(tmp_path):
         assert not list(store.files.iterdir())
 
 
-def test_openai_sdk_image_array_reaches_image_edit_task(tmp_path):
-    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1)) as c:
+def test_openai_sdk_image_array_reaches_image_edit_task(tmp_path, owner_env):
+    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1,
+                               transport=httpx.MockTransport(owner_env.new_backend()))) as c:
         # Fill the queue: correct multipart parsing reaches admission and returns429, not422 missing image.
         c.post('/v1/tasks',headers=AUTH,json={'kind':'image_generate','options':{'prompt':'x'}})
         r=c.post('/v1/images/edits',headers=AUTH,data={'prompt':'edit'},files=[('image[]',('one.png',png())),('image[]',('two.png',png('blue')))])
@@ -177,8 +179,9 @@ def test_failed_reference_upload_removes_previous_comfy_scratch(tmp_path):
     assert not list(folder.iterdir())
 
 
-def test_unsupported_mask_is_rejected_before_any_edit_is_submitted(tmp_path):
-    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1)) as c:
+def test_unsupported_mask_is_rejected_before_any_edit_is_submitted(tmp_path, owner_env):
+    with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1,
+                               transport=httpx.MockTransport(owner_env.new_backend()))) as c:
         c.post('/v1/tasks',headers=AUTH,json={'kind':'image_generate','options':{'prompt':'x'}})
         r=c.post('/v1/images/edits',headers=AUTH,data={'prompt':'只修改遮罩处'},files={'image':('image.png',png()),'mask':('mask.png',png())})
         assert r.status_code==422

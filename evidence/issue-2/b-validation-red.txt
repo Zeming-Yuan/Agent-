@@ -1,0 +1,70 @@
+..........FFFF                                                           [100%]
+=================================== FAILURES ===================================
+_ test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-94/test_tb01_legacy_expand_regist1')
+owner = '', key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    @pytest.mark.parametrize('owner,key', [('', 'x' * 32), ('  ', 'x' * 32), ('A', 'short')])
+    def test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity(tmp_path, owner, key):
+        from services.identity import KeyRegistry
+    
+        registry = KeyRegistry(tmp_path / 'keys.sqlite3')
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:146: Failed
+_ test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[  -xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-94/test_tb01_legacy_expand_regist2')
+owner = '  ', key = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+
+    @pytest.mark.parametrize('owner,key', [('', 'x' * 32), ('  ', 'x' * 32), ('A', 'short')])
+    def test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity(tmp_path, owner, key):
+        from services.identity import KeyRegistry
+    
+        registry = KeyRegistry(tmp_path / 'keys.sqlite3')
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:146: Failed
+_ test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[A-short] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-94/test_tb01_legacy_expand_regist3')
+owner = 'A', key = 'short'
+
+    @pytest.mark.parametrize('owner,key', [('', 'x' * 32), ('  ', 'x' * 32), ('A', 'short')])
+    def test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity(tmp_path, owner, key):
+        from services.identity import KeyRegistry
+    
+        registry = KeyRegistry(tmp_path / 'keys.sqlite3')
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:146: Failed
+____________ test_tb01_legacy_expand_registry_cannot_reassign_a_key ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-94/test_tb01_legacy_expand_regist4')
+
+    def test_tb01_legacy_expand_registry_cannot_reassign_a_key(tmp_path):
+        from services.identity import KeyRegistry
+    
+        registry = KeyRegistry(tmp_path / 'keys.sqlite3')
+        raw = registry.issue('A')
+        principal = registry.resolve(raw)
+>       with pytest.raises(ValueError, match='another owner'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:157: Failed
+=============================== warnings summary ===============================
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[  -xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[A-short]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_cannot_reassign_a_key
+4 failed, 10 passed, 1 warning in 0.78s

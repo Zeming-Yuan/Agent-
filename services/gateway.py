@@ -16,6 +16,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from .store import Store
+from .identity import KeyRegistry
 from .ownership import expand_ownership, preflight_ownership
 from .image_options import ImageOptions
 
@@ -37,12 +38,20 @@ class TaskBody(BaseModel):
 
 def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                max_upload_bytes=64*1024*1024, max_pending=4, context_window=32768,
-               audio_enabled=True, images_enabled=False):
+               audio_enabled=True, images_enabled=False,
+               key_registry: KeyRegistry | None = None, identity_mode: str = 'legacy'):
+    if identity_mode not in ('legacy', 'staging', 'strict'):
+        raise ValueError('identity_mode must be legacy, staging or strict')
+    if identity_mode == 'strict':
+        raise ValueError('strict requires completed owner migration (T02/T03/T04)')
     if len(token) < 16:
         raise ValueError('Agent token must contain at least 16 characters')
     if type(context_window) is not int or not 1 <= context_window <= 262144:
         raise ValueError('Context window must be within the model native limit')
     store = Store(root, max_pending)
+    if key_registry is None:
+        key_registry = KeyRegistry(store.root / 'keys.sqlite3')
+        key_registry.register('legacy', token)
     ownership_report = preflight_ownership(store.db)
     LOG.info('ownership_preflight unowned_files=%s unowned_tasks=%s unowned_idempotency_records=%s running_tasks=%s',
              ownership_report['unowned_files'], ownership_report['unowned_tasks'],
@@ -121,7 +130,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         scheme, separator, credential = authorization.partition(' ')
         bearer = scheme.casefold() == 'bearer' and bool(separator)
         credential = credential.lstrip(' ').rstrip(' \t')
-        authenticated = bearer and hmac.compare_digest(credential.encode(), token.encode())
+        principal = key_registry.resolve(credential) if bearer else None
+        authenticated = principal is not None and (identity_mode != 'legacy' or principal.owner == 'legacy')
         if not authenticated:
             formatted_match = bearer and hmac.compare_digest(credential.strip().encode(), token.encode())
             # Only diagnostic booleans: never emit headers, tokens or token hashes.
@@ -130,6 +140,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                         bool(authorization), bearer, formatted_match)
             return JSONResponse({'error':{'message':'Invalid API key','type':'authentication_error'}}, 401,
                                 headers={'X-Request-ID':rid, 'WWW-Authenticate':'Bearer'})
+        request.state.principal = principal
         # Caddy also caps the complete request, including chunked uploads.
         length = request.headers.get('content-length', '0')
         if not length.isdigit() or int(length) > max_upload_bytes + 1024*1024:
