@@ -35,3 +35,9 @@ Disable admission and preserve tasks/files/KeyRegistry/raw evidence; confirm bac
 #26 explicitly tracks a reliable correlated actual old-profile release producer plus physical admission fault/recovery demonstration. Current T08 still emits unknown and will never be treated as positive proof. #24 is the safe single-task real measurement; #12 owns measured profile certification/hot budgets; #15 owns actual two-platform Harness and recovery. #10 remainsOPEN; parent#1 unchanged. This document does not claim complete #10 acceptance or production readiness.
 
 Independent two-axis final review and original selective sync are appended after fixed source commits exist.
+
+## Final review repair
+
+Fixed B review: Standards0, Spec1P2 (review-b.md); reviewer targeted16/27passed.22RED→GREEN reproduces configured pending-ACK ceiling and adds visible failure/degrade/new503 without abandoning owned release settlement. The previous414/85counts are pre-repair source evidence only; repair-final-affected.txt and final re-review supersede them below.
+
+Fresh repaired source: ticket86collected/86passed; explicit16affected415passed, one existing AnyIO warning. Bash syntax0. Scoped88payload path/private-key-marker inspection found0suspicious items (not a configured scanner). repair-source-hashes.json freezes tested source; no code changed during final tests. Independent fixed-commit re-review follows.

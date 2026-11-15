@@ -541,3 +541,27 @@ def test_tb09_operator_approval_cannot_make_unidentified_baseline_valid(tmp_path
     path.write_text(json.dumps(cfg))
     digest=hashlib.sha256(path.read_bytes()).hexdigest()
     assert load_resources(path,expected_sha256=digest,runtime_hash='runtime')=={}
+
+
+def test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled(owner_env):
+    import asyncio,threading
+    backend=owner_env.new_backend()
+    entered=threading.Event();release=threading.Event();settled=threading.Event()
+    async def external(request):
+        if request.url.path=='/free':
+            entered.set()
+            await asyncio.to_thread(release.wait,2.)
+            settled.set()
+        return await backend(request)
+    with client_with_resources(owner_env,external,**resources(wait_timeout=.08)) as c:
+        tid=owner_env.submit(c).json()['id']
+        assert entered.wait(1)
+        try:
+            done=owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed',timeout=.3)
+            assert done['blocked_reason']=='release_unconfirmed'
+            assert not settled.is_set() and backend.jobs==[]
+            assert c.get('/health',headers=owner_env.auth('A')).status_code==503
+            assert owner_env.submit(c).status_code==503
+        finally:
+            release.set()
+    assert settled.is_set() and backend.jobs==[]

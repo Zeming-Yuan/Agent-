@@ -201,6 +201,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 backends['image']={'status':'unavailable'}
         if images_enabled and not admission.configured():
             backends['image']={'status':'unavailable','reason':'No valid image resource configuration'}
+        if images_enabled and admission.unavailable_reason:
+            backends['image']={'status':'unavailable','reason':admission.unavailable_reason}
         if images_enabled and app.state.image_worker is not None and app.state.image_worker.done():
             backends['image']={'status':'unavailable','reason':'Image worker stopped; restart backend and gateway'}
         ready=(backends['main']=={} or backends['main'].get('status') in ('ready','ok')) and all(s.get('status')=='ready' for name,s in backends.items() if name!='main')
@@ -217,7 +219,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
 
     async def ensure_image_available():
         worker = app.state.image_worker
-        if worker is not None and worker.done():
+        if admission.unavailable_reason or (worker is not None and worker.done()):
             raise HTTPException(503, 'Image worker unavailable; operator must restore the backend and gateway')
         try:
             response = await client.get(image_url+'/system_stats', timeout=3)

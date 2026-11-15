@@ -390,3 +390,5 @@ bash -n deploy/run-image.sh deploy/run-gateway-runtime.sh
 内存不足保持queued/waiting_resources并解释system_memory/container_memory；时间上限使用配置wait_timeout，超限明确failed，900秒推理时钟仍从实际推理开始。显式取消仅本人任务，queued可直接cancelled，但在途控制请求仍须结算才能释放worker。正常关闭时未启动推理的queued任务保留，恢复后按原task_id继续；running仍按既有恢复规则失败，不能自动重跑。释放请求失败/结果未知、证明丢失或启动清理失败时worker停止、健康降级，新工作503，已有记录仍可恢复。启动清理只尝试一次，不无限自动恢复/加载。
 
 回滚继续保全数据库、文件、注册表与证据；先停接单、确认旧推理/控制请求结束，再恢复保留owner/T07清理/T09准入的版本。预算/证明无法确认则保持禁用。没有新数据库格式、seed、不可逆迁移或新的公共观测接口。生产恢复、实机安全切换/真实采样及Windows/macOS Harness均未验证，后续#24、#12、#15承接；#10不因离线测试关闭。
+
+T09最终审查修复：/free迟迟未返回时也在配置wait_timeout到达后明确failed/release_unconfirmed，健康立即降级且新任务503；worker仍持有在途HTTP请求直到其结算，不会因任务已失败而放行下一单。此请求另有原30秒网络边界，不能用它替代用户可见资源等待上限。对不确定请求只做人工受控恢复。

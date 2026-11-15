@@ -1,0 +1,51 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-532/test_tb09_release_ack_deadline0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xeba9c793a7a0>, wait_task=<function owner_env.<locals>.wait_task at 0xeba9c793a8e0>)
+
+    def test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled(owner_env):
+        import asyncio,threading
+        backend=owner_env.new_backend()
+        entered=threading.Event();release=threading.Event();settled=threading.Event()
+        async def external(request):
+            if request.url.path=='/free':
+                entered.set()
+                await asyncio.to_thread(release.wait,2.)
+                settled.set()
+            return await backend(request)
+        with client_with_resources(owner_env,external,**resources(wait_timeout=.08)) as c:
+            tid=owner_env.submit(c).json()['id']
+            assert entered.wait(1)
+            try:
+>               done=owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed',timeout=.3)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:560:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xeba9c7da3680>
+tid = 'task-b7ad84395b40469ea6cbc8e7bc2c7963', owner = 'A'
+predicate = <function test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled.<locals>.<lambda> at 0xeba9c7ba3b00>
+timeout = 0.3
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-b7ad84395b40469ea6cbc8e7bc2c7963', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'queued', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794730210, 'updated': 1794730210, 'stage': 'waiting_resources', 'stage_seq': 1, 'stage_started_at': 1794730210.900238, 'stage_updated_at': 1794730210.900238, 'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'step': None, 'steps': None}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled
+1 failed, 85 deselected, 1 warning in 0.76s

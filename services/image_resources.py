@@ -107,6 +107,7 @@ class ImageAdmission:
         self.settings = copy.deepcopy(settings or {})
         self.runtime_hash = runtime_hash
         self.proof = []
+        self.unavailable_reason = None
 
     def budget(self, item):
         return self.budgets.get(profile_for(item))
@@ -150,7 +151,7 @@ class ImageAdmission:
             return None
 
     async def prepare(self, item, store, client, url):
-        from .images import settled_post
+        from .images import settled_post, settle
         tid = item['id']
         self.proof = []
         start = time.monotonic()
@@ -171,11 +172,22 @@ class ImageAdmission:
         task_event(store,tid,{'type':'resource_wait','reason':'release_unconfirmed'})
         # A single owned request. HTTP completion alone never authorizes loading.
         record_current_task(store,tid,operation='release',event='release_requested')
+        request = asyncio.create_task(settled_post(client, url+'/free', json={'unload_models': True, 'free_memory': True}))
+        async def finish_request():
+            return await request
         try:
-            response = await settled_post(client, url+'/free', json={'unload_models': True, 'free_memory': True})
+            done,_ = await asyncio.wait({request},timeout=max(0,self.settings['wait_timeout']-(time.monotonic()-start)))
+            if not done:
+                self.unavailable_reason = 'Model release deadline exceeded; operator recovery required'
+                task_event(store,tid,{'type':'failed','error':self.unavailable_reason,'blocked_reason':'release_unconfirmed'})
+                # Terminal visibility does not release serial ownership of the in-flight call.
+                await settle(finish_request())
+                raise ReleaseUnconfirmed(self.unavailable_reason)
+            response = request.result()
             response.raise_for_status()
             record_current_task(store,tid,operation='release',event='release_acknowledged')
         except asyncio.CancelledError:
+            await settle(finish_request())
             raise
         except Exception as exc:
             raise ReleaseUnconfirmed('Model release request unconfirmed') from exc
