@@ -10,7 +10,7 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe55c16286570>
         from concurrent.futures import ThreadPoolExecutor
         from pathlib import Path
         import threading
-    
+
         with owner_env.client() as a, owner_env.client() as b:
             fid = owner_env.upload(a, 'A')
             source = owner_env.root / 'files' / fid
@@ -18,7 +18,7 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe55c16286570>
             deleting = threading.Event()
             deleted = threading.Event()
             original_open = Path.open
-    
+
             def controlled_open(path, *args, **kwargs):
                 if path == source and args and args[0] == 'rb':
                     opening.set()
@@ -27,16 +27,16 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe55c16286570>
                     # With it, deletion waits for hashing to release the SQLite lock.
                     deleted.wait(.2)
                 return original_open(path, *args, **kwargs)
-    
+
             monkeypatch.setattr(Path, 'open', controlled_open)
-    
+
             def remove():
                 assert opening.wait(2)
                 deleting.set()
                 response = b.delete('/v1/files/' + fid, headers=owner_env.auth('A'))
                 deleted.set()
                 return response
-    
+
             # TestClient surfaces unhandled500 as an exception; either is a failure.
             with ThreadPoolExecutor(max_workers=2) as pool:
                 deletion = pool.submit(remove)
@@ -45,8 +45,8 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe55c16286570>
 >               response = submission.result(timeout=5)
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb05_server_resume.py:117: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:117:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 /usr/lib/python3.12/concurrent/futures/_base.py:456: in result
     return self.__get_result()
            ^^^^^^^^^^^^^^^^^^^
@@ -153,7 +153,7 @@ services/store.py:24: in task_fingerprint
 tests/test_tb05_server_resume.py:101: in controlled_open
     return original_open(path, *args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-258/test_tb05_delete_racing_reques0/runtime/files/file-2def3c9296cd4e5e8dc392afc4cf8333')
 mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None

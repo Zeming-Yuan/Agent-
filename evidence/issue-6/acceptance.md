@@ -10,13 +10,13 @@ User-confirmed fixed base ea6092f33bc394315a6801166180cabb2a70694e; controlled c
 | 2 Same-owner replay before readiness; offline read/replay/download |01 async503RED→GREEN,05 sync generate/edit503RED→GREEN;08 edit new upload/same content matches old request, conflict409;09 revokedKey401/new same-ownerKey recovers offline; stopped uncertain worker still returns same failed task |Inputs must remain valid and owned; missing/deleted original material can be reuploaded for content matching, or recover directly by task ID. No new client journal. |
 | 3 Owner-only pagination/status, recover lost response, no unowned/cross-owner leak |02 paginationRED→GREEN;03 invalidstatusRED→GREEN; explicit1..100/default20 and25same-time tasks; five statuses; other/unknown/empty cursors404; A/B/unowned list empty; unauthenticated401; response object/data/has_more/next_cursor, no owner/internal fingerprint |Order stable by(created,rowid), ID cursor validated in same read snapshot. No queue fairness or quota added. |
 | 4 New offline requests503/no new task; inference once |08 async/sync generation/edit all503 and empty task list; failed sync edit cleans its created reference; concurrent readiness barrier forces two prelookups to miss then transactional second lookup gives one ID/job;01/05/06/08/09 assert actual backend job counts |Existing global4pending/2GiB and20GiB protection unchanged. No memory/performance measurement. |
-| 5 Restart queue/result persistence, running fails, deleted results unavailable/no rerun |07 child processos._exit after real worker starts, strict app reconstructed same root:completed readable,queued preserved,running failed; offline replays all IDs; resumed worker executes queued only;08 async/sync deletedresult404 with same task/no second job |Migration still refuses running. Runtime read-only inspection permits owned contracted running then recover before workers. Existing backend cleanup handles orphan work before admitting queued inference; no GPU resume promise. |
+| 5 Restart queue/result persistence, running fails, deleted results unavailable/no rerun |07 child process os._exit after real worker starts, strict app reconstructed same root:completed readable,queued preserved,running failed; offline replays all IDs; resumed worker executes queued only;08 async/sync deletedresult404 with same task/no second job |Migration still refuses running. Runtime read-only inspection permits owned contracted running then recover before workers. Existing backend cleanup handles orphan work before admitting queued inference; no GPU resume promise. |
 
 ## TDD and review evidence
 
 A commits a53df86 (vertical core), bb4d8b3 (review repairs). A independent axes initially Standards2P2/Spec1P2: contracted list fields and pre-read fingerprint/deletion race. Both reproduced and fixed red→green, independently re-reviewed Standards0/Spec0. review-a.md records fixed ranges. A focused9passed; affected135passed.
 
-B adds cancellation separation and shared image submission; a real crash revealed T04 strict runtime preflight prevented recover. Runtime-only allow_running retains all ownership checks and migration refusal; T04 former legitimate-running refusal replaced by queued/running × fivecorruption matrix (10passed). B review pending until fixed commit, see review-b.md when recorded.
+B adds cancellation separation and shared image submission; a real crash revealed T04 strict runtime preflight prevented recover. Runtime-only allow_running retains all ownership checks and migration refusal; T04 former legitimate-running refusal replaced by queued/running × fivecorruption matrix (10passed). B fixed bb4d8b3...2f6493b independently reviewed:Standards0/Spec0, no unhandled findings; details in review-b.md. Standards focused24passed; Spec focused45passed.
 
 ## Verification entry points
 
@@ -40,3 +40,11 @@ No schema migration is introduced. Before rollback, stop new work/writers, prese
 Product delivery must verify each changed path against base before replacing, then compare SHA256. Only scoped code/tests/docs/sanitized evidence, no private data or config. baseline.json records controlled checkout inputs (product matched before implementation); final sync-manifest.json records actual selective delivery when performed. Until recorded, delivery and product-cwd verification remain pending.
 
 Additional factory-path RED→GREEN:11-factory-crash-red reproduced the separate application() precheck refusal; factory now uses the same runtime inspection as create_app.11-factory-crash-green verifies both direct reconstruction and isolated factory restore,2passed. b-commit-affected235passed precedes this final one-line factory change; b-before-review is the fresh affected factory/plan selection. Final postreview14-file result will supersede prior counts.
+
+## Fresh final source verification (after B implementation)
+
+- final-collect.txt:34 selected/240total (nonempty).
+- final-affected.txt:14 affected files,236passed,one existing Starlette/AnyIO warning.
+- b-before-review.txt:38passed/202deselected includes final factory path and planned regression.
+- Whole-range diff hygiene found only captured pytest-log trailing spaces; normalized whitespace in sanitized evidence, preserving diagnostics. Fresh final-range check is required after committing these evidence changes.
+- Final scope excludes four existing audio-only tests; fullsuite was not run. No unconfigured gate or physical acceptance is implied.

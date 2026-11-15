@@ -10,37 +10,37 @@ self = MemoryObjectReceiveStream(_state=_MemoryObjectStreamState(max_buffer_size
 >           return self.receive_nowait()
                    ^^^^^^^^^^^^^^^^^^^^^
 
-../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/streams/memory.py:119: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/streams/memory.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = MemoryObjectReceiveStream(_state=_MemoryObjectStreamState(max_buffer_size=0, buffer=deque([]), open_send_channels=0, open_receive_channels=0, waiting_receivers=OrderedDict(), waiting_senders=OrderedDict()), _closed=True, _waiters=None)
 
     def receive_nowait(self) -> T_co:
         """
         Receive the next item if it can be done without waiting.
-    
+
         :return: the received item
         :raises ~anyio.ClosedResourceError: if this send stream has been closed
         :raises ~anyio.EndOfStream: if the buffer is empty and this stream has been
             closed from the sending end
         :raises ~anyio.WouldBlock: if there are no items in the buffer and no tasks
             waiting to send
-    
+
         """
         if self._closed:
             raise ClosedResourceError
-    
+
         if self._state.waiting_senders:
             # Get the item from the next sender
             send_event, item = self._state.waiting_senders.popitem(last=False)
             self._state.buffer.append(item)
             send_event.set()
-    
+
         if self._state.buffer:
             return self._state.buffer.popleft()
         elif not self._state.open_send_channels:
             raise EndOfStream
-    
+
 >       raise WouldBlock
 E       anyio._core._exceptions.WouldBlock
 
@@ -52,18 +52,18 @@ fut = <coroutine object FastAPI.__call__ at 0xf2fb49371a80>, timeout = 3
 
     async def wait_for(fut, timeout):
         """Wait for the single Future or coroutine to complete, with timeout.
-    
+
         Coroutine will be wrapped in Task.
-    
+
         Returns result of the Future or coroutine.  When a timeout occurs,
         it cancels the task and raises TimeoutError.  To avoid the task
         cancellation, wrap it in shield().
-    
+
         If the wait is cancelled, the task is also cancelled.
-    
+
         If the task suppresses the cancellation and returns a value instead,
         that value is returned.
-    
+
         This function is a coroutine.
         """
         # The special case for timeout <= 0 is for the following case:
@@ -83,26 +83,26 @@ fut = <coroutine object FastAPI.__call__ at 0xf2fb49371a80>, timeout = 3
         #         assert False
         #
         # asyncio.run(test_waitfor())
-    
-    
+
+
         if timeout is not None and timeout <= 0:
             fut = ensure_future(fut)
-    
+
             if fut.done():
                 return fut.result()
-    
+
             await _cancel_and_wait(fut)
             try:
                 return fut.result()
             except exceptions.CancelledError as exc:
                 raise TimeoutError from exc
-    
+
         async with timeouts.timeout(timeout):
 >           return await fut
                    ^^^^^^^^^
 
-/usr/lib/python3.12/asyncio/tasks.py:520: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/tasks.py:520:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/applications.py:1159: in __call__
     await super().__call__(scope, receive, send)
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/applications.py:107: in __call__
@@ -126,20 +126,20 @@ services/gateway.py:160: in guard
     await receive_event.wait()
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2009: in wait
     await self._event.wait()
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <asyncio.locks.Event object at 0xf2fb48923f20 [unset]>
 
     async def wait(self):
         """Block until the internal flag is true.
-    
+
         If the internal flag is true on entry, return True
         immediately.  Otherwise, block until another coroutine calls
         set() to set the flag to true, then return True.
         """
         if self._value:
             return True
-    
+
         fut = self._get_loop().create_future()
         self._waiters.append(fut)
         try:
@@ -159,8 +159,8 @@ kind = 'image_generate'
         with owner_env.client(backend=backend, run_worker=True) as c:
 >           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
 
-tests/test_tb05_server_resume.py:173: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:173:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
     return cast(T_Retval, self.start_task_soon(func, *args).result())
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,7 +176,7 @@ tests/test_tb05_server_resume.py:43: in disconnecting_asgi_request
     await asyncio.wait_for(app(scope, receive, send), 3)
 /usr/lib/python3.12/asyncio/tasks.py:519: in wait_for
     async with timeouts.timeout(timeout):
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <Timeout [expired]>
 exc_type = <class 'asyncio.exceptions.CancelledError'>
@@ -189,14 +189,14 @@ exc_val = CancelledError(), exc_tb = <traceback object at 0xf2fb493fa580>
         exc_tb: Optional[TracebackType],
     ) -> Optional[bool]:
         assert self._state in (_State.ENTERED, _State.EXPIRING)
-    
+
         if self._timeout_handler is not None:
             self._timeout_handler.cancel()
             self._timeout_handler = None
-    
+
         if self._state is _State.EXPIRING:
             self._state = _State.EXPIRED
-    
+
             if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
                 # Since there are no new cancel requests, we're
                 # handling this.
@@ -214,37 +214,37 @@ self = MemoryObjectReceiveStream(_state=_MemoryObjectStreamState(max_buffer_size
 >           return self.receive_nowait()
                    ^^^^^^^^^^^^^^^^^^^^^
 
-../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/streams/memory.py:119: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/streams/memory.py:119:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = MemoryObjectReceiveStream(_state=_MemoryObjectStreamState(max_buffer_size=0, buffer=deque([]), open_send_channels=0, open_receive_channels=0, waiting_receivers=OrderedDict(), waiting_senders=OrderedDict()), _closed=True, _waiters=None)
 
     def receive_nowait(self) -> T_co:
         """
         Receive the next item if it can be done without waiting.
-    
+
         :return: the received item
         :raises ~anyio.ClosedResourceError: if this send stream has been closed
         :raises ~anyio.EndOfStream: if the buffer is empty and this stream has been
             closed from the sending end
         :raises ~anyio.WouldBlock: if there are no items in the buffer and no tasks
             waiting to send
-    
+
         """
         if self._closed:
             raise ClosedResourceError
-    
+
         if self._state.waiting_senders:
             # Get the item from the next sender
             send_event, item = self._state.waiting_senders.popitem(last=False)
             self._state.buffer.append(item)
             send_event.set()
-    
+
         if self._state.buffer:
             return self._state.buffer.popleft()
         elif not self._state.open_send_channels:
             raise EndOfStream
-    
+
 >       raise WouldBlock
 E       anyio._core._exceptions.WouldBlock
 
@@ -256,18 +256,18 @@ fut = <coroutine object FastAPI.__call__ at 0xf2fb481848b0>, timeout = 3
 
     async def wait_for(fut, timeout):
         """Wait for the single Future or coroutine to complete, with timeout.
-    
+
         Coroutine will be wrapped in Task.
-    
+
         Returns result of the Future or coroutine.  When a timeout occurs,
         it cancels the task and raises TimeoutError.  To avoid the task
         cancellation, wrap it in shield().
-    
+
         If the wait is cancelled, the task is also cancelled.
-    
+
         If the task suppresses the cancellation and returns a value instead,
         that value is returned.
-    
+
         This function is a coroutine.
         """
         # The special case for timeout <= 0 is for the following case:
@@ -287,26 +287,26 @@ fut = <coroutine object FastAPI.__call__ at 0xf2fb481848b0>, timeout = 3
         #         assert False
         #
         # asyncio.run(test_waitfor())
-    
-    
+
+
         if timeout is not None and timeout <= 0:
             fut = ensure_future(fut)
-    
+
             if fut.done():
                 return fut.result()
-    
+
             await _cancel_and_wait(fut)
             try:
                 return fut.result()
             except exceptions.CancelledError as exc:
                 raise TimeoutError from exc
-    
+
         async with timeouts.timeout(timeout):
 >           return await fut
                    ^^^^^^^^^
 
-/usr/lib/python3.12/asyncio/tasks.py:520: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/asyncio/tasks.py:520:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/applications.py:1159: in __call__
     await super().__call__(scope, receive, send)
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/applications.py:107: in __call__
@@ -330,20 +330,20 @@ services/gateway.py:160: in guard
     await receive_event.wait()
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py:2009: in wait
     await self._event.wait()
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <asyncio.locks.Event object at 0xf2fb48172750 [unset]>
 
     async def wait(self):
         """Block until the internal flag is true.
-    
+
         If the internal flag is true on entry, return True
         immediately.  Otherwise, block until another coroutine calls
         set() to set the flag to true, then return True.
         """
         if self._value:
             return True
-    
+
         fut = self._get_loop().create_future()
         self._waiters.append(fut)
         try:
@@ -363,8 +363,8 @@ kind = 'image_edit'
         with owner_env.client(backend=backend, run_worker=True) as c:
 >           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
 
-tests/test_tb05_server_resume.py:173: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:173:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
     return cast(T_Retval, self.start_task_soon(func, *args).result())
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -380,7 +380,7 @@ tests/test_tb05_server_resume.py:43: in disconnecting_asgi_request
     await asyncio.wait_for(app(scope, receive, send), 3)
 /usr/lib/python3.12/asyncio/tasks.py:519: in wait_for
     async with timeouts.timeout(timeout):
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <Timeout [expired]>
 exc_type = <class 'asyncio.exceptions.CancelledError'>
@@ -393,14 +393,14 @@ exc_val = CancelledError(), exc_tb = <traceback object at 0xf2fb426ba340>
         exc_tb: Optional[TracebackType],
     ) -> Optional[bool]:
         assert self._state in (_State.ENTERED, _State.EXPIRING)
-    
+
         if self._timeout_handler is not None:
             self._timeout_handler.cancel()
             self._timeout_handler = None
-    
+
         if self._state is _State.EXPIRING:
             self._state = _State.EXPIRED
-    
+
             if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
                 # Since there are no new cancel requests, we're
                 # handling this.

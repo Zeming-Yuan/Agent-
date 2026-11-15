@@ -11,8 +11,8 @@ kind = 'image_generate'
         with owner_env.client(backend=backend, run_worker=True) as c:
 >           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
 
-tests/test_tb05_server_resume.py:173: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:173:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
     return cast(T_Retval, self.start_task_soon(func, *args).result())
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -24,7 +24,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
     retval = await retval_or_awaitable
              ^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 app = <fastapi.applications.FastAPI object at 0xf3b0f07a2e10>
 request = <Request('POST', 'http://testserver/v1/images/generations')>
@@ -34,7 +34,7 @@ started = <threading.Event at 0xf3b0f0b10a70: unset>
         payload = request.read()
         first = True
         disconnected = False
-    
+
         async def receive():
             nonlocal first, disconnected
             if first:
@@ -43,10 +43,10 @@ started = <threading.Event at 0xf3b0f0b10a70: unset>
             assert await asyncio.to_thread(started.wait, 2), 'backend never started'
             disconnected = True
             return {'type': 'http.disconnect'}
-    
+
         async def send(message):
             pass  # The remote client is gone; only durable HTTP recovery matters.
-    
+
         scope = {'type': 'http', 'asgi': {'version': '3.0'}, 'http_version': '1.1',
                  'method': request.method, 'scheme': 'http', 'path': request.url.path,
                  'raw_path': request.url.raw_path, 'query_string': b'',
@@ -76,8 +76,8 @@ kind = 'image_edit'
         with owner_env.client(backend=backend, run_worker=True) as c:
 >           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
 
-tests/test_tb05_server_resume.py:173: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:173:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
     return cast(T_Retval, self.start_task_soon(func, *args).result())
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,7 +89,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 ../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
     retval = await retval_or_awaitable
              ^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 app = <fastapi.applications.FastAPI object at 0xf3b0efd3c500>
 request = <Request('POST', 'http://testserver/v1/images/edits')>
@@ -99,7 +99,7 @@ started = <threading.Event at 0xf3b0f078a2d0: unset>
         payload = request.read()
         first = True
         disconnected = False
-    
+
         async def receive():
             nonlocal first, disconnected
             if first:
@@ -108,10 +108,10 @@ started = <threading.Event at 0xf3b0f078a2d0: unset>
             assert await asyncio.to_thread(started.wait, 2), 'backend never started'
             disconnected = True
             return {'type': 'http.disconnect'}
-    
+
         async def send(message):
             pass  # The remote client is gone; only durable HTTP recovery matters.
-    
+
         scope = {'type': 'http', 'asgi': {'version': '3.0'}, 'http_version': '1.1',
                  'method': request.method, 'scheme': 'http', 'path': request.url.path,
                  'raw_path': request.url.raw_path, 'query_string': b'',

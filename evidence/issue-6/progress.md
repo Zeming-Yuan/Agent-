@@ -23,3 +23,9 @@ Ruling: #6 restart AC conflicts with T04 runtime non-running precondition. Allow
 Task2 factory trace found a second default inspect_contract in application(). Extended real-crash test to isolated restored factory directory; RED startup refusal→GREEN2, no production path/network accessed. Both runtime entry points now permit recovery after validation.
 
 Task2 pre-review: current plan/factory affected38passed/202deselected, one existing dependency warning (b-before-review.txt); prior broad235passed + factory crash2passed; fresh broader run deferred to final after review. N/A type/static/build configured gates. Scoped49path scan found0 credential/private/link markers.
+
+Final diff hygiene: whole committed-range diff check exposed pytest trace trailing spaces in captured logs (initial untracked logs not included in working-tree diff check). Normalize evidence line endings/line trailing spaces only, retain assertion/failure contents. Final range check must be repeated after evidence commit.
+
+Fresh final code verification:34/240collected;14affected files236passed,one existing warning. B Standards independent fixed snapshot24passed/83deselected and0findings; B Spec still pending.
+
+Task 2: complete (commit2f6493b from bb4d8b3;14affected236passed; independent BStandards0/Spec0, no deferred minors). Both source/runtime entry points verified; no requested offline acceptance gap remains. Realbackend/production/desktop remain explicitly unverified under existing tickets4/5/12/13/14/15.

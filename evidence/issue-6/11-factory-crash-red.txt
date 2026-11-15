@@ -12,7 +12,7 @@ entry = 'factory'
         import subprocess
         import sys
         from scripts.migrate_image_owners import contract_ownership
-    
+
         with owner_env.client():
             pass  # Create an empty owned store before the explicit offline migration.
         contract_ownership(owner_env.root / 'state.sqlite3', 'legacy')
@@ -70,24 +70,24 @@ entry = 'factory'
             monkeypatch.setenv('AUDIO_ENABLED', '0')
             monkeypatch.delenv('MAIN_TOKEN_FILE', raising=False)
             original_client = httpx.AsyncClient
-    
+
             class OfflineClient(original_client):
                 def __init__(self, *args, **kwargs):
                     if kwargs.get('transport') is None:
                         kwargs['transport'] = httpx.MockTransport(lambda req: httpx.Response(503))
                     super().__init__(*args, **kwargs)
-    
+
             monkeypatch.setattr(httpx, 'AsyncClient', OfflineClient)
 >           recovering = TestClient(gateway.application())
                                     ^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb05_server_resume.py:341: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:341:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 services/gateway.py:489: in application
     inspect_contract(root / 'state.sqlite3')
 services/ownership.py:163: in inspect_contract
     return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner,
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xf7784f86bd30>
 files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-281/test_tb05_strict_restart_after0/factory-source/.private/runtime/files')

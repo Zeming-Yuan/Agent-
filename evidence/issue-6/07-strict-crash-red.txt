@@ -8,7 +8,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-271/tes
         import subprocess
         import sys
         from scripts.migrate_image_owners import contract_ownership
-    
+
         with owner_env.client():
             pass  # Create an empty owned store before the explicit offline migration.
         contract_ownership(owner_env.root / 'state.sqlite3', 'legacy')
@@ -55,8 +55,8 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-271/tes
 >       with owner_env.client(identity_mode='strict', backend=offline) as c:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb05_server_resume.py:315: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb05_server_resume.py:315:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 tests/conftest.py:74: in client
     app=create_app(env.root,keys["legacy"],key_registry=registry,
 services/gateway.py:48: in create_app
@@ -64,7 +64,7 @@ services/gateway.py:48: in create_app
 services/ownership.py:163: in inspect_contract
     return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 db = <sqlite3.Connection object at 0xf054d3816d40>
 files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-271/test_tb05_strict_restart_after0/runtime/files')

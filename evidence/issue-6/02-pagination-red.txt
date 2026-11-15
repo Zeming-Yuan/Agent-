@@ -16,7 +16,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-247/tes
             assert first.status_code == 200
 >           assert [t['id'] for t in first.json()['data']] == [ids[0], ids[2]]
 E           AssertionError: assert ['task-56826a...efdd596947c1'] == ['task-56826a...d9eab07951c9']
-E             
+E
 E             Left contains one more item: 'task-9532309cdbee4a3ba9d4efdd596947c1'
 E             Use -v to get more diff
 
