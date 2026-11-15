@@ -267,3 +267,9 @@ CLI dry-run 用只读连接，不创建缺失数据库。写入前在 BEGIN IMME
 T04历史“strict启动拒绝running”在T05运行时更新：完整只读归属/contract预检允许中断running通过，随后lifespan的Store.recover在worker启动前标记failed；不是GPU续算或重复提交。迁移CLI和维护检查仍要求先确认无运行任务。后端残留推理在既有worker初始化清理成功后才放行queued，提交结果未知仍停止新工作。停接单、保全当前DB/files/注册表并确认后端空闲后，仅回退到能保留owner/请求映射和断线不取消语义的版本；回退到T04会重新引入running启动拒绝，需显式维护收敛，不能恢复旧库覆盖新写入。
 
 受控崩溃、离线下载、并发同键、删除竞争、Key轮换和跨人/未归属拒绝均有自动化证据，索引见 evidence/issue-6/acceptance.md。没有生产迁移/发布、真实后端操作、Key发放或保护器修改；生产/实机/Harness与资源包络仍未验证。类型/静态/构建/CI、Compose、seed、安全扫描、变异测试没有配置，N/A；全量套件本轮按用户范围未运行。
+
+## T06 客户端请求日志（切片 A，离线）
+
+桥接在服务确认 owner 后打开按(service,owner,request_id)分区的 SQLite 日志，prepare 提交早于任务 POST。保留日志，勿删除映射后自动重提；网络响应丢失使用原 request_id。日志包含业务恢复信息，应按个人私有数据保管，文件0600、新目录0700，不写入原始 Key。备份时停止桥接写入，用 SQLite backup 或停写后复制；恢复到私有路径后用相同服务和同 owner Key 继续查询。Key 轮换不改变 owner；服务/owner 分区测试与完整恢复工具在切片 B 补齐。
+
+回退先停新创作并保留日志和服务端任务/结果；通过本人任务查询与下载恢复，不能清空日志盲目生成。仅修改客户端，不迁移服务端数据库或部署。验证与限制见 evidence/issue-7/progress.md。

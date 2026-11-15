@@ -2,21 +2,26 @@
 import argparse
 import asyncio
 import base64
+import hashlib
 import json
 import os
 import re
 import ssl
+import uuid
 from pathlib import Path
 import httpx
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ImageContent, TextContent
+from client.request_journal import RequestJournal
 
 
 class ImageBridge:
-    def __init__(self,base_url,token,ca_path,output_dir,*,transport=None):
+    def __init__(self,base_url,token,ca_path,output_dir,*,journal_path=None,transport=None):
         if not base_url.startswith('https://') or not base_url.rstrip('/').endswith('/v1'):
             raise ValueError('Use the HTTPS service URL ending in /v1')
         self.output_dir=Path(output_dir).expanduser()
+        self.service=str(httpx.URL(base_url.rstrip('/')))
+        self.journal_path=Path(journal_path).expanduser() if journal_path is not None else Path.home()/'.local/state/spark-image-tools/requests.sqlite3'
         self.client=httpx.AsyncClient(base_url=base_url.rstrip('/')+'/',headers={'Authorization':'Bearer '+token},
             verify=ssl.create_default_context(cafile=str(ca_path)),timeout=30,trust_env=False,transport=transport)
 
@@ -36,10 +41,23 @@ class ImageBridge:
             response=await self.request('POST','files',files={'file':(source.name,file)})
         return response.json()['id']
 
-    async def generate(self,prompt,size,seed,title,foreground_path):
+    async def journal(self):
+        identity=(await self.request('GET','me')).json()
+        owner=identity.get('owner')
+        if not isinstance(owner,str) or not owner:raise RuntimeError('Invalid service identity')
+        return RequestJournal(self.journal_path,self.service,owner)
+
+    async def generate(self,prompt,size,seed,title,foreground_path,*,request_id=None):
         options={'prompt':prompt,'size':size,'seed':seed,'title':title}
         if foreground_path:options['foreground_file_id']=await self.upload(foreground_path)
-        return (await self.request('POST','tasks',json={'kind':'image_generate','options':options})).json()
+        payload={'kind':'image_generate','options':options}
+        journal=await self.journal()
+        request_id=request_id if request_id is not None else str(uuid.uuid4())
+        fingerprint=hashlib.sha256(json.dumps(payload,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
+        journal.prepare(request_id,fingerprint,payload)
+        result=(await self.request('POST','tasks',json=payload,headers={'Idempotency-Key':request_id})).json()
+        journal.accepted(request_id,result['id'])
+        return {**result,'request_id':request_id}
 
     async def edit(self,prompt,image_paths,size,quality,seed):
         if not 1<=len(image_paths)<=3:raise ValueError('Use 1 to 3 local image paths')
@@ -78,9 +96,9 @@ def build_server(bridge):
     server=FastMCP('Spark image tools',instructions='本地生图和图片编辑。先 generate_image/edit_image 获取任务ID，再 get_image_task 等待并展示返回的图片；不要重复提交。首次加载或切换可能需要数分钟，queued/running不是失败，不要因80秒或几轮查询而自动取消；用户要求取消时再调用取消工具。真实商品精确外观优先使用透明PNG前景合成。生成和编辑结果均需检查商标、乱码文字、商品结构与材质；缺陷需修正后再交付。')
 
     @server.tool()
-    async def generate_image(prompt:str,size:str='1024x1024',seed:int=0,title:str='',foreground_path:str='')->dict:
+    async def generate_image(prompt:str,size:str='1024x1024',seed:int=0,title:str='',foreground_path:str='',request_id:str|None=None)->dict:
         """生成配图/电商背景，返回任务ID。foreground_path 可指定透明商品PNG的本地绝对路径，原图合成保留外观；title 为准确排版的标题。请在提示词描述主体、构图、材质、光线和留白。"""
-        return await bridge.generate(prompt,size,seed,title,foreground_path)
+        return await bridge.generate(prompt,size,seed,title,foreground_path,request_id=request_id)
 
     @server.tool()
     async def edit_image(prompt:str,image_paths:list[str],size:str='1024x1024',quality:str='fast',seed:int=0)->dict:

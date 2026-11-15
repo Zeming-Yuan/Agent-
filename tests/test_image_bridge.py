@@ -15,12 +15,13 @@ def test_bridge_returns_real_mcp_image_content_and_saved_file(tmp_path):
     def backend(req):
         seen.append(req)
         assert req.headers['authorization']=='Bearer test-secret-token'
+        if req.url.path=='/v1/me':return httpx.Response(200,json={'owner':'A'})
         if req.url.path=='/v1/tasks' and req.method=='POST':return httpx.Response(202,json={'id':tid,'status':'queued'})
         if req.url.path=='/v1/tasks/'+tid:return httpx.Response(200,json={'id':tid,'status':'completed','result':{'file_id':fid,'model':'spark-image'}})
         if req.url.path=='/v1/files/'+fid+'/content':return httpx.Response(200,content=b.getvalue())
         return httpx.Response(404)
     async def check():
-        bridge=ImageBridge('https://192.168.10.77:18443/v1','test-secret-token',Path('certificates/agent-root-ca.crt'),tmp_path,transport=httpx.MockTransport(backend))
+        bridge=ImageBridge('https://192.168.10.77:18443/v1','test-secret-token',Path('certificates/agent-root-ca.crt'),tmp_path,journal_path=tmp_path/'requests.sqlite3',transport=httpx.MockTransport(backend))
         server=build_server(bridge)
         listed=await server.list_tools()
         assert {t.name for t in listed}=={'generate_image','edit_image','get_image_task','cancel_image_task'}

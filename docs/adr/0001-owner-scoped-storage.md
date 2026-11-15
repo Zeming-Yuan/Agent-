@@ -53,3 +53,5 @@ T05 A审查修复：预读取使用Store.request_fingerprint，在BEGIN IMMEDIAT
 T05 切片B：HTTP等待生命周期与持久任务生命周期分离；断线/协程取消不向worker或任务发送取消，显式取消仍使用原接口。同步/异步共享submit_image接纳顺序（owner素材校验、事务保护的内容指纹、已有映射、readiness、事务内二次幂等/容量校验），不引入第二状态机。同步570秒超时继续返回task_id；分页契约见共享执行契约。
 
 T05 对T04“strict启动前非运行状态”作有限修订：离线迁移仍拒绝running；已contract的运行时只读预检通过allow_running=True验证完整归属后，lifespan先recover成failed，再创建worker。这解决进程崩溃后严格启动先拒绝、导致既有恢复策略无法执行的冲突。该参数不绕过contract版本/索引/owner/请求映射/文件关联验证；queued/结果保持，running绝不重跑。测试通过真实子进程崩溃验证，同时对queued/running各注入五类损坏，均在初始化前无写入拒绝。既有后端清理与提交未知时停止接纳策略不变，生产部署与实机仍未验证。
+
+T06 切片A：客户端 RequestJournal 只保存请求身份和任务映射，服务端 task_requests/任务状态仍为权威。日志键为规范服务 URL、GET /v1/me 的稳定 owner、request_id；Key 不参与分区也不落日志。SQLite BEGIN IMMEDIATE 保证同键不同业务输入不能覆盖，提交日志后才发送任务请求。新意图用新 UUID，同意图恢复显式沿用 request_id；不能以内容相同推断同一意图。既有服务端归属/容量/恢复策略不变。

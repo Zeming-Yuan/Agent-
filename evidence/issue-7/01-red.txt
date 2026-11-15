@@ -1,0 +1,67 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_tb06_lost_response_replays_after_bridge_restart _____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-290/test_tb06_lost_response_replay0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf88df871fe20>, wait_task=<function owner_env.<locals>.wait_task at 0xf88df871fec0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-290/test_tb06_lost_response_replay0')
+
+    def test_tb06_lost_response_replays_after_bridge_restart(owner_env, tmp_path):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True) as gateway:
+            transport = GatewayTransport(gateway, journal=tmp_path/'requests.sqlite3', drop_submit=True)
+
+            async def run():
+                one = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    with pytest.raises(Exception, match='accepted response lost'):
+                        await build_server(one).call_tool('generate_image', {'prompt':'fixture', 'request_id':'r1'})
+                finally:
+                    await one.close()
+                original = gateway.get('/v1/tasks', headers=owner_env.auth('A')).json()['data'][0]['id']
+                two = bridge_for(owner_env, tmp_path, transport)
+                try:
+                    result = await build_server(two).call_tool('generate_image', {'prompt':'fixture', 'request_id':'r1'})
+                    content = result[0] if isinstance(result, tuple) else result
+                    state = json.loads(next(x.text for x in content if x.type == 'text'))
+                    assert state['id'] == original
+                    owner_env.wait_task(gateway, original, 'A', lambda t: t['status'] == 'completed')
+                    assert len(backend.jobs) == 1
+                finally:
+                    await two.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:66:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:49: in run
+    one = bridge_for(owner_env, tmp_path, transport)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-290/test_tb06_lost_response_replay0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf88df871fe20>, wait_task=<function owner_env.<locals>.wait_task at 0xf88df871fec0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-290/test_tb06_lost_response_replay0')
+transport = <test_tb06_mcp_resume.GatewayTransport object at 0xf88df866c0b0>
+
+    def bridge_for(env, tmp_path, transport, *, owner='A', service='https://spark.invalid/v1'):
+>       return ImageBridge(service, env.keys[owner], CA, tmp_path/'out',
+                           journal_path=tmp_path/'requests.sqlite3', transport=transport)
+E       TypeError: ImageBridge.__init__() got an unexpected keyword argument 'journal_path'
+
+tests/test_tb06_mcp_resume.py:39: TypeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_lost_response_replays_after_bridge_restart
+1 failed, 1 warning in 0.27s

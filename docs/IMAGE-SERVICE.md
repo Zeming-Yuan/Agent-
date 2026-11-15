@@ -108,3 +108,9 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 已contract的strict运行时重启先只读验证完整归属，再在worker启动前将中断的running任务标记failed（Service restarted during processing）；queued和completed保留。worker恢复时先沿用既有后端清理策略，再执行queued，不续算或重放failed任务。迁移/维护预检仍拒绝running；无归属、悬空、跨人、缺请求映射等仍拒绝启动且不写库。
 
 本票34项恢复测试、逐AC映射和复测命令见 evidence/issue-6/acceptance.md；进程崩溃通过子进程os._exit复现，图片推理使用受控外部协议替身。生产部署、真实HTTPS/MCP/图片节点、Windows/macOS Harness、GPU内存/性能尚未验证，由后续现有票继续验收。未配置类型/静态/构建门禁（N/A），没有把受影响回归当作全量门禁。
+
+## T06 MCP 续取：切片 A（2026-11-15，离线）
+
+公共桥接首次生成前先通过 GET /v1/me 确定 owner，将 request_id 与业务指纹持久化后才 POST /tasks，使用同一 Idempotency-Key。generate_image 可传 request_id；跨调用重试必须复用该值，新创作省略时生成新 UUID，不能按提示词永久去重。同键不同输入在本地拒绝。默认日志 ~/.local/state/spark-image-tools/requests.sqlite3，也可传 journal_path；日志按规范服务 URL 与稳定 owner 隔离，不存 Key。
+
+切片 A 仅交付无参考素材生成的持久身份；编辑/素材、本人列表、原子保存及显式个人包入口由切片 B 接线。证据 evidence/issue-7/：01-red 缺 journal_path，01-green 真实 call_tool/HTTP/Store/worker 丢响应重启后同任务且一次后端执行，a-regression 3 passed。生产、双端 Harness 与真实后端未验证；未配置类型/静态/构建检查为 N/A。
