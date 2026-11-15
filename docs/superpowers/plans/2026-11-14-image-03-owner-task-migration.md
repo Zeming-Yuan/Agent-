@@ -12,7 +12,7 @@
 
 **Ticket:** T03；Blocked by：T02。任务归属和结果取回必须基于 T02 已隔离的素材链路；继续串行迁移共享任务库。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 2026-11-15 已执行离线实现和受影响自动验证；真实入口验收仍未完成。执行证据见末尾记录与 evidence/issue-4/。
 
 ## Global Constraints
 
@@ -267,4 +267,20 @@ git commit -m "test(image): t03 boundaries and recovery"
 - [x] 边界 A/B 各自带测试与文档；回退不会丢新数据或恢复共享读取。
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
-本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+原计划发布阶段只批准编写和发布计划，不启动产品实现。2026-11-15 用户已明确授权 implement + TDD，并确认基线与公开 HTTP/临时 Key CLI seam；采用原生串行实现，审查使用独立双轴 reviewer。此授权未扩展为生产部署。
+
+
+## 2026-11-15 执行记录
+
+- 用户确认固定基线 ee26c31eb74d891b33b26ab428514e1c84dcb636；前置 #3 已关闭。受控 checkout 和产品文件经核对一致（文档专用 source-baseline.json 除外），不在非Git产品目录初始化/全量上传。
+- 切片 A：941e986（任务 owner、业务指纹与请求旁表）、f56cf69（旧素材缺失的可恢复409）。双轴初审各1个P2，同一缺失素材问题经公开HTTP red→green修复后复审 Standards0/Spec0。
+- 切片 B：a0c170e（/v1/me、私有文件Key CLI、轮换/恢复测试与文档）；独立双轴审查结果另见 evidence/issue-4/review-b.md。
+- 新测试采集28/128，T03选择器28 passed，计划回归31 passed，受影响12文件124 passed。1条既有Starlette/AnyIO弃用警告；按用户要求只跑受影响检查，未运行完整门禁。类型/静态/构建/CI等未配置项N/A。
+- 通过真实gateway/SQLite/files/worker及受控外部推理替身验证A/B隔离；真实子进程CLI验证发放/撤销/轮换。新目录合成副本恢复已验证，生产恢复/发布未验证。
+- 旧版已删素材且无内容指纹时无法恢复内容等价证据：返回本人旧task_id的409，继续读取已有任务/结果，不猜测或重推理；新T03内容指纹请求仍支持删图重传复用。详见ADR和验收记录。
+- 实际HTTPS/MCP/物理模型/20GiB标定/Windows与macOS实际Harness仍未验证，保留后续 #5—#15 门禁，#4不能仅凭离线回归标记完整验收通过。没有性能结论。
+- 完整AC逐条映射、red/green输出、回滚边界与选择性同步清单：evidence/issue-4/acceptance.md、execution.md、sync-manifest.json。
+
+组合故障修复后重新采集30/130（collect-final.txt），受影响12文件126 passed（b-review-green.txt），1条既有弃用警告；先前28/124为修复前历史记录。未运行完整门禁。
+
+最终自动验证：T03采集33/133（collect-latest.txt），计划回归36 passed（plan-regression-latest.txt），受影响12文件129 passed（final-affected.txt）；1条既有弃用警告。旧记录28/124与30/126为审查修复前历史输出，不作为最终版本证据。

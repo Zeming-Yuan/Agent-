@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb03_me_and_rotated_key_retain_owner_and_existing_result _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-162/test_tb03_me_and_rotated_key_r0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xebe24b6ac900>, wait_task=<function owner_env.<locals>.wait_task at 0xebe24b6ac9a0>)
+caplog = <_pytest.logging.LogCaptureFixture object at 0xebe24b65f770>
+
+    def test_tb03_me_and_rotated_key_retain_owner_and_existing_result(owner_env, caplog):
+        import logging
+        backend = owner_env.new_backend()
+        with caplog.at_level(logging.INFO, logger='agent-mm'), owner_env.client(backend=backend, run_worker=True) as c:
+>           assert c.get('/v1/me', headers=owner_env.auth('A')).json() == {'owner': 'A'}
+E           AssertionError: assert {'detail': 'Not Found'} == {'owner': 'A'}
+E
+E             Left contains 1 more item:
+E             {'detail': 'Not Found'}
+E             Right contains 1 more item:
+E             {'owner': 'A'}
+E             Use -v to get more diff
+
+tests/test_tb03_owner_tasks.py:262: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     agent-mm:gateway.py:56 ownership_preflight unowned_files=0 unowned_tasks=0 unowned_idempotency_records=0 running_tasks=0
+INFO     agent-mm:gateway.py:150 ffe4557b6819445d91cfd934e6e08878 GET /v1/me 404
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_me_and_rotated_key_retain_owner_and_existing_result
+1 failed, 20 deselected, 1 warning in 0.17s

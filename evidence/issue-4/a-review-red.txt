@@ -1,0 +1,152 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb03_legacy_missing_material_conflicts_with_recoverable_task _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-158/test_tb03_legacy_missing_mater0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf9921dd2c720>, wait_task=<function owner_env.<locals>.wait_task at 0xf9921dd2c7c0>)
+legacy_services = namespace(create_app=<function create_app at 0xf9921dcc7a60>, Store=<class 't01_legacy_7dd3bf3c59b345648aa04285927ab5d3.store.Store'>)
+
+    def test_tb03_legacy_missing_material_conflicts_with_recoverable_task(owner_env, legacy_services):
+        import httpx
+        from fastapi.testclient import TestClient
+        backend = owner_env.new_backend()
+        with TestClient(legacy_services.create_app(owner_env.root, owner_env.keys['legacy'],
+                        images_enabled=True, audio_enabled=False,
+                        transport=httpx.MockTransport(backend))) as c:
+            fid = owner_env.upload(c, 'legacy')
+            response = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[fid])
+            tid = response.json()['id']
+            done = owner_env.wait_task(c, tid, 'legacy', lambda t: t['status'] == 'completed')
+            result_id = done['result']['file_id']
+            assert c.delete('/v1/files/' + fid, headers=owner_env.auth('legacy')).status_code == 200
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            new_fid = owner_env.upload(c, 'legacy')
+>           replay = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[new_fid])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb03_owner_tasks.py:236:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/conftest.py:88: in submit
+    return c.post("/v1/tasks",headers=headers,json={"kind":kind,"options":{"prompt":"fixture",**options}})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:546: in post
+    return super().post(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:445: in request
+    return super().request(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:348: in handle_request
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:345: in handle_request
+    portal.call(self.app, scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/applications.py:1159: in __call__
+    await super().__call__(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:191: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+/usr/lib/python3.12/contextlib.py:158: in __exit__
+    self.gen.throw(value)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_utils.py:87: in collapse_excgroups
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/gateway.py:148: in guard
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:736: in app
+    await route.handle(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:290: in handle
+    await self.app(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:134: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:120: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:674: in app
+    raw_response = await run_endpoint_function(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:328: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/gateway.py:324: in submit
+    return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/store.py:172: in submit
+    previous = self._business_fingerprint(old['kind'], old['file_id'], json.loads(old['options']))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/store.py:149: in _business_fingerprint
+    with (self.files / reference).open('rb') as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-158/test_tb03_legacy_missing_mater0/runtime/files/file-8a2d1bc71a3f4cbfbd1679c22432c950')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-clusteradmin/pytest-158/test_tb03_legacy_missing_mater0/runtime/files/file-8a2d1bc71a3f4cbfbd1679c22432c950'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_legacy_missing_material_conflicts_with_recoverable_task
+1 failed, 19 deselected, 1 warning in 0.56s

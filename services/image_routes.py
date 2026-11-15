@@ -14,7 +14,7 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
         deadline=time.monotonic()+570
         try:
             while True:
-                state=store.task(tid)
+                state=store.task(tid,owner=request.state.principal.owner)
                 if state['status']=='completed':
                     fid=state['result']['file_id']
                     return {'created':state['updated'],'data':[{'b64_json':base64.b64encode(store.path(fid,owner=request.state.principal.owner).read_bytes()).decode(),

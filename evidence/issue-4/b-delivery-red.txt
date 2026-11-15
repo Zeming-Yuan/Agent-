@@ -1,0 +1,53 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+__ test_tb03_failed_key_delivery_revokes_and_preserves_existing_files[write] ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-166/test_tb03_failed_key_delivery_1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe77f044b1080>, wait_task=<function owner_env.<locals>.wait_task at 0xe77f044b1260>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-166/test_tb03_failed_key_delivery_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe77f0445f4d0>
+fault = 'write'
+
+    @pytest.mark.parametrize('fault', ['open', 'write'])
+    def test_tb03_failed_key_delivery_revokes_and_preserves_existing_files(owner_env, tmp_path, monkeypatch, fault):
+        import os
+        import secrets
+        from services.identity import issue_to_file
+        raw = '[REDACTED_SYNTHETIC_TEST_KEY]'
+        monkeypatch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+        target = tmp_path / 'key-output'
+        if fault == 'open':
+            target.write_text('existing key must survive')
+        else:
+            fdopen = os.fdopen
+            class BrokenOutput:
+                def __init__(self, stream):
+                    self.stream = stream
+                def __enter__(self):
+                    return self
+                def __exit__(self, *args):
+                    self.stream.close()
+                def write(self, value):
+                    self.stream.write(value[:4])
+                    raise OSError('synthetic disk full')
+            monkeypatch.setattr(os, 'fdopen', lambda *a, **kw: BrokenOutput(fdopen(*a, **kw)))
+        with pytest.raises(OSError):
+            issue_to_file(owner_env.registry, 'A', target)
+        assert owner_env.registry.resolve(raw) is None
+        if fault == 'open':
+            assert target.read_text() == 'existing key must survive'
+        else:
+>           assert not target.exists()
+E           AssertionError: assert not True
+E            +  where True = exists()
+E            +    where exists = PosixPath('/tmp/pytest-of-clusteradmin/pytest-166/test_tb03_failed_key_delivery_1/key-output').exists
+
+tests/test_tb03_owner_tasks.py:321: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_failed_key_delivery_revokes_and_preserves_existing_files[write]
+1 failed, 1 passed, 22 deselected, 1 warning in 0.13s

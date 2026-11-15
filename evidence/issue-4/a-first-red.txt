@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_tb03_same_request_key_does_not_cross_owners _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-145/test_tb03_same_request_key_doe0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xed166704b420>, wait_task=<function owner_env.<locals>.wait_task at 0xed166704b4c0>)
+
+    def test_tb03_same_request_key_does_not_cross_owners(owner_env):
+        with owner_env.client() as c:
+            a = owner_env.submit(c, 'A', request_key='same')
+            b = owner_env.submit(c, 'B', request_key='same')
+            assert a.status_code == b.status_code == 202
+>           assert a.json()['id'] != b.json()['id']
+E           AssertionError: assert 'task-c678b8888a0d4f9c9517514a0c243bba' != 'task-c678b8888a0d4f9c9517514a0c243bba'
+
+tests/test_tb03_owner_tasks.py:9: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_same_request_key_does_not_cross_owners
+1 failed, 1 warning in 0.11s

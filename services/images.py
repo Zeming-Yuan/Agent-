@@ -205,7 +205,7 @@ async def image_worker(store,client,url,active):
             store.update(tid,status='completed',progress=1,result=result)
             last_kind=profile
         except asyncio.CancelledError:
-            if store.task(tid)['status']!='cancelled':
+            if store.worker_task(tid)['status']!='cancelled':
                 store.update(tid,status='failed',error='Image worker interrupted');raise
         except SubmissionUncertain:
             LOG.exception('image backend outcome uncertain; admission stopped')

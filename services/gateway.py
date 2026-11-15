@@ -84,7 +84,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 result = await job
                 store.update(tid, status='completed', progress=1, result=result)
             except asyncio.CancelledError:
-                if store.task(tid)['status'] != 'cancelled':
+                if store.worker_task(tid)['status'] != 'cancelled':
                     store.update(tid, status='failed', error='Worker interrupted')
                     raise
             except Exception as exc:
@@ -149,6 +149,10 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         response.headers['x-request-id'] = rid
         LOG.info('%s %s %s %s', rid, request.method, request.url.path, response.status_code)
         return response
+
+    @app.get('/v1/me')
+    async def me(request: Request):
+        return {'owner': request.state.principal.owner}
 
     @app.get('/health')
     async def health():
@@ -331,12 +335,12 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         return store.submit(body.kind,body.file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
 
     @app.get('/v1/tasks/{tid}')
-    async def status(tid: str):
-        return store.task(tid)
+    async def status(tid: str, request: Request):
+        return store.task(tid, owner=request.state.principal.owner)
 
     @app.post('/v1/tasks/{tid}/cancel')
-    async def cancel(tid: str):
-        task = store.task(tid)
+    async def cancel(tid: str, request: Request):
+        task = store.task(tid, owner=request.state.principal.owner)
         if task['status'] in ('queued','running'):
             task = store.update(tid,status='cancelled')
             if tid in active:
