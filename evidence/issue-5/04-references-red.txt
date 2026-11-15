@@ -1,0 +1,290 @@
+FFFFFFFFFF                                                               [100%]
+=================================== FAILURES ===================================
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-file_id] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval0')
+field = 'file_id', problem = 'dangling'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-image_ids] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval1')
+field = 'image_ids', problem = 'dangling'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-foreground_file_id] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval2')
+field = 'foreground_file_id', problem = 'dangling'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-result] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval3')
+field = 'result', problem = 'dangling'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-source_result] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval4')
+field = 'source_result', problem = 'dangling'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-file_id] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval5')
+field = 'file_id', problem = 'cross-owner'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-image_ids] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval6')
+field = 'image_ids', problem = 'cross-owner'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-foreground_file_id] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval7')
+field = 'foreground_file_id', problem = 'cross-owner'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-result] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval8')
+field = 'result', problem = 'cross-owner'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+_ test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-source_result] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-196/test_tb04_owner_contract_inval9')
+field = 'source_result', problem = 'cross-owner'
+
+    @pytest.mark.parametrize('field', ['file_id', 'image_ids', 'foreground_file_id', 'result', 'source_result'])
+    @pytest.mark.parametrize('problem', ['dangling', 'cross-owner'])
+    def test_tb04_owner_contract_invalid_reference_refuses_without_writes(tmp_path, field, problem):
+        import json
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        task = store.submit('image_generate', None, {'prompt': 'private prompt'}, None, owner='legacy')
+        fid = 'file-' + 'f' * 32
+        if problem == 'cross-owner':
+            store.save_generated(fid, b'other', 'other.png', owner='B')
+        with store.connect() as db:
+            if field == 'file_id':
+                db.execute('UPDATE tasks SET file_id=?', (fid,))
+            elif field in ('result', 'source_result'):
+                db.execute('UPDATE tasks SET result=?', (json.dumps({'file_id' if field == 'result' else 'source_file_id': fid}),))
+            else:
+                db.execute('UPDATE tasks SET options=?', (json.dumps({field: [fid] if field == 'image_ids' else fid}),))
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match=problem) as exc:
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:89: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-file_id]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-image_ids]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-foreground_file_id]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-result]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[dangling-source_result]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-file_id]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-image_ids]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-foreground_file_id]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-result]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_invalid_reference_refuses_without_writes[cross-owner-source_result]
+10 failed, 3 deselected, 1 warning in 0.96s

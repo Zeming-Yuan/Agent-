@@ -212,3 +212,23 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 ## 2026-11-15 T03 真实无模型验证
 
 按用户要求保持LTX运行且不加载模型。在独立数据目录、loopback HTTPS和原项目CA上完成56个真实网络/进程检查点：A/B鉴权与隔离、真实CPU PDF worker、幂等、轮换/撤销、四单容量，以及MCP离线503/跨人404。临时进程已停止、Key已撤销删除，正式服务与LTX状态保持原样。无产品代码修改。详见 evidence/t03-live-20261115T025313Z/README.md。物理生图/编辑、双端Harness、正式18443/生产发布恢复与模型内存标定仍未验证，#4保持OPEN。
+
+
+## T04 离线 contract 迁移（生产启用仍阻塞）
+
+2026-11-15 用户允许在 #4 保持 OPEN 时实现 #5 的离线行为；这不是生产切换授权。生产接管人、#4 物理图片验收、生产备份/恢复和双端实际入口仍未验证。保持既有模型、LTX、20GiB 保护和服务配置不变。
+
+仅在脱敏副本执行；实际维护前停止全部数据库、文件和凭证注册表写入者，定向停止并确认后端空闲。`running` 必须先按保守恢复策略明确失败，不自动重跑。T01 固定稳定 owner 是 `legacy`；接管通过向指定人员发放该 owner 的新个人 Key 完成，不改归属、不再分发共享旧 Key。`--legacy-owner` 缺失或与此身份不符均拒绝。
+
+```bash
+.venv/bin/python -m scripts.migrate_image_owners --db /absolute/offline-copy/state.sqlite3 --legacy-owner legacy --dry-run
+.venv/bin/python -m scripts.migrate_image_owners --db /absolute/offline-copy/state.sqlite3 --legacy-owner legacy --backup-dir /absolute/new-private-backup
+```
+
+CLI dry-run 用只读连接，不创建缺失数据库。写入前在 BEGIN IMMEDIATE 中预检文件、所有状态任务的来源/参考/前景/结果关联、owner、请求与摘要映射；悬空、跨人、缺失字节或不安全路径拒绝，错误只含对象 ID，不含业务参数。迁移前 SQLite backup API 保存 state.sqlite3、相邻 keys.sqlite3（若有）和整个 files 目录；新目录0700、文件0600，manifest.json 记录 SHA256。外部路径的注册表、CA和私有配置另行在私有路径保全；不把原始 Key 放进证据。
+
+`contract_ownership(db_path, legacy_owner, backup_dir=...)` 同样先备份；省略 backup_dir 时在数据根 ownership-backups 下创建独占随机目录。备份失败不得迁移；失败备份目录保留用于排查，不能覆盖重用。备份必须在 files 树外，禁止复制符号链接。所有写入者停止是跨数据库/文件一致性的必要运维前提，SQLite 锁不是分布式维护锁。
+
+在同一事务补齐旁表、回填 owner 范围请求映射、删除 tasks.idem 全局唯一约束并记录 ownership_migration。保留原 ID、rowid 顺序、列、业务值、显式索引/触发器。任何迁移异常整体回滚；下次使用新备份目录重试。不能把新多人库交给旧共享服务。
+
+切片 A 的逐步 red/green 及迁移中断原始证据在 evidence/issue-5/；strict 启动与用户接口收口由切片 B 交付。尚未执行生产迁移或恢复，不把副本测试写成生产验收。

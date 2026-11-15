@@ -10,6 +10,23 @@ from fastapi import HTTPException
 from .ownership import require_owner
 
 
+def task_fingerprint(files: Path, kind, fid, options):
+    canonical = dict(options)
+    material_digests = []
+    material_refs = []
+    if kind not in ('image_generate', 'image_edit') and fid:
+        material_refs.append(('source', fid))
+    material_refs.extend(('image', ref) for ref in canonical.pop('image_ids', []))
+    foreground = canonical.pop('foreground_file_id', None)
+    if foreground:
+        material_refs.append(('foreground', foreground))
+    for role, reference in material_refs:
+        with (files / reference).open('rb') as stream:
+            material_digests.append((role, hashlib.file_digest(stream, 'sha256').hexdigest()))
+    return hashlib.sha256(json.dumps([kind, canonical, material_digests],
+        sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+
+
 class Store:
     def __init__(self, root: Path, max_pending=4):
         self.root = Path(root)
@@ -135,22 +152,6 @@ class Store:
             item.pop(key)
         return item
 
-    def _business_fingerprint(self, kind, fid, options):
-        canonical = dict(options)
-        material_digests = []
-        material_refs = []
-        if kind not in ('image_generate', 'image_edit') and fid:
-            material_refs.append(('source', fid))
-        material_refs.extend(('image', ref) for ref in canonical.pop('image_ids', []))
-        foreground = canonical.pop('foreground_file_id', None)
-        if foreground:
-            material_refs.append(('foreground', foreground))
-        for role, reference in material_refs:
-            with (self.files / reference).open('rb') as stream:
-                material_digests.append((role, hashlib.file_digest(stream, 'sha256').hexdigest()))
-        return hashlib.sha256(json.dumps([kind, canonical, material_digests],
-            sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
-
     def submit(self, kind, fid, options, idem, *, owner="legacy"):
         tid = 'task-' + uuid.uuid4().hex
         now = int(time.time())
@@ -161,7 +162,7 @@ class Store:
                 refs.append(options['foreground_file_id'])
             for reference in refs:
                 require_owner(db, 'file', reference, owner)
-            fingerprint = self._business_fingerprint(kind, fid, options)
+            fingerprint = task_fingerprint(self.files, kind, fid, options)
             if idem:
                 row = db.execute('SELECT task_id AS id,fingerprint FROM task_requests WHERE owner=? AND request_key=?', (owner, idem)).fetchone()
                 if row is None and owner == 'legacy':
@@ -170,7 +171,7 @@ class Store:
                     if old:
                         require_owner(db, 'task', old['id'], owner)
                         try:
-                            previous = self._business_fingerprint(old['kind'], old['file_id'], json.loads(old['options']))
+                            previous = task_fingerprint(self.files, old['kind'], old['file_id'], json.loads(old['options']))
                         except FileNotFoundError:
                             # Old ID-only fingerprints cannot prove equivalence after source deletion.
                             raise HTTPException(409, {'message': 'Legacy request material unavailable; retrieve existing task',

@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_tb04_owner_contract_preserves_explicit_triggers _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-205/test_tb04_owner_contract_prese0')
+
+    def test_tb04_owner_contract_preserves_explicit_triggers(tmp_path):
+        from scripts.migrate_image_owners import contract_ownership
+        store = Store(tmp_path)
+        with store.connect() as db:
+            db.execute('CREATE TABLE task_audit(task_id TEXT)')
+            db.execute('CREATE TRIGGER audit_task AFTER INSERT ON tasks BEGIN INSERT INTO task_audit VALUES(new.id); END')
+        contract_ownership(store.db, 'legacy')
+        created = store.submit('image_generate', None, {'prompt': 'x'}, None, owner='legacy')
+        with store.connect() as db:
+>           assert [row[0] for row in db.execute('SELECT task_id FROM task_audit')] == [created['id']]
+E           AssertionError: assert [] == ['task-87aab8...49a3c08b2b66']
+E             
+E             Right contains one more item: 'task-87aab82846a94afaa96b49a3c08b2b66'
+E             Use -v to get more diff
+
+tests/test_tb04_owner_contract.py:231: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_preserves_explicit_triggers
+1 failed, 35 deselected, 1 warning in 0.11s

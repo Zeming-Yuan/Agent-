@@ -1,0 +1,37 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb04_owner_contract_repeat_keeps_legacy_ids_requests_and_indexes _____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-194/test_tb04_owner_contract_repea0')
+legacy_services = namespace(create_app=<function create_app at 0xfb6b85fd7560>, Store=<class 't01_legacy_e4f39e64e79c4543af764831a399e871.store.Store'>)
+
+    def test_tb04_owner_contract_repeat_keeps_legacy_ids_requests_and_indexes(tmp_path, legacy_services):
+        import sqlite3
+        from scripts.migrate_image_owners import contract_ownership
+        store = legacy_services.Store(tmp_path / 'runtime')
+        fid = 'file-' + 'd' * 32
+        store.save_generated(fid, b'old', 'old.png')
+        task = store.submit('image_generate', None, {'prompt': 'x'}, 'request-one')
+        with store.connect() as db:
+            db.execute('CREATE INDEX tasks_created ON tasks(created)')
+            before = tuple(db.execute('SELECT rowid,* FROM tasks').fetchone())
+        first = contract_ownership(store.db, 'legacy')
+        second = contract_ownership(store.db, 'legacy')
+        assert first['version'] == second['version'] == 1
+        assert first['legacy_owner'] == 'legacy'
+        with store.connect() as db:
+            assert tuple(db.execute('SELECT rowid,* FROM tasks').fetchone()) == before
+>           assert tuple(db.execute('SELECT kind,object_id,owner FROM object_owners WHERE kind=\'file\'').fetchone()) == ('file', fid, 'legacy')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           sqlite3.OperationalError: no such table: object_owners
+
+tests/test_tb04_owner_contract.py:60: OperationalError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_repeat_keeps_legacy_ids_requests_and_indexes
+1 failed, 2 deselected, 1 warning in 0.09s

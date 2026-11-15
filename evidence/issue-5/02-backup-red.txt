@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb04_owner_contract_backup_is_private_complete_and_exclusive _______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-192/test_tb04_owner_contract_backu0')
+
+    def test_tb04_owner_contract_backup_is_private_complete_and_exclusive(tmp_path):
+        import hashlib
+        import json
+        import sqlite3
+>       from scripts.migrate_image_owners import backup_state
+E       ImportError: cannot import name 'backup_state' from 'scripts.migrate_image_owners' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/scripts/migrate_image_owners.py)
+
+tests/test_tb04_owner_contract.py:21: ImportError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_backup_is_private_complete_and_exclusive
+1 failed, 1 deselected, 1 warning in 0.02s

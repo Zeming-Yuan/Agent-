@@ -1,0 +1,28 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_tb04_owner_contract_cli_dry_run_and_missing_identity_are_read_only ____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-200/test_tb04_owner_contract_cli_d0')
+
+    def test_tb04_owner_contract_cli_dry_run_and_missing_identity_are_read_only(tmp_path):
+        import json
+        import subprocess
+        import sys
+        store = Store(tmp_path / 'runtime')
+        before = store.db.read_bytes()
+        command = [sys.executable, '-m', 'scripts.migrate_image_owners', '--db', str(store.db)]
+        missing = subprocess.run(command + ['--dry-run'], capture_output=True, text=True)
+>       assert missing.returncode != 0
+E       AssertionError: assert 0 != 0
+E        +  where 0 = CompletedProcess(args=['/home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python', '-m', 'scripts.migrate_image_owners',...in/pytest-200/test_tb04_owner_contract_cli_d0/runtime/state.sqlite3', '--dry-run'], returncode=0, stdout='', stderr='').returncode
+
+tests/test_tb04_owner_contract.py:145: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_cli_dry_run_and_missing_identity_are_read_only
+1 failed, 24 deselected, 1 warning in 0.21s
