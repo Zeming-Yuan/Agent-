@@ -1,0 +1,279 @@
+{
+  "base": "45fa55afde3cbe97549f89ccb18eb71c5e677b68",
+  "source_head": "997e9deab3b3a95d3eaca1044100b5afedf3fed3",
+  "implementation_head": "8b1a7d6a0ffb86f4e208da90a8b7a36c9a198029",
+  "product": "/home/clusteradmin/Desktop/Agent多模态服务",
+  "paths": [
+    {
+      "path": "OPERATIONS.md",
+      "before": "20a6bf70fff6999b3a4f0a35ebfb950bda052a940f9b9d279693bd7b90b82646",
+      "after": "72f103089a1b47e202e717043c5c4e5ad6c82ea8ee9addf3536dd57a12904ccf"
+    },
+    {
+      "path": "client/image-tools-requirements.txt",
+      "before": null,
+      "after": "2188d85ca16ca0e7cacc486c55ec18bf5ffc3fd1ecd212290b82477a4eadf786"
+    },
+    {
+      "path": "client/request_journal.py",
+      "before": null,
+      "after": "dda41fec242ba4dee24ff398e07e84ebc39d8a6b5aa947c7150c9888ee326075"
+    },
+    {
+      "path": "client/spark_image_tools.py",
+      "before": "c04c50f6937d75238dcae27ac77aefd36845d2fcea1878217fe28a75ad333f5f",
+      "after": "20d88e2698cc63c76d892d8d4c624beafc944d2fe06ca2da7c0d8103ef5969ce"
+    },
+    {
+      "path": "docs/IMAGE-SERVICE.md",
+      "before": "86da487d87154933910dabad5d6ea4f64523d76536a8ae8ec12e49c9dfc88e67",
+      "after": "83fd7bc7ecfe2b186291595c230ef753e4e4ad1c6dd03c17b5b11bd4cc2cf67a"
+    },
+    {
+      "path": "docs/adr/0001-owner-scoped-storage.md",
+      "before": "cdd306fdabdc5a807e248eb29486284c1702222f95a193c162e7afaa15db897d",
+      "after": "6b7f9dc2cedf06a14a284f939edbc5120c2350d0b83d584fce6189ec4d72aff6"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-11-14-image-06-mcp-resume.md",
+      "before": "cc0f06bf5e7b90821a5d535e04dde406a1c7aa7e7540bc45ab42ba1480a92843",
+      "after": "b7d1b308f87952c8b9ddc7edd1fb5b2c0d263b2788fe88b37d3035f5ffa38991"
+    },
+    {
+      "path": "evidence/issue-7/01-green.txt",
+      "before": null,
+      "after": "7264ad4494a8e9215351bb007876e6bac317227184e1506248cb4ee66c2e041b"
+    },
+    {
+      "path": "evidence/issue-7/01-red.txt",
+      "before": null,
+      "after": "58aeb5134f4ce183614985f82533da01f65f4c84a201d269677e8339c31b12b9"
+    },
+    {
+      "path": "evidence/issue-7/02-green.txt",
+      "before": null,
+      "after": "dd1cf4e2e17e9c6d7fddc6ce646efec355dec00472ec5717314c364334c8070e"
+    },
+    {
+      "path": "evidence/issue-7/02-invalid-foreground.txt",
+      "before": null,
+      "after": "8fefa6faef71050eef7332f3ad4eb6e295c783c68fd24a2624bc22a6487c5d35"
+    },
+    {
+      "path": "evidence/issue-7/02-red.txt",
+      "before": null,
+      "after": "60e2e88bfd4b5aafd367e29c05a40d297a15da976c5df85439e7d7b44aedd339"
+    },
+    {
+      "path": "evidence/issue-7/03-green.txt",
+      "before": null,
+      "after": "a6713924d2fe48bee20010ddba632928e76d9ae9d8e4e8fb3c66f886c95b1a67"
+    },
+    {
+      "path": "evidence/issue-7/03-red.txt",
+      "before": null,
+      "after": "b5d2f17b4a2e5d051ba5ecf8575eeda7b3ff5d4574993f9ec0508b38ea077cff"
+    },
+    {
+      "path": "evidence/issue-7/04-green.txt",
+      "before": null,
+      "after": "c5c98b60c49bad322e4629bedb5430d8988f98fa85ca83d30ee20dad51853d6f"
+    },
+    {
+      "path": "evidence/issue-7/04-red.txt",
+      "before": null,
+      "after": "82f25c3471c230e2cc45b5fc147f6f324e65464e0ebe296b82069c862eb956ad"
+    },
+    {
+      "path": "evidence/issue-7/05-green.txt",
+      "before": null,
+      "after": "87b24a3a1bcc714319474bba40fd5d48002c6f51fef2429d90ff401dd4f84f6a"
+    },
+    {
+      "path": "evidence/issue-7/05-red.txt",
+      "before": null,
+      "after": "6f71511a26503045eadd9f4a693a47928578555f6751c4397acb1dcf51712957"
+    },
+    {
+      "path": "evidence/issue-7/06-green.txt",
+      "before": null,
+      "after": "2882f623a0b347e28a3e54ecfc76a81dd0222a1de667f2bc0fe2ed04b59447c1"
+    },
+    {
+      "path": "evidence/issue-7/06-red.txt",
+      "before": null,
+      "after": "579786e76d78aebd49a6d655f802105999063982da91fc8fd5f902829635efc8"
+    },
+    {
+      "path": "evidence/issue-7/07-stdio-and-regression.txt",
+      "before": null,
+      "after": "2835831faeddd7bb2c835d19d610c5048f4f353d679bf7ee3005ec6a30c6936b"
+    },
+    {
+      "path": "evidence/issue-7/08-journal-green.txt",
+      "before": null,
+      "after": "178b8040ce1eaa1bb9c404fa9a94fab21bb6102c465487942d12cfad13234e6c"
+    },
+    {
+      "path": "evidence/issue-7/08-red.txt",
+      "before": null,
+      "after": "7fed76c8f6ac9c2dc87d4bd2a2f33fed094227e2761030913a89c414ba8e1503"
+    },
+    {
+      "path": "evidence/issue-7/08-url-green.txt",
+      "before": null,
+      "after": "d5a4361dbf682d2aa52008ce974e7be06a6a597f7c78fe592c55c78ccfa10b2e"
+    },
+    {
+      "path": "evidence/issue-7/a-cli-green.txt",
+      "before": null,
+      "after": "028119550ad1ac60b97795da913a8cb0646cf80a46449af29427947ebd92c7f8"
+    },
+    {
+      "path": "evidence/issue-7/a-cli-red.txt",
+      "before": null,
+      "after": "cae3a14cc7d8fe498d7b3ee7177fcfd208244c006b0913099deb3dfb12dc0c88"
+    },
+    {
+      "path": "evidence/issue-7/a-final.txt",
+      "before": null,
+      "after": "b2a22b071fea0ad24046a44bc7e5ef65fae9c4b4dd0153cc352a88403d1b3c55"
+    },
+    {
+      "path": "evidence/issue-7/a-id-red.txt",
+      "before": null,
+      "after": "193bbfcd5b8926888cfa95f58756205a223c131a860ce4f721c1ce07c31931a3"
+    },
+    {
+      "path": "evidence/issue-7/a-regression.txt",
+      "before": null,
+      "after": "dba637a224a818901559af38c2e6e24ead391859122a1df156ef22cd29f936d2"
+    },
+    {
+      "path": "evidence/issue-7/a-review-green.txt",
+      "before": null,
+      "after": "a055c42b3828ae5fa5b7898dea5dc61f98ba7439ed634155abdd31e25f8dcf26"
+    },
+    {
+      "path": "evidence/issue-7/acceptance.md",
+      "before": null,
+      "after": "a8520479bc9fe3715836723898ca4c94e32780e082cf509e7e78aecb459a1b2c"
+    },
+    {
+      "path": "evidence/issue-7/b-affected-before-review.txt",
+      "before": null,
+      "after": "5122b68da24ea5949ca46dcb5ea33a6063de1735e1e2a4e4959a72945dba7cee"
+    },
+    {
+      "path": "evidence/issue-7/b-collect.txt",
+      "before": null,
+      "after": "5812fbbfb6d203515b553f28cb481c7910728281ace8f138337dc1399e4600f8"
+    },
+    {
+      "path": "evidence/issue-7/b-final-affected.txt",
+      "before": null,
+      "after": "ffd0fbf78ffb01572a5bf38b26e41d06fa70aa2f7d6c357c63dff5d65b6c733d"
+    },
+    {
+      "path": "evidence/issue-7/b-focused.txt",
+      "before": null,
+      "after": "52316428c41f1b44e8f3ac9a65fe0d3edcad8d4f08b0a6b3fb4ac663fdd7130a"
+    },
+    {
+      "path": "evidence/issue-7/b-review-affected.txt",
+      "before": null,
+      "after": "46f3cc82b94aff76ca5acd3a3b3e16c416b59a9129918574f6d4c1b01f96aa46"
+    },
+    {
+      "path": "evidence/issue-7/b-review-path-green.txt",
+      "before": null,
+      "after": "af39441706a248531fa202e77f299999812f02b12c6dfaf7fceaef3d8984c0db"
+    },
+    {
+      "path": "evidence/issue-7/b-review-path-red.txt",
+      "before": null,
+      "after": "b4d4283033b6d601d8ab67915c8b4226da9b4a10918cc3036c9ed60fd24552cf"
+    },
+    {
+      "path": "evidence/issue-7/b-review-prefix-green.txt",
+      "before": null,
+      "after": "5af05c1a92f5189bc9f99c8c5f94850a0385e78c8c0c8b1965070499c665b9a5"
+    },
+    {
+      "path": "evidence/issue-7/b-review-prefix-red.txt",
+      "before": null,
+      "after": "816f0ae9c07d16d1c0c2a765ee402c985a0324e5e3e3a0fb2582418dea31a6c0"
+    },
+    {
+      "path": "evidence/issue-7/b-review-windows-green.txt",
+      "before": null,
+      "after": "9859b2b7778217acd76b4f386b174837042f8f6bfe6c4a019691daa49404d237"
+    },
+    {
+      "path": "evidence/issue-7/b-review-windows-red.txt",
+      "before": null,
+      "after": "287913d7098a1e2b5cc6b2d92d3b1f366177fe73ab7d2f991841702d48ce4338"
+    },
+    {
+      "path": "evidence/issue-7/baseline-tests.txt",
+      "before": null,
+      "after": "b8e27a45e48de30a18cd362195da47fadbc7ccc711680e272b21cb9db89e1353"
+    },
+    {
+      "path": "evidence/issue-7/baseline.json",
+      "before": null,
+      "after": "ac56645c192e213bcb79897f13b242a0354d51fe72d27644ede39ec7aa709f63"
+    },
+    {
+      "path": "evidence/issue-7/final-collect.txt",
+      "before": null,
+      "after": "f8ca27ac2db9284c2c001150ba90b53d1a08b75ce8efee01a9659d8069eda171"
+    },
+    {
+      "path": "evidence/issue-7/issue.json",
+      "before": null,
+      "after": "377d9994ee15af52dd6090bca941e26fcb8ca19f994ddb940709c1bb54325742"
+    },
+    {
+      "path": "evidence/issue-7/product-final.txt",
+      "before": null,
+      "after": "c4e65a25c65fe6e19e31715c7fd3883c9390114c4531ceef15e7cec6bbd59f13"
+    },
+    {
+      "path": "evidence/issue-7/progress.md",
+      "before": null,
+      "after": "30b0ab2e15f1fa12c3f281a3f8b14d1378246af1c7ffbd4522b9e523ef1f6b7f"
+    },
+    {
+      "path": "evidence/issue-7/review-a.md",
+      "before": null,
+      "after": "ae5e482181093504d53d6a6af626aebf211d9b865a43803b74c1ae724a04f8b4"
+    },
+    {
+      "path": "evidence/issue-7/review-b.md",
+      "before": null,
+      "after": "f907f86e36943e48ec58fb001c4510bb8ffa3b0081f23ec2ffee5a35e4e12252"
+    },
+    {
+      "path": "scripts/build_image_client_bundle.py",
+      "before": "bc6a5bf24102ca298ec128266aec42127e0e953f0faf36c0f73ca39d871f3485",
+      "after": "34fc4ed43ddc8cf8acd11fa37a8682612e0410de7c9d7e08d9a89734db93bbd2"
+    },
+    {
+      "path": "tests/test_image_bridge.py",
+      "before": "caead53e0bea33c4cabb59b61c4153a0fda6c4cef088679ada926cc9a0c4aa7e",
+      "after": "49f923157d4591b1acfcfd49facec0ae1424c817a2c8521e92dc8e6492a40954"
+    },
+    {
+      "path": "tests/test_tb06_mcp_resume.py",
+      "before": null,
+      "after": "a6075836d51f8a15530733183b7c78db7a19324dec119bc498c2cdd60426190e"
+    },
+    {
+      "path": "tests/test_tb06_mcp_stdio.py",
+      "before": null,
+      "after": "971fbc597e77c013420dc1cb4e9b528c3ce24a9c388762f6eb82f2c593841178"
+    }
+  ],
+  "note": "source_head is the exact committed payload snapshot; later manifest-only commit adds this manifest. Scoped selective delivery, no private runtime/deployment; excludes itself."
+}
