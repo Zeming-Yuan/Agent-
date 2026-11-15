@@ -181,3 +181,11 @@ T01 身份接线：`create_app(root, token)` 保留旧位置参数，默认在 r
 T02 已接入 HTTP 文件读/删/引用及 worker 结果归属，修正同步编辑全局哈希 ID。`identity_mode='staging'` 仅可用于隔离副本；任务查询/取消与按人幂等尚待 T03/T04，生产 application() 仍 legacy，strict 启动保护保留。T01 上述未完成文件迁移的说明是当时状态；当前细节见 docs/IMAGE-SERVICE.md 和 evidence/issue-3/acceptance.md。
 
 维护与恢复仍先停新工作、定向停任务并确认后端空闲，再同步保全数据库、文件与凭证注册表。新旁表 file_digests 及任务 object_owners 必须随库保存；不可丢弃新 owner 数据。关闭 staging 接入后仅服务 legacy 自有数据；回退版本仍须保留文件 owner 检查与新归属，不能把混合库交给 T01 或更早共享访问代码。无不可逆 schema 重建，本票未部署、未触碰生产库，实机备份/发布/回滚未验证。
+
+# T03：任务归属（切片 A，2026-11-15）
+
+在独立测试副本中验证任务查询/取消、按 owner 的幂等与 worker 结果归属。生产服务保持停用/legacy，未改部署配置或生产库。新 task_requests 旁表须与 state.sqlite3、object_owners、file_digests、files 和 KeyRegistry 一并保全。所有新写入保持旧 files/tasks 列数，无不可逆表重建；重放先于全局容量检查。
+
+回退先关闭 staging 接入并停止接单，保存新增任务/素材/注册表，定向停止运行任务并确认后端空闲。含多人数据时只能回退到具备同等任务与文件 owner 校验的版本，不能直接部署 T02 或更早的全局任务查询实现。旧版兼容测试仅限 legacy 副本，不表示允许生产降级。
+
+测试 seam、基线、red/green 和审查记录见 evidence/issue-4/。类型检查、静态检查、构建/CI、Compose、安全扫描、变异测试、seed 均未配置，标为 N/A；物理模型、真实 HTTPS、双端 Harness、生产备份发布/回滚仍未验证。仅执行受影响测试，不以离线接口结果宣称完整 AC 或性能验收。

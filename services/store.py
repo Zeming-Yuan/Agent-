@@ -1,4 +1,4 @@
-"""Owner-scoped files and durable job state; task access migration remains staged."""
+"""Owner-scoped files and durable job state; owner-scoped task access with expand compatibility."""
 from contextlib import contextmanager
 import hashlib
 import json
@@ -24,6 +24,8 @@ class Store:
                 owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
             CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
                 file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
+            CREATE TABLE IF NOT EXISTS task_requests(owner TEXT NOT NULL, request_key TEXT NOT NULL,
+                fingerprint TEXT NOT NULL, task_id TEXT NOT NULL, PRIMARY KEY(owner, request_key));
             CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
             CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
               options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
@@ -117,9 +119,13 @@ class Store:
             db.execute('DELETE FROM files WHERE id=?', (fid,))
             db.execute("DELETE FROM object_owners WHERE kind='file' AND object_id=?", (fid,))
 
-    def task(self, tid):
+    def task(self, tid, *, owner="legacy"):
         with self.connect() as db:
-            row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
+            require_owner(db, 'task', tid, owner)
+            return self._task(db, tid)
+
+    def _task(self, db, tid):
+        row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
         if row is None:
             raise HTTPException(404, 'Task not found')
         item = dict(row)
@@ -129,8 +135,23 @@ class Store:
             item.pop(key)
         return item
 
+    def _business_fingerprint(self, kind, fid, options):
+        canonical = dict(options)
+        material_digests = []
+        material_refs = []
+        if kind not in ('image_generate', 'image_edit') and fid:
+            material_refs.append(('source', fid))
+        material_refs.extend(('image', ref) for ref in canonical.pop('image_ids', []))
+        foreground = canonical.pop('foreground_file_id', None)
+        if foreground:
+            material_refs.append(('foreground', foreground))
+        for role, reference in material_refs:
+            with (self.files / reference).open('rb') as stream:
+                material_digests.append((role, hashlib.file_digest(stream, 'sha256').hexdigest()))
+        return hashlib.sha256(json.dumps([kind, canonical, material_digests],
+            sort_keys=True, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
+
     def submit(self, kind, fid, options, idem, *, owner="legacy"):
-        fingerprint = hashlib.sha256(json.dumps([kind, fid, options], sort_keys=True).encode()).hexdigest()
         tid = 'task-' + uuid.uuid4().hex
         now = int(time.time())
         with self.connect() as db:
@@ -140,24 +161,39 @@ class Store:
                 refs.append(options['foreground_file_id'])
             for reference in refs:
                 require_owner(db, 'file', reference, owner)
+            fingerprint = self._business_fingerprint(kind, fid, options)
             if idem:
-                row = db.execute('SELECT id,fingerprint FROM tasks WHERE idem=?', (idem,)).fetchone()
+                row = db.execute('SELECT task_id AS id,fingerprint FROM task_requests WHERE owner=? AND request_key=?', (owner, idem)).fetchone()
+                if row is None and owner == 'legacy':
+                    # Old writers retain their original positional schema and global key.
+                    old = db.execute('SELECT * FROM tasks WHERE idem=?', (idem,)).fetchone()
+                    if old:
+                        require_owner(db, 'task', old['id'], owner)
+                        previous = self._business_fingerprint(old['kind'], old['file_id'], json.loads(old['options']))
+                        if previous != fingerprint:
+                            raise HTTPException(409, 'Idempotency key reused with different request')
+                        db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (owner, idem, fingerprint, old['id']))
+                        return self.task(old['id'], owner=owner)
                 if row:
                     if row['fingerprint'] != fingerprint:
                         raise HTTPException(409, 'Idempotency key reused with different request')
-                    return self.task(row['id'])
+                    return self.task(row['id'], owner=owner)
             count = db.execute("SELECT count(*) FROM tasks WHERE status IN ('queued','running')").fetchone()[0]
             if count >= self.max_pending:
                 raise HTTPException(429, 'Media queue full', headers={'Retry-After':'10'})
             db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
-                       (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, idem, fingerprint, now, now))
+                       (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, idem if owner == 'legacy' else None,
+                        hashlib.sha256(json.dumps([kind, fid, options], sort_keys=True).encode()).hexdigest()
+                        if owner == 'legacy' else fingerprint, now, now))
             db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('task', tid, owner))
-        return self.task(tid)
+            if idem:
+                db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (owner, idem, fingerprint, tid))
+        return self.task(tid, owner=owner)
 
     def worker_task(self, tid):
         """Internal identity lookup; never exposed as an HTTP access method."""
-        item = self.task(tid)
         with self.connect() as db:
+            item = self._task(db, tid)
             row = db.execute("SELECT owner FROM object_owners WHERE kind='task' AND object_id=?", (tid,)).fetchone()
         if row is None:
             raise RuntimeError('Task ownership missing')
@@ -173,7 +209,8 @@ class Store:
             # Cancellation is terminal, even if an upstream request completes at the same instant.
             db.execute('UPDATE tasks SET ' + ','.join(f'{k}=?' for k in fields) + " WHERE id=? AND status!='cancelled'",
                        (*fields.values(), tid))
-        return self.task(tid)
+        with self.connect() as db:
+            return self._task(db, tid)
 
     def recover(self):
         with self.connect() as db:
@@ -183,4 +220,4 @@ class Store:
         with self.connect() as db:
             op = 'IN' if image else 'NOT IN'
             row = db.execute(f"SELECT id FROM tasks WHERE status='queued' AND kind {op} ('image_generate','image_edit') ORDER BY created,rowid LIMIT 1").fetchone()
-        return self.task(row['id']) if row else None
+        return self.worker_task(row['id']) if row else None

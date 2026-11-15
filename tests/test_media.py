@@ -18,7 +18,7 @@ def test_subprocess_timeout_and_failure():
 def test_restart_marks_running_failed_but_preserves_queued(tmp_path):
     store=Store(tmp_path)
     fid='file-'+'0'*32
-    store.add_file(fid,'name',5)
+    store.save_generated(fid,b'hello','name',owner='legacy')
     running=store.submit('transcribe',fid,{},'r')['id']
     queued=store.submit('transcribe',fid,{},'q')['id']
     store.update(running,status='running')

@@ -59,3 +59,11 @@ MCP工具：generate_image、edit_image、get_image_task、cancel_image_task。�
 图片和既有媒体 worker 从持久任务归属读取素材，图片结果写回同一 owner；同步等待也按请求 owner 取回结果。任务写归属仅是素材链路的必要身份传递：任务查询/取消隔离、按人幂等和任务列表仍由 T03/T04 完成。生产仍固定 legacy，strict 继续拒绝启动，staging 不得作为多人生产入口。
 
 本票验收映射、逐步 red/green、独立审查、受影响回归和复测入口见 `evidence/issue-3/acceptance.md`。测试使用临时数据库、A/B 临时 Key 及外部后端替身，不代表真实 HTTPS/模型或 Windows/macOS Harness 验收；这些仍未验证，归后续 T14。类型/静态/构建门禁未配置（N/A）。回退先停接单并保存新增数据；多 owner 数据存在后必须保留归属检查，不能退回共享可读版本。
+
+## T03 任务归属迁移：切片 A（2026-11-15，离线）
+
+上述 T02 的任务查询/取消及按人幂等待迁移说明是历史状态。现在受控 staging 中，任务查询与取消仅允许本人；跨人和未知任务统一返回 404 `Object not found`。同步图片等待同样使用已鉴权 owner；worker 使用内部 `worker_task` 取回持久归属，不向 HTTP 暴露全权限读取或 owner 字段。
+
+幂等范围为 `(owner, Idempotency-Key)`：同人同键同业务输入复用原任务，同键不同输入 409，不同 owner 同键独立。素材身份以流式 SHA256 内容判定并保留参考图顺序与用途，临时上传 ID 改变不影响重试；提示词、尺寸、质量、seed、标题等业务参数参与指纹。新键表示新创作。已命中请求先于全局四单容量检查返回，不额外占位。后端离线时的无就绪检查重放由后续 T05 处理。
+
+`task_requests` 旁表与任务、归属在同一 BEGIN IMMEDIATE 中写入；保留原 tasks 12 列和全局 idem UNIQUE，非 legacy 写 NULL。legacy 新写入保留旧指纹表示；旧幂等记录经 owner 校验后补入旁表，冻结旧版双向兼容测试覆盖只含 legacy 的副本。混合 owner 库不能交给旧版运行。生产仍 legacy，strict 仍拒绝启动；任务列表/contract 收口及生产多人开放不属于此切片。
