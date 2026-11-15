@@ -1,0 +1,170 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb06_reference_recovery_reuses_upload_and_content_identity[image_edit] __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-301/test_tb06_reference_recovery_r0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7bf35a1d3a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe7bf35a1d440>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-301/test_tb06_reference_recovery_r0')
+kind = 'image_edit'
+
+    @pytest.mark.parametrize('kind',['image_edit','image_generate'])
+    def test_tb06_reference_recovery_reuses_upload_and_content_identity(owner_env, tmp_path, kind):
+        backend = owner_env.new_backend()
+        source = tmp_path/'素材 one.png'
+        source.write_bytes(backend.png)
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport = GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3',drop_submit=True)
+            async def invoke(bridge):
+                if kind == 'image_edit':
+                    return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                return await bridge.generate('fixture','1024x1024',0,'',str(source),request_id='ref')
+            async def run():
+                one = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    with pytest.raises(httpx.ReadError):
+                        await invoke(one)
+                finally:
+                    await one.close()
+                original = gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'][0]
+                owner_env.wait_task(gateway,original['id'],'A',lambda t:t['status']=='completed')
+                two = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    uploads = [r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']
+                    assert len(uploads) == 1
+                    fid = original['options']['image_ids'][0] if kind=='image_edit' else original['options']['foreground_file_id']
+                    assert gateway.delete('/v1/files/'+fid,headers=owner_env.auth('A')).status_code == 200
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    assert len(backend.jobs) == 1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']) == 2
+                finally:
+                    await two.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:106:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:87: in run
+    await invoke(one)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+bridge = <client.spark_image_tools.ImageBridge object at 0xe7bf35753fe0>
+
+    async def invoke(bridge):
+        if kind == 'image_edit':
+>           return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: ImageBridge.edit() got an unexpected keyword argument 'request_id'
+
+tests/test_tb06_mcp_resume.py:81: TypeError
+_ test_tb06_reference_recovery_reuses_upload_and_content_identity[image_generate] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-301/test_tb06_reference_recovery_r1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7bf357b4a40>, wait_task=<function owner_env.<locals>.wait_task at 0xe7bf357b49a0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-301/test_tb06_reference_recovery_r1')
+kind = 'image_generate'
+
+    @pytest.mark.parametrize('kind',['image_edit','image_generate'])
+    def test_tb06_reference_recovery_reuses_upload_and_content_identity(owner_env, tmp_path, kind):
+        backend = owner_env.new_backend()
+        source = tmp_path/'素材 one.png'
+        source.write_bytes(backend.png)
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport = GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3',drop_submit=True)
+            async def invoke(bridge):
+                if kind == 'image_edit':
+                    return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                return await bridge.generate('fixture','1024x1024',0,'',str(source),request_id='ref')
+            async def run():
+                one = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    with pytest.raises(httpx.ReadError):
+                        await invoke(one)
+                finally:
+                    await one.close()
+                original = gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'][0]
+                owner_env.wait_task(gateway,original['id'],'A',lambda t:t['status']=='completed')
+                two = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    uploads = [r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']
+                    assert len(uploads) == 1
+                    fid = original['options']['image_ids'][0] if kind=='image_edit' else original['options']['foreground_file_id']
+                    assert gateway.delete('/v1/files/'+fid,headers=owner_env.auth('A')).status_code == 200
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    assert len(backend.jobs) == 1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']) == 2
+                finally:
+                    await two.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:106:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:91: in run
+    owner_env.wait_task(gateway,original['id'],'A',lambda t:t['status']=='completed')
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xe7bf357b9880>
+tid = 'task-e8c7ee7ecdea4c5ab0bd2ea471eb93ce', owner = 'A'
+predicate = <function test_tb06_reference_recovery_reuses_upload_and_content_identity.<locals>.run.<locals>.<lambda> at 0xe7bf34a1ea20>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-e8c7ee7ecdea4c5ab0bd2ea471eb93ce', 'kind': 'image_generate', 'file_id': 'file-08e4b11f6e7b4f41a63e58dcebbd4fae', 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': 'file-08e4b11f6e7b4f41a63e58dcebbd4fae', 'title': ''}, 'status': 'failed', 'progress': 0.0, 'result': None, 'error': 'Image processing failed; see service log', 'created': 1794717293, 'updated': 1794717293}
+
+tests/conftest.py:97: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:215 image task task-e8c7ee7ecdea4c5ab0bd2ea471eb93ce failed (ValueError)
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 204, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 167, in process_image
+    data=await asyncio.to_thread(compose_image,r.content,fg,opts['title'])
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 34, in compose_image
+    if low==255 or high==0: raise ValueError('Product foreground must be a visible transparent PNG')
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Product foreground must be a visible transparent PNG
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_edit]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_generate]
+2 failed, 7 deselected, 1 warning in 3.43s

@@ -318,3 +318,7 @@ git commit -m "test(image): t06 boundaries and recovery"
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+
+## 2026-11-15 execution context
+
+User authorized single-ticket implement+tdd, reconfirmed public MCP/stdio/HTTP/save/bundle seams and fixed45fa55afde3cbe97549f89ccb18eb71c5e677b68. Controlled source checkout reused on feat/issue-7-mcp-resume; original non-Git product remains baseline checked for selective delivery. SliceA freezes generationjournal (735df49,ca5e2ef),reviewed0/0 after repairs. SliceB serially adds materials/list/atomic-save/explicitbundle. Added tests/test_tb06_mcp_stdio.py for actual childprocess/TLS acceptance and client/image-tools-requirements.txt for common standalone dependencies; both selected by planned -k. User's affected-only validation overrides fullsuite skill defaults. Evidence/acceptance/remaining platform-hardware limits in evidence/issue-7. Final B review and delivery status in that ledger; do not infer fullparentspec completion from this ticket.

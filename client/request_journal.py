@@ -37,8 +37,22 @@ class RequestJournal:
 
     def accepted(self, request_id: str, task_id: str) -> None:
         with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute('BEGIN IMMEDIATE')
+            key=(self.service,self.owner,request_id)
+            row=db.execute('SELECT task_id FROM requests WHERE service=? AND owner=? AND request_id=?',key).fetchone()
+            if row is None or row[0] not in (None,task_id):
+                raise ValueError('Unknown request or conflicting accepted task')
             db.execute('UPDATE requests SET task_id=? WHERE service=? AND owner=? AND request_id=?',
                        (task_id,self.service,self.owner,request_id))
+
+    def remember_upload(self, request_id: str, index: int, file_id: str) -> None:
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute('BEGIN IMMEDIATE')
+            key=(self.service,self.owner,request_id)
+            payload=json.loads(db.execute('SELECT payload FROM requests WHERE service=? AND owner=? AND request_id=?',key).fetchone()[0])
+            payload['materials'][index]['file_id']=file_id
+            db.execute('UPDATE requests SET payload=? WHERE service=? AND owner=? AND request_id=?',
+                       (json.dumps(payload,ensure_ascii=False),)+key)
 
     def pending(self) -> list[dict]:
         with closing(sqlite3.connect(self.path)) as db:

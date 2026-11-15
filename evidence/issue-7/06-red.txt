@@ -1,0 +1,27 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb06_bundle_rejects_runtime_and_credential_assets ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-312/test_tb06_bundle_rejects_runti0')
+
+    def test_tb06_bundle_rejects_runtime_and_credential_assets(tmp_path):
+        from scripts.build_image_client_bundle import build_bundle
+        key=tmp_path/'personal.key';key.write_text('test-personal-credential')
+        other=tmp_path/'other-owner.key';other.write_text('test-other-owner-credential')
+        config=tmp_path/'config.json'
+        config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+        for name,source in [('README.md',other),('requests.sqlite3',other),('../README.md',other),('api_key',other)]:
+            target=tmp_path/'rejected.zip'
+>           with pytest.raises(ValueError):build_bundle(config,{name:source},target)
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:298: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_bundle_rejects_runtime_and_credential_assets
+1 failed, 16 deselected, 1 warning in 0.14s

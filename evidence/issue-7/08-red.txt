@@ -1,0 +1,61 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_tb06_service_identity_rejects_credentials_and_query[https://raw-secret@spark.invalid/v1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-315/test_tb06_service_identity_rej0')
+service = 'https://raw-secret@spark.invalid/v1'
+
+    @pytest.mark.parametrize('service',['https://raw-secret@spark.invalid/v1','https://spark.invalid/v1?secret=/v1','https://spark.invalid/v1#secret/v1'])
+    def test_tb06_service_identity_rejects_credentials_and_query(tmp_path,service):
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:329: Failed
+_ test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1?secret=/v1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-315/test_tb06_service_identity_rej1')
+service = 'https://spark.invalid/v1?secret=/v1'
+
+    @pytest.mark.parametrize('service',['https://raw-secret@spark.invalid/v1','https://spark.invalid/v1?secret=/v1','https://spark.invalid/v1#secret/v1'])
+    def test_tb06_service_identity_rejects_credentials_and_query(tmp_path,service):
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:329: Failed
+_ test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1#secret/v1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-315/test_tb06_service_identity_rej2')
+service = 'https://spark.invalid/v1#secret/v1'
+
+    @pytest.mark.parametrize('service',['https://raw-secret@spark.invalid/v1','https://spark.invalid/v1?secret=/v1','https://spark.invalid/v1#secret/v1'])
+    def test_tb06_service_identity_rejects_credentials_and_query(tmp_path,service):
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:329: Failed
+______________ test_tb06_journal_never_replaces_an_accepted_task _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-315/test_tb06_journal_never_replac0')
+
+    def test_tb06_journal_never_replaces_an_accepted_task(tmp_path):
+        from client.request_journal import RequestJournal
+        journal=RequestJournal(tmp_path/'j.sqlite3','svc','A')
+        journal.prepare('r','fp',{})
+        journal.accepted('r','task-original')
+        journal.accepted('r','task-original')
+>       with pytest.raises(ValueError):journal.accepted('r','task-other')
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:339: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://raw-secret@spark.invalid/v1]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1?secret=/v1]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1#secret/v1]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_journal_never_replaces_an_accepted_task
+4 failed, 19 deselected, 1 warning in 0.19s

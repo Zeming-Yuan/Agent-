@@ -1,0 +1,79 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb06_mcp_owner_service_partition_rotation_and_server_recovery ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-305/test_tb06_mcp_owner_service_pa0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf5703be51440>, wait_task=<function owner_env.<locals>.wait_task at 0xf5703be514e0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-305/test_tb06_mcp_owner_service_pa0')
+
+    def test_tb06_mcp_owner_service_partition_rotation_and_server_recovery(owner_env, tmp_path):
+        with owner_env.client() as gateway:
+            transport=GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3')
+            async def run():
+                one=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    original=await one.generate('fixture','1024x1024',0,'','',request_id='same')
+                    source=tmp_path/'edit.png'; source.write_bytes(owner_env.new_backend().png)
+                    edited=text_state(await build_server(one).call_tool('edit_image',{'prompt':'fixture','image_paths':[str(source)],'request_id':'edit'}))
+                    assert edited['request_id']=='edit'
+                    listing=text_state(await build_server(one).call_tool('list_image_tasks',{'status':'queued','limit':1}))
+                    assert listing['data'][0]['id']==original['id']
+                    assert listing['has_more'] and listing['next_cursor']==original['id']
+                finally:
+                    await one.close()
+                owner_env.keys['A']=owner_env.registry.issue('A')
+                for owner,service,want_ids,want_requests in [
+                    ('A','https://spark.invalid/v1',{original['id'],edited['id']},{'same','edit'}),
+                    ('B','https://spark.invalid/v1',set(),set()),
+                    ('A','https://other.invalid/v1',{original['id'],edited['id']},set())]:
+                    bridge=bridge_for(owner_env,tmp_path,transport,owner=owner,service=service)
+                    try:
+                        listing=text_state(await build_server(bridge).call_tool('list_image_tasks',{}))
+                        assert {t['id'] for t in listing['data']}==want_ids
+                        assert {r['request_id'] for r in listing['requests']}==want_requests
+                    finally:
+                        await bridge.close()
+                (tmp_path/'requests.sqlite3').unlink()
+                restored=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    listing=text_state(await build_server(restored).call_tool('list_image_tasks',{}))
+                    assert {t['id'] for t in listing['data']}=={original['id'],edited['id']}
+                    assert listing['requests']==[]
+                finally:
+                    await restored.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:207:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        one=bridge_for(owner_env,tmp_path,transport)
+        try:
+            original=await one.generate('fixture','1024x1024',0,'','',request_id='same')
+            source=tmp_path/'edit.png'; source.write_bytes(owner_env.new_backend().png)
+            edited=text_state(await build_server(one).call_tool('edit_image',{'prompt':'fixture','image_paths':[str(source)],'request_id':'edit'}))
+>           assert edited['request_id']=='edit'
+E           AssertionError: assert '003b9c9f-5bd...-987d41ba4da5' == 'edit'
+E
+E             - edit
+E             + 003b9c9f-5bdf-493d-9511-987d41ba4da5
+
+tests/test_tb06_mcp_resume.py:181: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_mcp_owner_service_partition_rotation_and_server_recovery
+1 failed, 9 deselected, 1 warning in 0.43s

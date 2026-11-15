@@ -24,7 +24,7 @@ def test_bridge_returns_real_mcp_image_content_and_saved_file(tmp_path):
         bridge=ImageBridge('https://192.168.10.77:18443/v1','test-secret-token',Path('certificates/agent-root-ca.crt'),tmp_path,journal_path=tmp_path/'requests.sqlite3',transport=httpx.MockTransport(backend))
         server=build_server(bridge)
         listed=await server.list_tools()
-        assert {t.name for t in listed}=={'generate_image','edit_image','get_image_task','cancel_image_task'}
+        assert {t.name for t in listed}=={'generate_image','edit_image','get_image_task','cancel_image_task','list_image_tasks'}
         result=await server.call_tool('generate_image',{'prompt':'生成电商场景'})
         assert not getattr(result,'isError',False)
         result=await server.call_tool('get_image_task',{'task_id':tid,'wait_seconds':0})
