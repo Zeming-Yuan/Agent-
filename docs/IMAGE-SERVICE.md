@@ -67,3 +67,5 @@ MCP工具：generate_image、edit_image、get_image_task、cancel_image_task。�
 幂等范围为 `(owner, Idempotency-Key)`：同人同键同业务输入复用原任务，同键不同输入 409，不同 owner 同键独立。素材身份以流式 SHA256 内容判定并保留参考图顺序与用途，临时上传 ID 改变不影响重试；提示词、尺寸、质量、seed、标题等业务参数参与指纹。新键表示新创作。已命中请求先于全局四单容量检查返回，不额外占位。后端离线时的无就绪检查重放由后续 T05 处理。
 
 `task_requests` 旁表与任务、归属在同一 BEGIN IMMEDIATE 中写入；保留原 tasks 12 列和全局 idem UNIQUE，非 legacy 写 NULL。legacy 新写入保留旧指纹表示；旧幂等记录经 owner 校验后补入旁表，冻结旧版双向兼容测试覆盖只含 legacy 的副本。混合 owner 库不能交给旧版运行。生产仍 legacy，strict 仍拒绝启动；任务列表/contract 收口及生产多人开放不属于此切片。
+
+T03 旧数据恢复边界：若 T03 之前的任务尚无内容指纹，且原素材已被删除，无法证明新上传内容等价。此时重用旧键返回409，detail含本人原 task_id，继续查询原任务/下载已有结果；不会重跑推理或猜测内容。需要重新创作时使用新键。已有 T03 内容指纹的请求不受此历史限制，删除原参考图后重传相同内容仍复用原任务。

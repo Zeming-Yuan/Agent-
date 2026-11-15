@@ -216,3 +216,40 @@ def test_tb03_media_worker_reads_owner_source_and_keeps_result_private(owner_env
             assert done['status'] == 'completed', done
             assert done['result']['pages'][0]['text'] == text
             assert c.get('/v1/tasks/' + tid, headers=owner_env.auth(stranger)).status_code == 404
+
+
+def test_tb03_legacy_missing_material_conflicts_with_recoverable_task(owner_env, legacy_services):
+    import httpx
+    from fastapi.testclient import TestClient
+    backend = owner_env.new_backend()
+    with TestClient(legacy_services.create_app(owner_env.root, owner_env.keys['legacy'],
+                    images_enabled=True, audio_enabled=False,
+                    transport=httpx.MockTransport(backend))) as c:
+        fid = owner_env.upload(c, 'legacy')
+        response = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[fid])
+        tid = response.json()['id']
+        done = owner_env.wait_task(c, tid, 'legacy', lambda t: t['status'] == 'completed')
+        result_id = done['result']['file_id']
+        assert c.delete('/v1/files/' + fid, headers=owner_env.auth('legacy')).status_code == 200
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        new_fid = owner_env.upload(c, 'legacy')
+        replay = owner_env.submit(c, 'legacy', kind='image_edit', request_key='deleted', image_ids=[new_fid])
+        assert replay.status_code == 409
+        assert replay.json()['detail']['task_id'] == tid
+        assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('legacy')).json()['status'] == 'completed'
+        assert c.get('/v1/files/' + result_id + '/content', headers=owner_env.auth('legacy')).status_code == 200
+        assert len(backend.jobs) == 1
+
+
+def test_tb03_new_request_replays_after_original_material_deleted(owner_env):
+    backend = owner_env.new_backend()
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        fid = owner_env.upload(c, 'A')
+        tid = owner_env.submit(c, 'A', kind='image_edit', request_key='deleted', image_ids=[fid]).json()['id']
+        done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        assert c.delete('/v1/files/' + fid, headers=owner_env.auth('A')).status_code == 200
+        new_fid = owner_env.upload(c, 'A')
+        replay = owner_env.submit(c, 'A', kind='image_edit', request_key='deleted', image_ids=[new_fid])
+        assert replay.status_code == 202 and replay.json()['id'] == tid
+        assert replay.json()['result'] == done['result']
+        assert len(backend.jobs) == 1

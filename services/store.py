@@ -169,7 +169,12 @@ class Store:
                     old = db.execute('SELECT * FROM tasks WHERE idem=?', (idem,)).fetchone()
                     if old:
                         require_owner(db, 'task', old['id'], owner)
-                        previous = self._business_fingerprint(old['kind'], old['file_id'], json.loads(old['options']))
+                        try:
+                            previous = self._business_fingerprint(old['kind'], old['file_id'], json.loads(old['options']))
+                        except FileNotFoundError:
+                            # Old ID-only fingerprints cannot prove equivalence after source deletion.
+                            raise HTTPException(409, {'message': 'Legacy request material unavailable; retrieve existing task',
+                                                      'task_id': old['id']}) from None
                         if previous != fingerprint:
                             raise HTTPException(409, 'Idempotency key reused with different request')
                         db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (owner, idem, fingerprint, old['id']))

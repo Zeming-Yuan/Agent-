@@ -18,3 +18,5 @@ Already satisfied behavior retained as regressions: changed payload409, global4/
 Test correction: forged owner options initially collided with fixture's owner argument (TypeError); send JSON directly. Existing media restart fixture only registered metadata; now saves real bytes via public save_generated for stream hashing. Neither fixture error counts as a business red.
 
 Slice A verification: approved affected12-file command in a-affected.txt →114 passed, one existing Starlette/AnyIO deprecation. Type/lint/build gates N/A (none configured). git diff --check exit0. Slice A code/tests/docs ready for independent fixed-diff review; Key CLI and /v1/me are slice B.
+
+Slice A review fix: historical deleted material now409 with original owner-scoped task_id; new content-fingerprint replay after source deletion remains202/same task. Public red→green recorded, affected116 passed in a-review-green.txt.
