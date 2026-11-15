@@ -46,3 +46,11 @@ Fixed1c566b6 review: Standards1 P1 (failed unreturned-result unlink did not halt
 ## Final reviewed source and verification
 
 Implementation HEAD85ee22d; independent final Standards0/Spec0 (review-b.md). Both archived product/ADR payloads SHA256-match the fixed commit. Fresh final-affected.txt:**277passed**, one existing AnyIO warning; final-collect.txt:**28selected/308collected** across T07 lifecycle/stdio names. Narrow repair selection31passed. Source hashes unchanged before/after the final affected run. No unresolved important findings or deferred minors; no full-suite/full-gate claim. Production/physical GPU and actual desktop-platform acceptance remain explicitly未验证.
+
+## Original product-directory verification and delivery
+
+79 committed payload paths were first baseline-checked with zero conflicts, original bytes privately backed up, selectively copied and SHA256-matched. Actual command cwd was /home/clusteradmin/Desktop/Agent多模态服务; existing .venv ran the same explicit affected-file selection:**277passed**, one existing dependency warning (product-final.txt). Original product code/test payload hashes remained unchanged after verification.
+
+An initial duplicate verification accidentally used the source checkout cwd; it was stopped and its partial output preserved only in the private rollback directory, not counted as original-product evidence. Actual original-directory run is separate and complete. Delivery metadata/this evidence are synchronized after the payload. sync-manifest.json references the final payload commit and original/after hashes; its own hash is excluded.
+
+Source branch retained locally with independently verifiable slice commits. Old shared checkout draft remains preserved because its writer was uncertain; use the isolated issue-8 checkout as source authority. No push, PR, deployment, production data write or guard change. Highest physical model and real Windows/macOS Harness evidence remains with existing follow-up tickets; parent#1 remains OPEN.
