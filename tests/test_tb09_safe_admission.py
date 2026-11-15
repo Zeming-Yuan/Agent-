@@ -565,3 +565,33 @@ def test_tb09_release_ack_deadline_fails_visibly_but_keeps_control_until_settled
         finally:
             release.set()
     assert settled.is_set() and backend.jobs==[]
+
+
+@pytest.mark.parametrize('failure',['http_error','disconnect'])
+def test_tb09_cancel_does_not_hide_failure_of_owned_release_request(owner_env,failure):
+    import asyncio,threading,time,httpx
+    backend=owner_env.new_backend()
+    entered=threading.Event();release=threading.Event();returned=threading.Event()
+    async def external(request):
+        if request.url.path=='/free':
+            entered.set()
+            await asyncio.to_thread(release.wait,2.)
+            returned.set()
+            if failure=='disconnect':raise httpx.ReadError('unknown release outcome',request=request)
+            return httpx.Response(503,json={'error':'release failed'})
+        return await backend(request)
+    with client_with_resources(owner_env,external,**resources()) as c:
+        tid=owner_env.submit(c).json()['id']
+        assert entered.wait(1)
+        assert c.post('/v1/tasks/'+tid+'/cancel',headers=owner_env.auth('A')).json()['status']=='cancelled'
+        release.set()
+        assert returned.wait(1)
+        deadline=time.monotonic()+.25
+        while time.monotonic()<deadline:
+            health=c.get('/health',headers=owner_env.auth('A'))
+            if health.status_code==503:break
+            time.sleep(.01)
+        assert health.status_code==503,health.text
+        assert owner_env.submit(c).status_code==503
+        assert c.get('/v1/tasks/'+tid,headers=owner_env.auth('A')).json()['status']=='cancelled'
+        assert backend.jobs==[]

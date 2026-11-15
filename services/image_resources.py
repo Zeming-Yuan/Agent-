@@ -174,7 +174,9 @@ class ImageAdmission:
         record_current_task(store,tid,operation='release',event='release_requested')
         request = asyncio.create_task(settled_post(client, url+'/free', json={'unload_models': True, 'free_memory': True}))
         async def finish_request():
-            return await request
+            response = await request
+            response.raise_for_status()
+            return response
         try:
             done,_ = await asyncio.wait({request},timeout=max(0,self.settings['wait_timeout']-(time.monotonic()-start)))
             if not done:
@@ -187,7 +189,11 @@ class ImageAdmission:
             response.raise_for_status()
             record_current_task(store,tid,operation='release',event='release_acknowledged')
         except asyncio.CancelledError:
-            await settle(finish_request())
+            try:
+                await settle(finish_request())
+            except Exception as exc:
+                self.unavailable_reason = 'Model release failed during cancellation; operator recovery required'
+                raise ReleaseUnconfirmed(self.unavailable_reason) from exc
             raise
         except Exception as exc:
             raise ReleaseUnconfirmed('Model release request unconfirmed') from exc

@@ -41,3 +41,9 @@ Independent two-axis final review and original selective sync are appended after
 Fixed B review: Standards0, Spec1P2 (review-b.md); reviewer targeted16/27passed.22RED→GREEN reproduces configured pending-ACK ceiling and adds visible failure/degrade/new503 without abandoning owned release settlement. The previous414/85counts are pre-repair source evidence only; repair-final-affected.txt and final re-review supersede them below.
 
 Fresh repaired source: ticket86collected/86passed; explicit16affected415passed, one existing AnyIO warning. Bash syntax0. Scoped88payload path/private-key-marker inspection found0suspicious items (not a configured scanner). repair-source-hashes.json freezes tested source; no code changed during final tests. Independent fixed-commit re-review follows.
+
+## Cancellation combination repair
+
+11ebbefe re-review found one StandardsP2, Spec0: cancelled queued request's owned/free503 was ignored after settlement.23RED→GREEN2 now preserves cancelled while returning health503/new503 on HTTP error or unknown outcome. This strengthens AC1/AC5; cancellation never hides failed release. Fresh final source evidence below supersedes prior415/86counts after fixed commit.
+
+Final cancelled-release repair source: ticket88collected/88passed (final-collect/final-focused), explicit16affected417passed (cancel-repair-affected), one existing AnyIO warning. Bash syntax0. Final-source-hashes.json freezes all modified product/test/launcher files; code unchanged during runs. Preimage inspection94paths/0conflicts; actual delivery awaits independent final review.

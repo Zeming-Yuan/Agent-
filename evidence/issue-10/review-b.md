@@ -15,3 +15,7 @@ Fixed command git diff da2acfb62b8abd478f18b4cc84b448e87003ed66...0b8ae7179692d8
 22RED: real HTTP/auth/Store/worker with held external ACK exceeded.08s and was not failed within.3s. GREEN: deadline sets failed/release_unconfirmed and a global admission-health latch immediately; new work503, no inference. The in-flight control request remains owned and is settled before worker exit, including native cancellation. No second task lifecycle table/state machine; existing reducer terminal event remains authoritative. Root fresh affected verification and fixed-commit re-review follow.
 
 Reliable actual positive release producer and physical acceptance remain absent/unverified in#26, not counted as passed. #10OPEN; no production profile/config/benchmark claim.
+
+## Re-review and cancellation repair
+
+Fixed11ebbefe: Spec0, independently3passed (ACK deadline, pending cancellation settlement, queued restart). Standards1P2: cancel queued task during/free, then HTTP503 returned; cancelled settlement discarded HTTP result, health200/new202.23RED reproduced HTTP-error branch (disconnect already safe), GREEN2 validates the owned response inside the settlement coroutine, propagates release failure through a health latch and ReleaseUnconfirmed while preserving terminal cancelled. Full affected verification/re-review follow the next fixed commit. No deferred findings/rulings.
