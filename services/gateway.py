@@ -375,6 +375,11 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     @app.post('/v1/tasks/{tid}/cancel')
     async def cancel(tid: str, request: Request):
         task = store.task(tid, owner=request.state.principal.owner)
+        if task['kind'] in ('image_generate', 'image_edit'):
+            task, changed = store.request_cancel(tid, owner=request.state.principal.owner)
+            if changed and tid in active:
+                active[tid].cancel()
+            return task
         if task['status'] in ('queued','running'):
             task = store.update(tid,status='cancelled')
             if tid in active:

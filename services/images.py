@@ -197,15 +197,21 @@ async def image_worker(store,client,url,active):
         item=store.next_task(image=True)
         if item is None:
             await asyncio.sleep(.2);continue
-        tid=item['id'];store.update(tid,status='running')
+        tid=item['id']
+        item=store.transition(tid,status='running',stage='running',expected_seq=item['stage_seq'])
+        if item['status'] != 'running':continue
         profile=(item['kind'],item['kind']=='image_edit' and item['options']['quality']=='fast')
         job=asyncio.create_task(process_image(item,store,client,url,unload_models=last_kind!=profile));active[tid]=job
         try:
             result=await job
-            store.update(tid,status='completed',progress=1,result=result)
+            store.transition(tid,status='completed',stage='completed',
+                             expected_seq=store.worker_task(tid)['stage_seq'],result=result)
             last_kind=profile
         except asyncio.CancelledError:
-            if store.worker_task(tid)['status']!='cancelled':
+            task=store.worker_task(tid)
+            if task['cancel_requested']:
+                store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
+            else:
                 store.update(tid,status='failed',error='Image worker interrupted');raise
         except SubmissionUncertain:
             LOG.exception('image backend outcome uncertain; admission stopped')

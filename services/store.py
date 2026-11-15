@@ -48,6 +48,11 @@ class Store:
             CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
               options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
               idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
             ''')
 
     @contextmanager
@@ -194,6 +199,10 @@ class Store:
             item[key] = json.loads(item[key]) if item[key] else None
         for key in ('idem', 'fingerprint'):
             item.pop(key)
+        runtime = db.execute('SELECT * FROM task_runtime WHERE task_id=?', (tid,)).fetchone()
+        if runtime:
+            item.update({k: runtime[k] for k in runtime.keys() if k != 'task_id'})
+            item['cancel_requested'] = bool(item['cancel_requested'])
         return item
 
     def request_fingerprint(self, kind, fid, options, *, owner):
@@ -228,6 +237,7 @@ class Store:
             db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
                        (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, None, fingerprint, now, now))
             db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('task', tid, owner))
+            db.execute('INSERT INTO task_runtime VALUES(?,?,?,?,?,?,?)', (tid, 'queued', 0, now, now, None, 0))
             if idem:
                 db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (owner, idem, fingerprint, tid))
         return self.task(tid, owner=owner)
@@ -241,6 +251,41 @@ class Store:
             raise RuntimeError('Task ownership missing')
         item['owner'] = row['owner']
         return item
+
+    def transition(self, tid: str, *, status: str, stage: str, expected_seq: int,
+                   result: dict | None = None, error: str | None = None) -> dict:
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self._transition_tx(db, tid, status=status, stage=stage, expected_seq=expected_seq,
+                                result=result, error=error)
+            return self._task(db, tid)
+
+    def _transition_tx(self, db, tid, *, status, stage, expected_seq, result=None, error=None):
+        task = self._task(db, tid)
+        if task['status'] in ('completed', 'failed', 'cancelled') or task['stage_seq'] != expected_seq:
+            return
+        if task['cancel_requested'] and status == 'completed':
+            return
+        now = time.time()
+        started = task['stage_started_at'] if task['stage'] == stage else now
+        db.execute('''UPDATE task_runtime SET stage=?,stage_seq=stage_seq+1,
+            stage_started_at=?,stage_updated_at=? WHERE task_id=?''', (stage, started, now, tid))
+        db.execute('UPDATE tasks SET status=?,progress=?,result=?,error=?,updated=? WHERE id=?',
+                   (status, 1 if status == 'completed' else task['progress'],
+                    json.dumps(result) if result is not None else None, error, int(now), tid))
+
+    def request_cancel(self, tid, *, owner):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            require_owner(db, 'task', tid, owner)
+            task = self._task(db, tid)
+            if task['status'] not in ('queued', 'running') or task['cancel_requested']:
+                return task, False
+            db.execute('UPDATE task_runtime SET cancel_requested=1 WHERE task_id=?', (tid,))
+            self._transition_tx(db, tid, status='cancelled' if task['status'] == 'queued' else 'running',
+                                stage='cancelled' if task['status'] == 'queued' else 'cancelling',
+                                expected_seq=task['stage_seq'])
+            return self._task(db, tid), True
 
     def update(self, tid, **fields):
         assert fields.keys() <= {'status', 'progress', 'result', 'error'}

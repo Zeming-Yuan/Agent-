@@ -138,3 +138,7 @@ python scripts/build_image_client_bundle.py --config /private/person/image.json 
 T06 B审查修复：平台资源名称必须是规范相对POSIX路径，拒绝 ./、重复分隔符、Windows盘符与大小写形式的client公共目录覆盖；防止ZIP解压归一化后替换公共入口。b-review-path-red/green记录复现及验证。
 
 T06 Windows路径保护补充：拒绝路径分量末尾点/空格、Windows保留设备名、非法字符与控制字符，并拒绝已有包文件作为目录前缀。避免解压器替换非法字符、截断NUL或大小写处理后覆盖公共入口/日志模块；实际Windows系统验收仍未运行。
+
+## T07 切片 A：取消清理
+
+运行图片任务的显式取消返回 running/cancelling；cancel_requested 持久化，重复取消保持同一 stage_seq，不二次打断清理。只有定向停止及 scratch 清理返回后才 cancelled，再选择下一单。queued 可直接 cancelled。HTTP 查询仍按 owner 隔离；任务阶段存 task_runtime 旁表，状态/结果和阶段使用同一 BEGIN IMMEDIATE/CAS 更新。阶段事件及 MCP 中文展示由本票切片 B 补齐，本节不是整票验收声明。
