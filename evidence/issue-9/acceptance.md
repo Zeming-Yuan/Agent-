@@ -37,3 +37,7 @@ Remaining physical acceptance is tracked by https://github.com/Zeming-Yuan/Agent
 ## Repair verification
 
 Initial review Standards1P2/Spec2P2; all reproduced and repaired (review-b.md). Fresh collection51/359; focused module51passed; planned53passed; explicit affected204passed/one existing warning (repair-affected.txt). repair-source-hashes.json freezes the verified source. No full gates, production or hardware actions. Independent re-review pending fixed repair commit.
+
+## Second repair verification
+
+Spec node5 correction:29RED→GREEN, focused module53passed. Final affected12-file run206passed, one existing warning; final-source-hashes.json freezes source/launchers/tests and final-collect.txt records nonempty ticket collection. Code unchanged during final run. Standards/Spec re-review follows fixed commit. Original-product selective delivery still pending.

@@ -131,7 +131,9 @@ def task_event(store, tid, event):
     node = event.get('node')
     if node in NODE_OPERATIONS and task['stage'] == event.get('stage'):
         operation = NODE_OPERATIONS[node]
-        if node == '4' and task['kind'] == 'image_edit': operation = 'text_vision_encode'
+        if task['kind'] == 'image_edit':
+            if node == '4': operation = 'text_vision_encode'
+            elif node == '5': operation = 'negative_text_vision_encode'
         metadata = {'node': node, 'operation': operation, 'event': 'backend_node'}
     return record_task(store, task, **metadata)
 

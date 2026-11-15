@@ -11,3 +11,7 @@ Initial1P2: task record errors only warned, so an intermediate phase write fault
 Initial2P2: same missing intermediate evidence; node boundary metadata discarded although full spec requires text/vision encoding, sampling, VAE decode, save and cleanup. Repair24 preserves only fixed sanitized node/operation labels and cleanup event; public HTTP/raw-curve test RED→GREEN. Repair25 requires operation coverage and rejects cached sampler/no-op. Repair27 preserves owned cached-encoding evidence without pretending it executed;28 rejects malformed/unowned/unknown metadata. Runtime source completeness26 also improved.
 
 Initial counts: Standards1P2, Spec2P2. All entered repair; final independent re-review must be appended before completion. Hardware not_run is explicitly unresolved under#24, not a code-review pass or defect waiver.
+
+## First re-review at81b1bfc
+
+Standards0, original P2 resolved; independently3focused tests passed. Spec original two resolved, independently6focused tests passed; found1additionalP2: edit node5 runs TextEncodeQwenImageEditPlus for negative text/reference encoding, but was labeled generic conditioning. Repair29 adds exact negative_text_vision_encode operation and executed/cached coverage; generate/edit raw/SVG tests and missing-negative test RED→GREEN. Further fixed-head re-review required.

@@ -17,3 +17,5 @@ No schema change or destructive migration. Disable opt-in observation to roll ba
 ## Review repair: complete phase evidence
 
 A Store-instance observation-health latch records any optional task snapshot read/write failure without altering task lifecycle. Later evidence includes the error, so a transient missing intermediate phase cannot masquerade as a complete curve. The collector validates contiguous committed stage_seq from claim through terminal and preserves sanitized fixed-node operation boundaries, independently of T07's intentionally coarser user stages. Explicit owned execution_cached metadata identifies encoding cache hits; sampler cache hits cannot count as fresh inference. Raw/unknown/unowned event content never enters the trace. The runtime descriptor also hashes application workflow/launcher and records kernel/available driver identity.
+
+Edit node5 is a second text/vision encoding pass (negative conditioning), unlike generation node5's ConditioningZeroOut. Trace it as negative_text_vision_encode and require executed or explicitly cached evidence separately from node4.

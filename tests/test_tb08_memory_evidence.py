@@ -478,17 +478,19 @@ def test_tb08_memory_evidence_positive_raw_fixture_is_valid():
     assert validate_run(measured_run()) == []
 
 
-def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(owner_env, monkeypatch, tmp_path):
+@pytest.mark.parametrize('edit', [False, True])
+def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(owner_env, monkeypatch, tmp_path, edit):
     import json
     import time
     from scripts.image_measurement import write_curve
     directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
     backend=owner_env.new_backend(hold=True)
     with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
-        tid=owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+        options={'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':'fast'} if edit else {}
+        tid=owner_env.submit(c,**options).json()['id']; assert backend.started.wait(2)
         pid=backend.jobs[0]['prompt_id']
         try:
-            for node in ('4','7','8','9'):
+            for node in ('4','5','7','8','9'):
                 backend.events_to_emit.put({'type':'executing','data':{'prompt_id':pid,'node':node}})
             deadline=time.monotonic()+2
             while time.monotonic()<deadline:
@@ -500,9 +502,12 @@ def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(
         owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
     rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
     operations={r.get('operation') for r in rows}
-    assert {'text_encode','sampling','vae_decode','backend_save','cleanup'} <= operations
+    encoding='text_vision_encode' if edit else 'text_encode'
+    assert {encoding,'sampling','vae_decode','backend_save','cleanup'} <= operations
+    if edit: assert 'negative_text_vision_encode' in operations
     curve=write_curve([],rows,rows[0]['utc_ns'],rows[-1]['utc_ns'])
-    assert 'text_encode' in curve and 'vae_decode' in curve
+    assert encoding in curve and 'vae_decode' in curve
+    if edit: assert 'negative_text_vision_encode' in curve
 
 
 def test_tb08_memory_evidence_runtime_identity_covers_workflow_and_launcher(tmp_path, monkeypatch):
@@ -548,3 +553,13 @@ def test_tb08_memory_evidence_cached_encoding_is_explicit_but_cached_sampling_is
     row['task_events']=[dict(t,operation='sampling_cached',cached_nodes=['7'])
         if t.get('operation')=='sampling' else t for t in row['task_events']]
     assert 'operation_coverage' in validate_run(row)
+
+
+def test_tb08_memory_evidence_edit_negative_encoding_is_required_or_explicitly_cached():
+    from scripts.image_measurement import validate_run
+    row=measured_run();row['profile']='fast'
+    for task in row['task_events']:
+        if task.get('operation')=='text_encode': task['operation']='text_vision_encode'
+    assert 'negative_encoding_coverage' in validate_run(row)
+    row['task_events'][2]['cached_nodes']=['5']
+    assert validate_run(row)==[]

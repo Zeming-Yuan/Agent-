@@ -1,0 +1,62 @@
+.FF                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries[True] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-475/test_tb08_memory_evidence_expo1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe2a011ef44a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe2a011ef42c0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe2a011f13e00>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-475/test_tb08_memory_evidence_expo1')
+edit = True
+
+    @pytest.mark.parametrize('edit', [False, True])
+    def test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries(owner_env, monkeypatch, tmp_path, edit):
+        import json
+        import time
+        from scripts.image_measurement import write_curve
+        directory=tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+        backend=owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend,run_worker=True,event_stream_factory=backend.event_stream) as c:
+            options={'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':'fast'} if edit else {}
+            tid=owner_env.submit(c,**options).json()['id']; assert backend.started.wait(2)
+            pid=backend.jobs[0]['prompt_id']
+            try:
+                for node in ('4','5','7','8','9'):
+                    backend.events_to_emit.put({'type':'executing','data':{'prompt_id':pid,'node':node}})
+                deadline=time.monotonic()+2
+                while time.monotonic()<deadline:
+                    rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+                    if any(r.get('node')=='9' for r in rows): break
+                    time.sleep(.01)
+            finally:
+                backend.finish.set()
+            owner_env.wait_task(c,tid,'A',lambda t:t['status']=='completed')
+        rows=[json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+        operations={r.get('operation') for r in rows}
+        encoding='text_vision_encode' if edit else 'text_encode'
+        assert {encoding,'sampling','vae_decode','backend_save','cleanup'} <= operations
+>       if edit: assert 'negative_text_vision_encode' in operations
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 'negative_text_vision_encode' in {None, 'cleanup', 'conditioning', 'vae_decode', 'text_vision_encode', 'sampling', ...}
+
+tests/test_tb08_memory_evidence.py:507: AssertionError
+_ test_tb08_memory_evidence_edit_negative_encoding_is_required_or_explicitly_cached _
+
+    def test_tb08_memory_evidence_edit_negative_encoding_is_required_or_explicitly_cached():
+        from scripts.image_measurement import validate_run
+        row=measured_run();row['profile']='fast'
+        for task in row['task_events']:
+            if task.get('operation')=='text_encode': task['operation']='text_vision_encode'
+>       assert 'negative_encoding_coverage' in validate_run(row)
+E       AssertionError: assert 'negative_encoding_coverage' in []
+E        +  where [] = <function validate_run at 0xe2a012611260>({'backend_executions': 1, 'capture_end_utc_ns': 1000000000, 'capture_start_utc_ns': 0, 'completed_ns': 10000000, ...})
+
+tests/test_tb08_memory_evidence.py:563: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_exports_owned_encoding_sampling_decode_boundaries[True]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_edit_negative_encoding_is_required_or_explicitly_cached
+2 failed, 1 passed, 50 deselected, 1 warning in 1.84s

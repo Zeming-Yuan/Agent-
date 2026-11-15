@@ -77,6 +77,8 @@ def validate_observations(record):
     operations = {t.get('operation') for t in tasks}
     encoding = 'text_encode' if record['profile'] == 'generate' else 'text_vision_encode'
     encoding_known = encoding in operations or any('4' in t.get('cached_nodes', []) for t in tasks)
+    if record['profile'] != 'generate' and 'negative_text_vision_encode' not in operations and not any('5' in t.get('cached_nodes',[]) for t in tasks):
+        errors.append('negative_encoding_coverage')
     if not encoding_known or not {'sampling','vae_decode','backend_save','cleanup'} <= operations:
         errors.append('operation_coverage')
     if any(t.get('blocked_reason') == 'events_unavailable' for t in tasks): errors.append('backend_events_unavailable')
