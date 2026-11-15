@@ -1,0 +1,52 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_tb05_sync_replay_works_when_image_backend_offline[image_generate] ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-267/test_tb05_sync_replay_works_wh0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf83a078fee80>, wait_task=<function owner_env.<locals>.wait_task at 0xf83a078fef20>)
+kind = 'image_generate'
+
+    @pytest.mark.parametrize('kind', ['image_generate', 'image_edit'])
+    def test_tb05_sync_replay_works_when_image_backend_offline(owner_env, kind):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            first = c.send(sync_request(owner_env, backend, kind))
+            assert first.status_code == 200, first.text
+            backend.offline.set()
+            replay = c.send(sync_request(owner_env, backend, kind))
+>           assert replay.status_code == 200, replay.text
+E           AssertionError: {"detail":"Image backend unavailable; do not repeatedly submit new tasks"}
+E           assert 503 == 200
+E            +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_tb05_server_resume.py:197: AssertionError
+______ test_tb05_sync_replay_works_when_image_backend_offline[image_edit] ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-267/test_tb05_sync_replay_works_wh1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf83a075968e0>, wait_task=<function owner_env.<locals>.wait_task at 0xf83a07595760>)
+kind = 'image_edit'
+
+    @pytest.mark.parametrize('kind', ['image_generate', 'image_edit'])
+    def test_tb05_sync_replay_works_when_image_backend_offline(owner_env, kind):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            first = c.send(sync_request(owner_env, backend, kind))
+            assert first.status_code == 200, first.text
+            backend.offline.set()
+            replay = c.send(sync_request(owner_env, backend, kind))
+>           assert replay.status_code == 200, replay.text
+E           AssertionError: {"detail":"Image backend unavailable; do not repeatedly submit new tasks"}
+E           assert 503 == 200
+E            +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_tb05_server_resume.py:197: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_sync_replay_works_when_image_backend_offline[image_generate]
+FAILED tests/test_tb05_server_resume.py::test_tb05_sync_replay_works_when_image_backend_offline[image_edit]
+2 failed, 11 deselected, 1 warning in 0.91s
+
+Exit code: 1

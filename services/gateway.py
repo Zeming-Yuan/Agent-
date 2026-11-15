@@ -45,7 +45,10 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         raise ValueError('identity_mode must be legacy, staging or strict')
     if identity_mode == 'strict':
         try:
-            inspect_contract(Path(root) / 'state.sqlite3')
+            # An already contracted store may contain work interrupted by a
+            # crash. Validate ownership first; lifespan recover fails running
+            # tasks before either worker can claim queued work.
+            inspect_contract(Path(root) / 'state.sqlite3', allow_running=True)
         except (OSError, sqlite3.Error):
             raise ValueError('strict requires completed owner migration') from None
         if key_registry is None:
@@ -210,6 +213,22 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         except (httpx.HTTPError, ValueError):
             raise HTTPException(503, 'Image backend unavailable; do not repeatedly submit new tasks')
 
+    async def submit_image(kind, options, idem, owner):
+        if idem and len(idem) > 128:
+            raise HTTPException(422, 'Idempotency key too long')
+        refs = options.image_ids + ([options.foreground_file_id] if options.foreground_file_id else [])
+        for fid in refs:
+            store.file(fid, owner=owner)
+        source = refs[0] if refs else None
+        payload = options.model_dump()
+        if idem:
+            fingerprint = store.request_fingerprint(kind, source, payload, owner=owner)
+            existing = store.lookup_request(owner, idem, fingerprint)
+            if existing is not None:
+                return existing
+        await ensure_image_available()
+        return store.submit(kind, source, payload, idem, owner=owner)
+
     @app.post('/v1/chat/completions')
     async def chat(request: Request):
         raw = await request.body()
@@ -335,16 +354,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                     raise HTTPException(422,'Image editing requires image_ids')
                 if body.kind=='image_generate' and opts.image_ids:
                     raise HTTPException(422,'Use image_edit for reference images')
-                for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid,owner=request.state.principal.owner)
-                source = opts.image_ids[0] if opts.image_ids else opts.foreground_file_id
-                if idem:
-                    fingerprint = store.request_fingerprint(body.kind, source, opts.model_dump(),
-                                                            owner=request.state.principal.owner)
-                    existing = store.lookup_request(request.state.principal.owner, idem, fingerprint)
-                    if existing is not None:
-                        return existing
-                await ensure_image_available()
-                return store.submit(body.kind,source,opts.model_dump(),idem,owner=request.state.principal.owner)
+                return await submit_image(body.kind, opts, idem, request.state.principal.owner)
             if body.kind in ('transcribe','audio_understand') and not audio_enabled:
                 raise HTTPException(410,'Audio capabilities have been retired')
             if not body.file_id: raise HTTPException(422,'file_id is required')
@@ -401,7 +411,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
 
     if images_enabled:
         from .image_routes import register_image_routes
-        register_image_routes(app, store, active, upload_lock, ensure_image_available)
+        register_image_routes(app, store, upload_lock, submit_image, ensure_image_available)
     return app
 
 
@@ -476,7 +486,7 @@ def application():
     root = base / '.private' / 'runtime'
     registry = None
     if mode == 'strict':
-        inspect_contract(root / 'state.sqlite3')
+        inspect_contract(root / 'state.sqlite3', allow_running=True)
         registry_path = root / 'keys.sqlite3'
         if registry_path.is_symlink() or not registry_path.is_file():
             raise ValueError('strict requires existing explicit key registry')

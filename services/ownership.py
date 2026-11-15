@@ -131,7 +131,7 @@ def global_idem_indexes(db) -> set[str]:
             and [row['name'] for row in db.execute('PRAGMA index_info("' + index['name'].replace('"', '""') + '")')] == ['idem']}
 
 
-def validate_contract(db, files: Path, *, legacy_owner: str | None = None) -> dict:
+def validate_contract(db, files: Path, *, legacy_owner: str | None = None, allow_running=False) -> dict:
     if legacy_owner is not None and legacy_owner != 'legacy':
         raise ValueError('legacy owner must match the existing stable legacy identity')
     if [row['name'] for row in db.execute('PRAGMA table_info(tasks)')] != TASK_COLUMNS.split(','):
@@ -149,18 +149,19 @@ def validate_contract(db, files: Path, *, legacy_owner: str | None = None) -> di
         raise ValueError('owner migration incomplete: contract required')
     if legacy_owner is None and allowed_auto:
         raise ValueError('owner migration retains global idempotency constraint')
-    if db.execute("SELECT 1 FROM tasks WHERE status='running' LIMIT 1").fetchone():
+    if not allow_running and db.execute("SELECT 1 FROM tasks WHERE status='running' LIMIT 1").fetchone():
         raise ValueError('running tasks must be reconciled before owner migration')
     counts = validate_ownership(db, files, legacy_owner=legacy_owner)
     return {'ready': True, 'legacy_owner': legacy_owner, **counts}
 
 
-def inspect_contract(db_path: Path, *, legacy_owner: str | None = None) -> dict:
+def inspect_contract(db_path: Path, *, legacy_owner: str | None = None, allow_running=False) -> dict:
     uri = Path(db_path).resolve().as_uri() + '?mode=ro'
     with closing(sqlite3.connect(uri, uri=True, timeout=10)) as db:
         db.row_factory = sqlite3.Row
         db.execute('BEGIN')
-        return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
+        return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner,
+                                 allow_running=allow_running)
 
 
 def require_scoped_requests(db) -> None:

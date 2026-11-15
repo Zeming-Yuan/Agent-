@@ -95,3 +95,16 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 `GET /v1/tasks?status=completed&limit=20&after=<本人任务ID>` 返回 `object: "list"`、`data`、`has_more` 和 `next_cursor`（末页为 null）。按接纳顺序升序，时间相同仍稳定排序；默认20条，limit为1..100。status可为queued/running/completed/failed/cancelled，非法筛选422。游标先检查本人归属，跨人/未知/空游标一致404；可用不同当前状态的本人任务作为游标。列表不依赖后端，不公开owner或内部幂等指纹。
 
 本切片8项HTTP测试与red/green记录在 evidence/issue-6；同步生成/编辑离线重放、断线与完整恢复由切片B接续，当前尚未完成。仅使用临时身份/数据库及外部图片后端替身，未部署或实机验收。
+
+
+## T05 服务端续取：切片 B（2026-11-15，离线）
+
+本段取代切片A中“同步待完成”的中间状态。同步生成、同步编辑和异步图片提交使用相同的本人幂等读取顺序；已命中任务不检查后端或worker就绪。同步编辑仍以同owner参考图内容参与指纹，失败接纳仅清理本次自动上传的参考图。无请求键的新同步编辑保持上传前的离线拒绝。
+
+连接断开或等待协程被取消只结束HTTP等待，不更新持久任务、不取消worker；显式取消接口保持原行为。同步570秒等待到期返回504，detail包含原task_id；继续GET原任务或使用原Idempotency-Key重放，不换新键。异步响应丢失可先GET本人列表，再查询或重放原请求；单次查询超时不改变任务状态。
+
+已保存图片无需推理后端在线即可下载。本人删除结果后，原任务和请求映射继续保留；下载与同步重放明确404，异步重放仍返回原任务及原结果引用，不重跑模型。相同业务输入的新键表示新创作，离线时仍503。
+
+已contract的strict运行时重启先只读验证完整归属，再在worker启动前将中断的running任务标记failed（Service restarted during processing）；queued和completed保留。worker恢复时先沿用既有后端清理策略，再执行queued，不续算或重放failed任务。迁移/维护预检仍拒绝running；无归属、悬空、跨人、缺请求映射等仍拒绝启动且不写库。
+
+本票34项恢复测试、逐AC映射和复测命令见 evidence/issue-6/acceptance.md；进程崩溃通过子进程os._exit复现，图片推理使用受控外部协议替身。生产部署、真实HTTPS/MCP/图片节点、Windows/macOS Harness、GPU内存/性能尚未验证，由后续现有票继续验收。未配置类型/静态/构建门禁（N/A），没有把受影响回归当作全量门禁。

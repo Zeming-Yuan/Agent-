@@ -1,0 +1,144 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________ test_tb05_sync_disconnect_does_not_cancel_work[image_generate] ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-263/test_tb05_sync_disconnect_does0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf3b0f0afeb60>, wait_task=<function owner_env.<locals>.wait_task at 0xf3b0f0afec00>)
+kind = 'image_generate'
+
+    @pytest.mark.parametrize('kind', ['image_generate', 'image_edit'])
+    def test_tb05_sync_disconnect_does_not_cancel_work(owner_env, kind):
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+>           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
+
+tests/test_tb05_server_resume.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+app = <fastapi.applications.FastAPI object at 0xf3b0f07a2e10>
+request = <Request('POST', 'http://testserver/v1/images/generations')>
+started = <threading.Event at 0xf3b0f0b10a70: unset>
+
+    async def disconnecting_asgi_request(app, request, started):
+        payload = request.read()
+        first = True
+        disconnected = False
+    
+        async def receive():
+            nonlocal first, disconnected
+            if first:
+                first = False
+                return {'type': 'http.request', 'body': payload, 'more_body': False}
+            assert await asyncio.to_thread(started.wait, 2), 'backend never started'
+            disconnected = True
+            return {'type': 'http.disconnect'}
+    
+        async def send(message):
+            pass  # The remote client is gone; only durable HTTP recovery matters.
+    
+        scope = {'type': 'http', 'asgi': {'version': '3.0'}, 'http_version': '1.1',
+                 'method': request.method, 'scheme': 'http', 'path': request.url.path,
+                 'raw_path': request.url.raw_path, 'query_string': b'',
+                 'headers': request.headers.raw, 'client': ('test', 1),
+                 'server': ('testserver', 80), 'root_path': ''}
+        try:
+            await asyncio.wait_for(app(scope, receive, send), 3)
+        except asyncio.CancelledError:
+            assert disconnected
+        except RuntimeError as exc:
+            # Starlette reports a cancelled endpoint as no response after disconnect.
+            assert disconnected and str(exc) == 'No response returned.'
+>       assert disconnected
+E       assert False
+
+tests/test_tb05_server_resume.py:49: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  agent-mm:gateway.py:150 e50b43506a8b4c29b02a8b53d8ed2538 authentication_denied peer=test method=POST header_present=False bearer_scheme=False formatted_key_matches=False
+__________ test_tb05_sync_disconnect_does_not_cancel_work[image_edit] __________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-263/test_tb05_sync_disconnect_does1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf3b0f0772660>, wait_task=<function owner_env.<locals>.wait_task at 0xf3b0efd371a0>)
+kind = 'image_edit'
+
+    @pytest.mark.parametrize('kind', ['image_generate', 'image_edit'])
+    def test_tb05_sync_disconnect_does_not_cancel_work(owner_env, kind):
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+>           c.portal.call(disconnecting_asgi_request, c.app, sync_request(owner_env, backend, kind), backend.started)
+
+tests/test_tb05_server_resume.py:173: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+app = <fastapi.applications.FastAPI object at 0xf3b0efd3c500>
+request = <Request('POST', 'http://testserver/v1/images/edits')>
+started = <threading.Event at 0xf3b0f078a2d0: unset>
+
+    async def disconnecting_asgi_request(app, request, started):
+        payload = request.read()
+        first = True
+        disconnected = False
+    
+        async def receive():
+            nonlocal first, disconnected
+            if first:
+                first = False
+                return {'type': 'http.request', 'body': payload, 'more_body': False}
+            assert await asyncio.to_thread(started.wait, 2), 'backend never started'
+            disconnected = True
+            return {'type': 'http.disconnect'}
+    
+        async def send(message):
+            pass  # The remote client is gone; only durable HTTP recovery matters.
+    
+        scope = {'type': 'http', 'asgi': {'version': '3.0'}, 'http_version': '1.1',
+                 'method': request.method, 'scheme': 'http', 'path': request.url.path,
+                 'raw_path': request.url.raw_path, 'query_string': b'',
+                 'headers': request.headers.raw, 'client': ('test', 1),
+                 'server': ('testserver', 80), 'root_path': ''}
+        try:
+            await asyncio.wait_for(app(scope, receive, send), 3)
+        except asyncio.CancelledError:
+            assert disconnected
+        except RuntimeError as exc:
+            # Starlette reports a cancelled endpoint as no response after disconnect.
+            assert disconnected and str(exc) == 'No response returned.'
+>       assert disconnected
+E       assert False
+
+tests/test_tb05_server_resume.py:49: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  agent-mm:gateway.py:150 0ea52ca4df31415fa1417d7df67d5387 authentication_denied peer=test method=POST header_present=False bearer_scheme=False formatted_key_matches=False
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_sync_disconnect_does_not_cancel_work[image_generate]
+FAILED tests/test_tb05_server_resume.py::test_tb05_sync_disconnect_does_not_cancel_work[image_edit]
+2 failed, 9 deselected, 1 warning in 0.23s
+
+Exit code: 1

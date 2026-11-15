@@ -293,8 +293,9 @@ def test_tb04_owner_contract_new_requests_only_use_owner_scoped_mapping(owner_en
             assert tuple(db.execute('SELECT owner,request_key,task_id FROM task_requests').fetchone()) == ('legacy', 'private-key', created.json()['id'])
 
 
-@pytest.mark.parametrize('problem', ['unowned', 'running', 'missing-request', 'wrong-version', 'global-index', 'dangling'])
-def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating(owner_env, problem):
+@pytest.mark.parametrize('problem', ['unowned', 'missing-request', 'wrong-version', 'global-index', 'dangling'])
+@pytest.mark.parametrize('state', ['queued', 'running'])
+def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutating(owner_env, problem, state):
     from scripts.migrate_image_owners import contract_ownership
     store = Store(owner_env.root)
     task = store.submit('image_generate', None, {'prompt': 'x'}, 'one', owner='legacy')
@@ -302,10 +303,9 @@ def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutatin
         db.execute("UPDATE tasks SET idem='one'")  # historical global record
     contract_ownership(store.db, 'legacy')
     with store.connect() as db:
+        db.execute('UPDATE tasks SET status=?', (state,))
         if problem == 'unowned':
             db.execute('DELETE FROM object_owners')
-        elif problem == 'running':
-            db.execute("UPDATE tasks SET status='running'")
         elif problem == 'missing-request':
             db.execute('DELETE FROM task_requests')
         elif problem == 'wrong-version':

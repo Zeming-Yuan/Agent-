@@ -1,0 +1,105 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_tb05_strict_restart_after_process_crash_preserves_queue_and_results ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-271/test_tb05_strict_restart_after0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf054d3b57100>, wait_task=<function owner_env.<locals>.wait_task at 0xf054d3b571a0>)
+
+    def test_tb05_strict_restart_after_process_crash_preserves_queue_and_results(owner_env):
+        import subprocess
+        import sys
+        from scripts.migrate_image_owners import contract_ownership
+    
+        with owner_env.client():
+            pass  # Create an empty owned store before the explicit offline migration.
+        contract_ownership(owner_env.root / 'state.sqlite3', 'legacy')
+        backend = owner_env.new_backend()
+        with owner_env.client(identity_mode='strict', backend=backend, run_worker=True) as c:
+            completed = owner_env.submit(c, 'A', request_key='saved').json()['id']
+            done = owner_env.wait_task(c, completed, 'A', lambda t: t['status'] == 'completed')
+            result_url = done['result']['content_url']
+            original = c.get(result_url, headers=owner_env.auth('A')).content
+        child = subprocess.run([sys.executable, '-c', '''
+    import json,os,sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path.cwd()/'tests'))
+    from conftest import ImageBackend
+    from fastapi.testclient import TestClient
+    import httpx
+    from services.gateway import create_app
+    from services.identity import KeyRegistry
+    cfg=json.load(sys.stdin)
+    backend=ImageBackend(hold=True)
+    app=create_app(Path(cfg['root']),'',key_registry=KeyRegistry(Path(cfg['registry'])),
+        identity_mode='strict',images_enabled=True,audio_enabled=False,
+        transport=httpx.MockTransport(backend))
+    c=TestClient(app);c.__enter__()
+    def submit(key):
+        r=c.post('/v1/tasks',headers={**cfg['auth'],'Idempotency-Key':key},
+            json={'kind':'image_generate','options':{'prompt':'fixture'}})
+        assert r.status_code==202
+        return r.json()['id']
+    running=submit('interrupted')
+    assert backend.started.wait(3)
+    queued=submit('queued')
+    print(json.dumps({'running':running,'queued':queued,'jobs':len(backend.jobs)}),flush=True)
+    os._exit(0)  # Deliberate process loss: no lifespan shutdown/recover fabrication.
+    '''], input=json.dumps({'root': str(owner_env.root),
+                           'registry': str(owner_env.root.parent / 'keys.sqlite3'),
+                           'auth': owner_env.auth('A')}), capture_output=True, text=True, timeout=10)
+        assert child.returncode == 0, child.stderr
+        interrupted = json.loads(child.stdout)
+        assert interrupted['jobs'] == 1
+        # A fresh process/app sees real persisted queued/running/completed states.
+        offline = owner_env.new_backend()
+        offline.offline.set()
+>       with owner_env.client(identity_mode='strict', backend=offline) as c:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb05_server_resume.py:315: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/conftest.py:74: in client
+    app=create_app(env.root,keys["legacy"],key_registry=registry,
+services/gateway.py:48: in create_app
+    inspect_contract(Path(root) / 'state.sqlite3')
+services/ownership.py:163: in inspect_contract
+    return validate_contract(db, Path(db_path).parent / 'files', legacy_owner=legacy_owner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0xf054d3816d40>
+files = PosixPath('/tmp/pytest-of-clusteradmin/pytest-271/test_tb05_strict_restart_after0/runtime/files')
+
+    def validate_contract(db, files: Path, *, legacy_owner: str | None = None) -> dict:
+        if legacy_owner is not None and legacy_owner != 'legacy':
+            raise ValueError('legacy owner must match the existing stable legacy identity')
+        if [row['name'] for row in db.execute('PRAGMA table_info(tasks)')] != TASK_COLUMNS.split(','):
+            raise ValueError('unsupported task schema; preserve data and use a matching migration version')
+        allowed_auto = global_idem_indexes(db)
+        for index in db.execute('PRAGMA index_list(tasks)'):
+            if index['origin'] == 'u' and index['name'] not in allowed_auto:
+                raise ValueError('unsupported task schema implicit unique constraint')
+        marker = db.execute("SELECT 1 FROM sqlite_master WHERE name='ownership_migration' AND type='table'").fetchone()
+        if marker:
+            versions = db.execute('SELECT version,legacy_owner FROM ownership_migration').fetchall()
+            if len(versions) != 1 or tuple(versions[0]) != (1, 'legacy'):
+                raise ValueError('owner migration version or legacy identity mismatch')
+        elif legacy_owner is None:
+            raise ValueError('owner migration incomplete: contract required')
+        if legacy_owner is None and allowed_auto:
+            raise ValueError('owner migration retains global idempotency constraint')
+        if db.execute("SELECT 1 FROM tasks WHERE status='running' LIMIT 1").fetchone():
+>           raise ValueError('running tasks must be reconciled before owner migration')
+E           ValueError: running tasks must be reconciled before owner migration
+
+services/ownership.py:153: ValueError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_strict_restart_after_process_crash_preserves_queue_and_results
+1 failed, 17 deselected, 1 warning in 0.91s
+
+Exit code: 1

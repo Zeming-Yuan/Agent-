@@ -13,3 +13,13 @@ Ruling: T05 seams/design already approved in ticket plan and explicitly reconfir
 Task 1: red 01 (503 replay), green; red 02 (pagination ignored), green; red03 (unknown/empty filter200), green8. Existing cursor/auth/limit guards passed as regressions. No type checker configuration exists (N/A).
 
 A review initial: Standards2P2 (list schema, fingerprint/delete race); Spec1P2 (list schema). Both independently verified. Contract red→green8. Race red FileNotFoundError through HTTP, green9 with only filesystem scheduling boundary substituted. Shared fingerprint extraction keeps online submit revalidation and deletion exclusion; no schema change.
+
+Task 1: complete (commits ea6092f..bb4d8b3, focused9passed; affected135passed; independent re-review Standards0/Spec0). Task2 begins from bb4d8b3.
+
+Task2: disconnect RED observed cancelled for generate/edit, GREEN; sync offline RED503 both, GREEN; strict crash RED startup rejects persisted running, GREEN after runtime-only allow_running. Timeout/lost-response/deletion/owner/concurrency regressions already pass; no destructive change made to manufacture red.
+Ruling: plan's disconnect helper needed lower-case ASGI headers and bounded cleanup when Starlette middleware waits after endpoint cancellation. Invalid-harness attempts retained separately, not counted as business RED;04-disconnect-red records actual cancelled assertions.
+Ruling: #6 restart AC conflicts with T04 runtime non-running precondition. Allow only runtime inspection of validated contracted running, then fail before worker creation; migration default remains rejecting running. T04 outdated standalone running-refusal case replaced by full queued/running corruption matrix (10cases), T05 real crash verifies new positive behavior.
+
+Task2 factory trace found a second default inspect_contract in application(). Extended real-crash test to isolated restored factory directory; RED startup refusal→GREEN2, no production path/network accessed. Both runtime entry points now permit recovery after validation.
+
+Task2 pre-review: current plan/factory affected38passed/202deselected, one existing dependency warning (b-before-review.txt); prior broad235passed + factory crash2passed; fresh broader run deferred to final after review. N/A type/static/build configured gates. Scoped49path scan found0 credential/private/link markers.
