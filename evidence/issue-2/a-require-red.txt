@@ -1,0 +1,15 @@
+...F....                                                                 [100%]
+=================================== FAILURES ===================================
+__________ test_tb01_legacy_expand_preserves_explicit_owner_on_retry ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-81/test_tb01_legacy_expand_preser1')
+
+    def test_tb01_legacy_expand_preserves_explicit_owner_on_retry(tmp_path):
+        from fastapi import HTTPException
+>       from services.ownership import expand_ownership, require_owner
+E       ImportError: cannot import name 'require_owner' from 'services.ownership' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/ownership.py)
+
+tests/test_tb01_legacy_expand.py:51: ImportError
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preserves_explicit_owner_on_retry
+1 failed, 7 passed in 0.40s

@@ -142,3 +142,24 @@ journalctl --user -u agent-mm-image -n 50 --no-pager
 Mac遇到queued时继续查原任务ID；若/health的image unavailable或接口503，请维护者查guard日志并恢复服务。不要反复建新任务。恢复证据位于evidence/image-queue-recovery-20261114。
 
 恢复后新的电脑生图任务已完成，含网关重启后的释放/重载耗时181.088秒，采样期间MemAvailable最低44.48GiB；不能把之前热请求约12秒当作每次首图时间。Mac日志中多次约80秒取消并重建，因此工具说明/私有包补充：20秒为单次查询等待，queued/running持续查原任务，勿按80秒自动取消。
+# T01：兼容归属 expand（2026-11-15，离线副本验证）
+
+本阶段只扩展旁表，不启用生产多用户；原 files/tasks 列数、任务 ID、结果引用、全局 4 单与 2GiB 边界保持原契约。`create_app` 初始化将现有无归属对象补为 `legacy`。新旧版写入暂仍使用旧表示，维护者在停写后再次 expand；只读预检会显示这些未归属行。文件/任务写入迁移属于 T02/T03。
+
+先停止新接单、确认图片后端空闲，并同时备份 state.sqlite3、files 目录和私有鉴权配置（原子快照或停写后复制）。在脱敏副本上通过以下公开接口检查；示例路径必须替换为副本，不能对生产路径试跑：
+
+```python
+from pathlib import Path
+from services.ownership import expand_ownership, preflight_ownership
+
+database = Path('/path/to/sanitized-copy/state.sqlite3')
+print(preflight_ownership(database))  # mode=ro；不存在的库报错，不创建
+expand_ownership(database, legacy_owner='legacy')
+print(preflight_ownership(database))
+```
+
+预检字段为 unowned_files、unowned_tasks、unowned_idempotency_records（旧 tasks.idem 非 NULL 且任务无归属）、running_tasks。预检不运行恢复、不更改状态；运行任务应先保守处理，不能通过重复推理清零。expand 使用一个事务，失败全部回滚，重试不覆盖明确归属。旧版继续写入后，停写、再次预检/expand。
+
+回退路径：停接单并保存新增任务和素材，确认后台无运行推理，再切回已验证的单用户旧版应用；保留旁表，不 DROP 数据或恢复旧快照覆盖新增写入。仅限仍属于 legacy 的数据；已有多个 owner 时只能回退到具备相应 owner 校验的版本。备份恢复先在另一副本检查原任务、素材和结果，再由维护者决定生产切换。
+
+切片 A 证据：`evidence/issue-2/a-*-red.txt` 与 `a-*-green.txt` 记录逐切片 red/green；`a-green.txt` 为计划指定的受影响回归，11 passed。ADR 见 `docs/adr/0001-owner-scoped-storage.md`。目前仅离线合成数据验证；旧/过渡版完整图片链路和恢复验证由切片 B 补齐，生产数据、实机后端、Windows/macOS Harness 未验收。

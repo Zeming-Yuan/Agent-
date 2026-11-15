@@ -1,0 +1,86 @@
+.FFF                                                                     [100%]
+=================================== FAILURES ===================================
+_ test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[False] __
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-76/test_tb01_legacy_expand_prefli0')
+expanded = False
+
+    @pytest.mark.parametrize('expanded', [False, True])
+    def test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes(tmp_path, expanded):
+        from services.ownership import expand_ownership, preflight_ownership
+    
+        store = Store(tmp_path)
+        if expanded:
+            expand_ownership(store.db, 'legacy')
+        with store.connect() as db:
+            db.execute('INSERT INTO files VALUES(?,?,?,?)', ('old-file', 'x.png', 1, 1))
+            for tid, status, idem in [('q', 'queued', 'retry'), ('r', 'running', None)]:
+                db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
+                           (tid, 'image_generate', None, '{}', status, 0,
+                            None, None, idem, 'fingerprint', 1, 1))
+        before = store.db.read_bytes()
+>       assert preflight_ownership(store.db) == {
+            'unowned_files': 1, 'unowned_tasks': 2,
+            'unowned_idempotency_records': 1, 'running_tasks': 1,
+        }
+E       AssertionError: assert {'unowned_fil...ned_tasks': 2} == {'running_tas...ned_tasks': 2}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 2 more items:
+E         {'running_tasks': 1, 'unowned_idempotency_records': 1}
+E         Use -v to get more diff
+
+tests/test_tb01_legacy_expand.py:37: AssertionError
+__ test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[True] __
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-76/test_tb01_legacy_expand_prefli1')
+expanded = True
+
+    @pytest.mark.parametrize('expanded', [False, True])
+    def test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes(tmp_path, expanded):
+        from services.ownership import expand_ownership, preflight_ownership
+    
+        store = Store(tmp_path)
+        if expanded:
+            expand_ownership(store.db, 'legacy')
+        with store.connect() as db:
+            db.execute('INSERT INTO files VALUES(?,?,?,?)', ('old-file', 'x.png', 1, 1))
+            for tid, status, idem in [('q', 'queued', 'retry'), ('r', 'running', None)]:
+                db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
+                           (tid, 'image_generate', None, '{}', status, 0,
+                            None, None, idem, 'fingerprint', 1, 1))
+        before = store.db.read_bytes()
+>       assert preflight_ownership(store.db) == {
+            'unowned_files': 1, 'unowned_tasks': 2,
+            'unowned_idempotency_records': 1, 'running_tasks': 1,
+        }
+E       AssertionError: assert {'unowned_fil...ned_tasks': 2} == {'running_tas...ned_tasks': 2}
+E         
+E         Omitting 2 identical items, use -vv to show
+E         Right contains 2 more items:
+E         {'running_tasks': 1, 'unowned_idempotency_records': 1}
+E         Use -v to get more diff
+
+tests/test_tb01_legacy_expand.py:37: AssertionError
+____ test_tb01_legacy_expand_preflight_missing_database_does_not_create_it _____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-76/test_tb01_legacy_expand_prefli2')
+
+    def test_tb01_legacy_expand_preflight_missing_database_does_not_create_it(tmp_path):
+        import sqlite3
+        from services.ownership import preflight_ownership
+    
+        missing = tmp_path / 'missing.sqlite3'
+        with pytest.raises(sqlite3.OperationalError):
+            preflight_ownership(missing)
+>       assert not missing.exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-clusteradmin/pytest-76/test_tb01_legacy_expand_prefli2/missing.sqlite3').exists
+
+tests/test_tb01_legacy_expand.py:56: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[False]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[True]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_missing_database_does_not_create_it
+3 failed, 1 passed in 0.29s

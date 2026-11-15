@@ -16,6 +16,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from .store import Store
+from .ownership import expand_ownership
 from .image_options import ImageOptions
 
 LOG = logging.getLogger('agent-mm')
@@ -42,6 +43,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     if type(context_window) is not int or not 1 <= context_window <= 262144:
         raise ValueError('Context window must be within the model native limit')
     store = Store(root, max_pending)
+    expand_ownership(store.db, 'legacy')
     active = {}
     main_slots = asyncio.Semaphore(2)
     audio_slots = asyncio.Semaphore(1)

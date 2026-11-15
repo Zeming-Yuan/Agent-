@@ -1,0 +1,14 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____________ test_tb01_legacy_expand_preserves_positional_writes ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-74/test_tb01_legacy_expand_preser0')
+
+    def test_tb01_legacy_expand_preserves_positional_writes(tmp_path):
+>       from services.ownership import expand_ownership, preflight_ownership
+E       ModuleNotFoundError: No module named 'services.ownership'
+
+tests/test_tb01_legacy_expand.py:6: ModuleNotFoundError
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preserves_positional_writes
+1 failed in 0.10s
