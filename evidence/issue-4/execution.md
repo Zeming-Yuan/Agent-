@@ -28,3 +28,7 @@ Slice A re-review at f56cf69: Standards0/Spec0. Historical data ruling remains e
 Base: f56cf69. GET /v1/me red404→owner-only response; rotation preserves original result while revoked/unknown401. issue_to_file red missing public function→private0600/digest-only; write-failure red left partial target→revoked/cleaned; pre-existing target preserved. CLI red no target (module had no entrypoint)→real subprocess issue/rotate/revoke with private output and same-owner HTTP access. Full focused task module28 passed (b-focused.txt). No production keys issued.
 
 Slice B verification: collected28/128; issue selector28 passed; plan-regression31 passed; affected124 passed, one existing warning. No full gates. git diff --check exit0. Key/identity slice ready for fixed-diff review.
+
+Slice B initial review: Standards1/Spec1, same P2: revoke failure skipped own-output cleanup. Added real SQLite authorizer failure injection at DB boundary (no mocked KeyRegistry) plus file-write failure. Red: leftover file / missing recovery ID. Green: independent cleanup + safe KeyDeliveryError.key_id, then successful revoke after authorizer removed; existing file unchanged.
+
+组合故障修复后重新采集30/130（collect-final.txt），受影响12文件126 passed（b-review-green.txt），1条既有弃用警告；先前28/124为修复前历史记录。未运行完整门禁。

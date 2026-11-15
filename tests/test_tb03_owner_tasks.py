@@ -430,3 +430,50 @@ def test_tb03_restart_and_restored_copy_keep_task_identity_and_revocation(owner_
                                 json={'kind': 'image_edit', 'options': {'prompt': 'fixture', 'image_ids': [fid]}})
                 assert replay.status_code == 202 and replay.json()['id'] == tid
     assert len(backend.jobs) == 2
+
+
+@pytest.mark.parametrize('existing', [False, True])
+def test_tb03_delivery_cleanup_and_recovery_id_survive_registry_revoke_failure(owner_env, tmp_path, monkeypatch, existing):
+    import os
+    import secrets
+    import sqlite3
+    from services.identity import issue_to_file, KeyDeliveryError
+    raw = 'ephemeral-test-rollback-credential'
+    target = tmp_path / 'failed-output'
+    if existing:
+        target.write_text('existing output stays untouched')
+    connect, fdopen = sqlite3.connect, os.fdopen
+    def rejecting_connection(*args, **kwargs):
+        db = connect(*args, **kwargs)
+        # The real SQLite boundary permits issuance/reads but rejects revocation UPDATE.
+        db.set_authorizer(lambda action, table, *rest:
+                          sqlite3.SQLITE_DENY if action == sqlite3.SQLITE_UPDATE and table == 'api_keys'
+                          else sqlite3.SQLITE_OK)
+        return db
+    class FailedOutput:
+        def __init__(self, stream):
+            self.stream = stream
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            self.stream.close()
+        def write(self, value):
+            self.stream.write(value)
+            self.stream.flush()
+            raise OSError('synthetic output failure')
+    with monkeypatch.context() as patch:
+        patch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+        patch.setattr(sqlite3, 'connect', rejecting_connection)
+        patch.setattr(os, 'fdopen', lambda *a, **kw: FailedOutput(fdopen(*a, **kw)))
+        with pytest.raises(KeyDeliveryError) as failure:
+            issue_to_file(owner_env.registry, 'A', target)
+        if existing:
+            assert target.read_text() == 'existing output stays untouched'
+        else:
+            assert not target.exists()
+        principal = owner_env.registry.resolve(raw)
+        assert failure.value.key_id == principal.key_id
+        assert principal.key_id in str(failure.value) and raw not in str(failure.value)
+    # Recovery is possible using only the safe ID after registry writes recover.
+    owner_env.registry.revoke(failure.value.key_id)
+    assert owner_env.registry.resolve(raw) is None

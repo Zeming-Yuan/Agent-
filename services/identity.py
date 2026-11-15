@@ -53,6 +53,13 @@ class KeyRegistry:
             db.execute('UPDATE api_keys SET revoked=1 WHERE key_id=?', (key_id,))
 
 
+class KeyDeliveryError(RuntimeError):
+    """Delivery rollback needs operator recovery, identified without the credential."""
+    def __init__(self, key_id: str):
+        self.key_id = key_id
+        super().__init__(f'Key delivery rollback incomplete; revoke key ID {key_id} and remove failed output')
+
+
 def issue_to_file(registry: KeyRegistry, owner: str, target: Path) -> str:
     """Issue once to an exclusive private file; return only the public key ID."""
     import os
@@ -69,11 +76,24 @@ def issue_to_file(registry: KeyRegistry, owner: str, target: Path) -> str:
         with stream:
             stream.write(raw + '\n')
     except BaseException:
+        incomplete = False
         if fd is not None:
-            os.close(fd)
-        registry.revoke(principal.key_id)
+            try:
+                os.close(fd)
+            except OSError:
+                incomplete = True
+        try:
+            registry.revoke(principal.key_id)
+        except Exception:
+            incomplete = True
+        # Cleanup is independent of registry availability and never owns prior files.
         if created:
-            target.unlink(missing_ok=True)
+            try:
+                target.unlink(missing_ok=True)
+            except OSError:
+                incomplete = True
+        if incomplete:
+            raise KeyDeliveryError(principal.key_id) from None
         raise
     return principal.key_id
 
@@ -97,6 +117,8 @@ def main():
         else:
             registry.revoke(args.key_id)
             key_id = args.key_id
+    except KeyDeliveryError as exc:
+        parser.exit(1, str(exc) + '\n')
     except (OSError, ValueError, sqlite3.Error) as exc:
         parser.exit(1, f'Key operation failed ({type(exc).__name__})\n')
     print(key_id)
