@@ -2,9 +2,7 @@
 import asyncio
 import base64
 import json
-import hashlib
 import time
-import uuid
 from fastapi import File, Form, HTTPException, Request, UploadFile
 from pydantic import ValidationError
 from .image_options import ImageGenerationBody, ImageOptions
@@ -19,7 +17,7 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
                 state=store.task(tid)
                 if state['status']=='completed':
                     fid=state['result']['file_id']
-                    return {'created':state['updated'],'data':[{'b64_json':base64.b64encode(store.path(fid).read_bytes()).decode(),
+                    return {'created':state['updated'],'data':[{'b64_json':base64.b64encode(store.path(fid,owner=request.state.principal.owner).read_bytes()).decode(),
                             'file_id':fid}],'task_id':tid}
                 if state['status'] in ('failed','cancelled'):
                     raise HTTPException(503 if state['status']=='failed' else 409,state['error'] or 'Image task cancelled')
@@ -34,18 +32,20 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
             if tid in active: active[tid].cancel()
             raise
 
-    def submit(options, kind, idem):
+    def submit(options, kind, idem, owner):
         if idem and len(idem)>128: raise HTTPException(422,'Idempotency key too long')
         refs=options.image_ids+([options.foreground_file_id] if options.foreground_file_id else [])
-        for fid in refs: store.file(fid)
-        return store.submit(kind,refs[0] if refs else None,options.model_dump(),idem)
+        for fid in refs: store.file(fid,owner=owner)
+        return store.submit(kind,refs[0] if refs else None,options.model_dump(),idem,owner=owner)
 
     @app.post('/v1/images/generations')
     async def generate(body: ImageGenerationBody, request: Request):
-        await ensure_image_available()
         if body.image_ids: raise HTTPException(422,'Use /v1/images/edits for reference images')
         options=ImageOptions.model_validate(body.model_dump(exclude={'model','n','response_format'}))
-        task=submit(options,'image_generate',request.headers.get('idempotency-key'))
+        if options.foreground_file_id:
+            store.file(options.foreground_file_id,owner=request.state.principal.owner)
+        await ensure_image_available()
+        task=submit(options,'image_generate',request.headers.get('idempotency-key'),request.state.principal.owner)
         return await wait_result(task,request)
 
     @app.post('/v1/images/edits')
@@ -77,18 +77,15 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
                         if len(data)>12*1024*1024: raise HTTPException(413,'Each image must be <=12MiB')
                         try: await asyncio.to_thread(validate_image,data)
                         except ValueError as exc: raise HTTPException(422,str(exc))
-                        fid='file-'+hashlib.sha256(data).hexdigest()[:32]
-                        try:store.file(fid)
-                        except HTTPException as exc:
-                            if exc.status_code!=404:raise
-                            created.append(fid)
-                        store.save_generated(fid,data,'reference.png')
+                        item, is_new=store.save_reference(data,owner=request.state.principal.owner)
+                        fid=item['id']
+                        if is_new: created.append(fid)
                         ids.append(fid)
                     options.image_ids=ids
-                    task=submit(options,'image_edit',request.headers.get('idempotency-key'))
+                    task=submit(options,'image_edit',request.headers.get('idempotency-key'),request.state.principal.owner)
                 except BaseException:
                     for fid in created:
-                        try:store.delete_file(fid)
+                        try:store.delete_file(fid,owner=request.state.principal.owner)
                         except HTTPException as exc:
                             if exc.status_code not in (404,409):raise
                     raise

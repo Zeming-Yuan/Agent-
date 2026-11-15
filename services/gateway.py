@@ -265,16 +265,18 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                                       media_type='text/event-stream',headers={'Cache-Control':'no-cache','X-Accel-Buffering':'no',**budget_headers})
 
     @app.post('/v1/files')
-    async def upload(file: UploadFile = File(...), purpose: str = Form('assistants')):
+    async def upload(request: Request, file: UploadFile = File(...), purpose: str = Form('assistants')):
         async with upload_lock:
             fid = 'file-' + uuid.uuid4().hex
             path = store.files / fid
             size = 0
+            created = False
             # Total storage bound across uploads; private directory is not an unbounded cache.
             with store.connect() as db:
                 used = db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
             try:
                 with path.open('xb') as out:
+                    created = True
                     while chunk := await file.read(1024*1024):
                         size += len(chunk)
                         if size > max_upload_bytes or used+size > 2*1024**3:
@@ -282,24 +284,25 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                         out.write(chunk)
                 if size==0:
                     raise HTTPException(422,'Empty file')
-                item = store.add_file(fid,file.filename or 'upload',size)
+                item = store.add_file(fid,file.filename or 'upload',size,owner=request.state.principal.owner)
                 return {'id':fid,'object':'file','bytes':size,'created_at':item['created'],'filename':item['name'],'purpose':purpose}
             except BaseException:
-                path.unlink(missing_ok=True)
+                if created:
+                    path.unlink(missing_ok=True)
                 raise
             finally:
                 await file.close()
 
     @app.get('/v1/files/{fid}/content')
-    async def content(fid: str):
-        path=store.path(fid)
+    async def content(fid: str, request: Request):
+        path=store.path(fid,owner=request.state.principal.owner)
         with path.open('rb') as source: signature=source.read(8)
         mime='image/png' if signature==b'\x89PNG\r\n\x1a\n' else 'application/octet-stream'
         return FileResponse(path,media_type=mime,headers={'X-Content-Type-Options':'nosniff'})
 
     @app.delete('/v1/files/{fid}')
-    async def delete(fid: str):
-        store.delete_file(fid)
+    async def delete(fid: str, request: Request):
+        store.delete_file(fid,owner=request.state.principal.owner)
         return {'id':fid,'object':'file','deleted':True}
 
     @app.post('/v1/tasks', status_code=202)
@@ -311,21 +314,21 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         try:
             if body.kind in ('image_generate','image_edit'):
                 if not images_enabled: raise HTTPException(410,'Image generation is disabled')
-                await ensure_image_available()
                 opts=ImageOptions.model_validate(body.options)
                 if body.kind=='image_edit' and not opts.image_ids:
                     raise HTTPException(422,'Image editing requires image_ids')
                 if body.kind=='image_generate' and opts.image_ids:
                     raise HTTPException(422,'Use image_edit for reference images')
-                for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid)
-                return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem)
+                for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid,owner=request.state.principal.owner)
+                await ensure_image_available()
+                return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
             if body.kind in ('transcribe','audio_understand') and not audio_enabled:
                 raise HTTPException(410,'Audio capabilities have been retired')
             if not body.file_id: raise HTTPException(422,'file_id is required')
             opts=Options.model_validate(body.options)
         except ValidationError as exc:
             raise HTTPException(422,str(exc))
-        return store.submit(body.kind,body.file_id,opts.model_dump(),idem)
+        return store.submit(body.kind,body.file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
 
     @app.get('/v1/tasks/{tid}')
     async def status(tid: str):

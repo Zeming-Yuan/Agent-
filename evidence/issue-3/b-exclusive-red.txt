@@ -1,0 +1,44 @@
+.................F                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_tb02_failed_exclusive_upload_does_not_unlink_existing_file ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-134/test_tb02_failed_exclusive_upl0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe93aba033880>, wait_task=<function owner_env.<locals>.wait_task at 0xe93aba0320c0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe93aba0a3ce0>
+
+    def test_tb02_failed_exclusive_upload_does_not_unlink_existing_file(owner_env, monkeypatch):
+        """A storage/name collision must never clean up a file this upload did not create."""
+        import asyncio
+        from types import SimpleNamespace
+        import httpx
+        import uuid
+        with owner_env.client() as c:
+            fid = owner_env.upload(c, 'A')
+            before = c.get(f'/v1/files/{fid}/content', headers=owner_env.auth('A')).content
+            async def collide():
+                async with httpx.AsyncClient(transport=httpx.ASGITransport(app=c.app, raise_app_exceptions=False),
+                                             base_url='http://test') as other:
+                    return await other.post('/v1/files', headers=owner_env.auth('B'),
+                                            files={'file': ('collision.png', b'other bytes')})
+            with monkeypatch.context() as patch:
+                patch.setattr(uuid, 'uuid4', lambda: SimpleNamespace(hex=fid[5:]))
+                failed = asyncio.run(collide())
+            assert failed.status_code == 500
+            async def download():
+                async with httpx.AsyncClient(transport=httpx.ASGITransport(app=c.app, raise_app_exceptions=False),
+                                             base_url='http://test') as other:
+                    return await other.get(f'/v1/files/{fid}/content', headers=owner_env.auth('A'))
+            after = asyncio.run(download())
+>           assert after.status_code == 200
+E           assert 500 == 200
+E            +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests/test_tb02_owner_files.py:219: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb02_owner_files.py::test_tb02_failed_exclusive_upload_does_not_unlink_existing_file
+1 failed, 17 passed, 1 warning in 4.76s

@@ -1,0 +1,76 @@
+F.F..                                                                    [100%]
+=================================== FAILURES ===================================
+____________ test_upload_quota_is_atomic_across_concurrent_requests ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-119/test_upload_quota_is_atomic_ac0')
+
+    def test_upload_quota_is_atomic_across_concurrent_requests(tmp_path):
+        import asyncio
+        from io import BytesIO
+        from starlette.datastructures import UploadFile
+        from starlette.routing import request_response
+        app=create_app(tmp_path,'test-secret-token',run_worker=False)
+        store=app.state.store
+        store.add_file('file-'+'f'*32,'quota-fixture',2*1024**3-3*1024**2)
+        upload=next(route.endpoint for route in app.routes if route.path=='/v1/files' and 'POST' in route.methods)
+        class SlowFile(UploadFile):
+            async def read(self,size=-1):
+                await asyncio.sleep(.02)
+                return await super().read(size)
+        async def check():
+            files=[SlowFile(filename='audio',file=BytesIO(b'x'*(2*1024**2))) for _ in range(2)]
+            result=await asyncio.gather(*(upload(file=f,purpose='assistants') for f in files),return_exceptions=True)
+            assert sum(isinstance(r,dict) for r in result)==1
+            assert any(getattr(r,'status_code',None)==413 for r in result)
+            with store.connect() as db:
+                assert db.execute('select sum(bytes) from files').fetchone()[0]<=2*1024**3
+>       asyncio.run(check())
+
+tests/test_gateway_validation.py:260:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_gateway_validation.py:255: in check
+    result=await asyncio.gather(*(upload(file=f,purpose='assistants') for f in files),return_exceptions=True)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+.0 = <list_iterator object at 0xfa418d5e1a20>
+
+>   result=await asyncio.gather(*(upload(file=f,purpose='assistants') for f in files),return_exceptions=True)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   TypeError: create_app.<locals>.upload() missing 1 required positional argument: 'request'
+
+tests/test_gateway_validation.py:255: TypeError
+__________ test_rejected_edit_releases_only_new_unreferenced_uploads ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-119/test_rejected_edit_releases_on0')
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-119/test_rejected_edit_releases_on0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfa418d000ae0>, wait_task=<function owner_env.<locals>.wait_task at 0xfa418d003b00>)
+
+    def test_rejected_edit_releases_only_new_unreferenced_uploads(tmp_path, owner_env):
+        with TestClient(create_app(tmp_path,'test-secret-token',run_worker=False,audio_enabled=False,images_enabled=True,max_pending=1,
+                                   transport=httpx.MockTransport(owner_env.new_backend()))) as c:
+            c.post('/v1/tasks',headers=AUTH,json={'kind':'image_generate','options':{'prompt':'x'}})
+            r=c.post('/v1/images/edits',headers=AUTH,data={'prompt':'edit'},files={'image':('new.png',png())})
+>           assert r.status_code==429
+E           assert 404 == 429
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_images.py:143: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_gateway_validation.py::test_upload_quota_is_atomic_across_concurrent_requests
+FAILED tests/test_images.py::test_rejected_edit_releases_only_new_unreferenced_uploads
+2 failed, 3 passed, 76 deselected, 1 warning in 0.56s

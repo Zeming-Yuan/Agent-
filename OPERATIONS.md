@@ -174,3 +174,10 @@ T01 身份接线：`create_app(root, token)` 保留旧位置参数，默认在 r
 切片 B 在合成旧格式库中验证：独立冻结的旧版完整服务 → 过渡版 → 旧版均上传、执行和取回可解码 PNG；原排队参考图/透明前景关联、历史结果和幂等 task_id 跨重启保留，running 仍按原恢复规则变为 failed，后端实际工作总数为 5（两个原排队任务、三次新生成），没有幂等重放推理。另验证旧/新版原上传及 task_idempotency 用例、旁表迁移注入失败后原子回滚与重试、并发旧写入、并发 Key 注册、数据库/文件/注册表备份恢复到新目录。证据与验收映射见 `evidence/issue-2/acceptance.md`。
 
 本轮离线最终验证：29 项 T01 测试已采集，计划指定受影响回归 31 passed，pytest 全套 79 passed（1 项既有 Starlette/AnyIO 弃用警告）。未配置类型检查/静态检查/构建门禁，标记 N/A；实机、生产与平台链路仍未验证。
+
+
+# T02：素材 owner 隔离（2026-11-15，受控离线验证）
+
+T02 已接入 HTTP 文件读/删/引用及 worker 结果归属，修正同步编辑全局哈希 ID。`identity_mode='staging'` 仅可用于隔离副本；任务查询/取消与按人幂等尚待 T03/T04，生产 application() 仍 legacy，strict 启动保护保留。T01 上述未完成文件迁移的说明是当时状态；当前细节见 docs/IMAGE-SERVICE.md 和 evidence/issue-3/acceptance.md。
+
+维护与恢复仍先停新工作、定向停任务并确认后端空闲，再同步保全数据库、文件与凭证注册表。新旁表 file_digests 及任务 object_owners 必须随库保存；不可丢弃新 owner 数据。关闭 staging 接入后仅服务 legacy 自有数据；回退版本仍须保留文件 owner 检查与新归属，不能把混合库交给 T01 或更早共享访问代码。无不可逆 schema 重建，本票未部署、未触碰生产库，实机备份/发布/回滚未验证。

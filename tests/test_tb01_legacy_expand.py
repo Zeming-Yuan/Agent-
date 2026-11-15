@@ -46,11 +46,11 @@ def test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes(tmp_pat
     }
 
 
-def test_tb01_legacy_expand_preserves_explicit_owner_on_retry(tmp_path):
+def test_tb01_legacy_expand_preserves_explicit_owner_on_retry(tmp_path, legacy_services):
     from fastapi import HTTPException
     from services.ownership import expand_ownership, require_owner
 
-    store = Store(tmp_path)
+    store = legacy_services.Store(tmp_path)
     fid = 'file-' + 'c' * 32
     store.add_file(fid, 'owned.png', 1)
     expand_ownership(store.db, 'A')
@@ -87,12 +87,12 @@ def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
     assert store.db.read_bytes() == before
 
 
-def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog):
+def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog, legacy_services):
     from fastapi.testclient import TestClient
     from services.gateway import create_app
     from services.ownership import preflight_ownership
 
-    store = Store(tmp_path)
+    store = legacy_services.Store(tmp_path)
     fid = 'file-' + 'd' * 32
     store.save_generated(fid, b'old result', 'result.png')
     task = store.submit('image_generate', None, {}, 'old-request')
@@ -333,11 +333,11 @@ def test_tb01_legacy_expand_original_cases_on_expanded_copy(tmp_path, legacy_ser
     original(tmp_path)
 
 
-def test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss(tmp_path):
+def test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss(tmp_path, legacy_services):
     import sqlite3
     from services.ownership import expand_ownership, preflight_ownership, require_owner
 
-    store = Store(tmp_path)
+    store = legacy_services.Store(tmp_path)
     store.add_file('existing', 'existing.png', 1)
     expand_ownership(store.db, 'A')
     store.add_file('new-file', 'new.png', 1)

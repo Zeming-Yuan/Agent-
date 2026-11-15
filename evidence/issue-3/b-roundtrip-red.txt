@@ -1,0 +1,26 @@
+..F                                                                      [100%]
+=================================== FAILURES ===================================
+___________________ test_tb02_owner_upload_reference_result ____________________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-123/test_tb02_owner_upload_referen0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe283d99123e0>, wait_task=<function owner_env.<locals>.wait_task at 0xe283d99132e0>)
+
+    def test_tb02_owner_upload_reference_result(owner_env):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            fid = owner_env.upload(c, 'A')
+            accepted = owner_env.submit(c, 'A', kind='image_edit', image_ids=[fid])
+>           assert accepted.status_code == 202, accepted.text
+E           AssertionError: {"detail":"Object not found"}
+E           assert 404 == 202
+E            +  where 404 = <Response [404 Not Found]>.status_code
+
+tests/test_tb02_owner_files.py:34: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb02_owner_files.py::test_tb02_owner_upload_reference_result
+1 failed, 2 passed, 1 warning in 0.30s
