@@ -39,8 +39,8 @@ def build_bundle(config_path: Path, platform_assets: dict[str,Path], output_path
         path=PurePosixPath(name)
         source=Path(source)
         # Only explicitly selected platform code/docs. Never sweep a runtime directory.
-        if (path.is_absolute() or '..' in path.parts or '\\' in name or not path.parts
-                or any(p.startswith('.') for p in path.parts) or path.parts[0]=='client'
+        if (str(path)!=name or path.is_absolute() or '..' in path.parts or '\\' in name or ':' in name or not path.parts
+                or any(p.startswith('.') for p in path.parts) or path.parts[0].casefold()=='client'
                 or name.casefold() in {p.casefold() for p in files}
                 or path.suffix.lower() not in {'.md','.command','.ps1','.py'}
                 or source.suffix.lower()!=path.suffix.lower()

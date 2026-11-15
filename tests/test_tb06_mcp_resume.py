@@ -299,6 +299,17 @@ def test_tb06_bundle_rejects_runtime_and_credential_assets(tmp_path):
         assert not target.exists()
 
 
+@pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
+    from scripts.build_image_client_bundle import build_bundle
+    key=tmp_path/'key';key.write_text('test-personal-credential')
+    config=tmp_path/'config.json'
+    config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+    asset=tmp_path/'helper.py';asset.write_text('raise RuntimeError("entrypoint replaced")')
+    with pytest.raises(ValueError):build_bundle(config,{name:asset},tmp_path/'rejected.zip')
+    assert not (tmp_path/'rejected.zip').exists()
+
+
 @pytest.mark.parametrize('conflicting',[False,True])
 def test_tb06_concurrent_clients_keep_one_request_mapping(owner_env,tmp_path,conflicting):
     backend=owner_env.new_backend()
