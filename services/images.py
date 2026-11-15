@@ -10,6 +10,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import HTTPException
 
+from .image_resources import ReleaseUnconfirmed, ResourceWaitExpired
 from .image_telemetry import record_cached_nodes, record_current_task, task_event, task_transition
 
 LOG=logging.getLogger('agent-mm.images')
@@ -166,12 +167,13 @@ def reclaim_result(store, fid, *, owner):
         raise CleanupUncertain('Image result reclamation unconfirmed; operator recovery required') from exc
 
 
-async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None):
-    opts=item['options'];tid=item['id'];pid=None;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False
+async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None, admission=None):
+    opts=item['options'];tid=item['id'];pid=None;submitted=False;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False;events_lost=False
     streams=contextlib.AsyncExitStack()
     owner=store.worker_task(tid)['owner']
-    if memory_available()<20*1024**3:raise RuntimeError('Image admission: available memory below 20GiB')
+    if admission is None and memory_available()<20*1024**3:raise RuntimeError('Image admission: available memory below 20GiB')
     try:
+        if admission is not None:await asyncio.to_thread(admission.validate_inputs,item,store)
         for fid in opts['image_ids']:
             data=await asyncio.to_thread(store.path(fid,owner=owner).read_bytes)
             await asyncio.to_thread(validate_image,data)
@@ -183,19 +185,18 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             names[-1]=name
         if unload_models:
             r=await settled_post(client,url+'/free',json={'unload_models':True,'free_memory':True});r.raise_for_status()
-        task_event(store,tid,{'type':'stage','stage':'loading'})
+        if admission is None:task_event(store,tid,{'type':'stage','stage':'loading'})
         # ComfyUI requires a canonical UUID. Hold it before sending any bytes.
         pid=str(uuid.uuid4())
-        record_current_task(store,tid,prompt_id=pid,event='submit_started')
         if event_stream_factory is not None:
             from .comfy_events import normalize_event
             try:
                 stream=await streams.enter_async_context(event_stream_factory(url,tid))
             except Exception:
-                stream=None
+                stream=None;events_lost=True
                 task_event(store,tid,{'type':'observation_lost'})
             async def observe():
-                nonlocal backend_failed
+                nonlocal backend_failed,events_lost
                 active_node=None
                 try:
                     async for raw in stream.events():
@@ -207,10 +208,22 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                                 task=task_event(store,tid,event)
                                 if 'node' in event and task['stage']==event['stage']:
                                     active_node=event['node']
+                    events_lost=True
                     task_event(store,tid,{'type':'observation_lost'})
                 except Exception:
+                    events_lost=True
                     task_event(store,tid,{'type':'observation_lost'})
             if stream is not None:watcher=asyncio.create_task(observe())
+        if admission is not None:
+            if not await admission.prepare(item,store,client,url):return None
+            if memory_available()<20*1024**3:raise ResourceWaitExpired('Image memory fell below20GiB before start')
+            current=store.worker_task(tid)
+            claimed=task_transition(store,tid,status='running',stage='loading',expected_seq=current['stage_seq'])
+            if claimed['status'] != 'running':return None
+            if events_lost:task_event(store,tid,{'type':'observation_lost'})
+        record_current_task(store,tid,prompt_id=pid,event='submit_started')
+        if admission is not None:admission.recheck(item)
+        submitted=True
         r=await settled_post(client,url+'/prompt',json={'prompt':workflow(opts,'agent-mm/'+tid,names),'client_id':tid,'prompt_id':pid})
         r.raise_for_status();pid=r.json()['prompt_id']
         deadline=time.monotonic()+900
@@ -252,7 +265,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                     await streams.aclose()
                 except Exception:
                     task_event(store,tid,{'type':'observation_lost'})
-                if pid:
+                if submitted:
                     await clear_backend(client,url,pid)
                     response=await client.post(url+'/history',json={'delete':[pid]},timeout=10)
                     response.raise_for_status()
@@ -270,41 +283,41 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
 
 
 
-async def image_worker(store,client,url,active,*,event_stream_factory=None):
-    initialized=False;last_kind=None
+async def image_worker(store,client,url,active,*,event_stream_factory=None,admission=None):
+    initialized=False
     while True:
         if not initialized:
             try:
                 await clear_backend(client,url)
                 r=await client.post(url+'/history',json={'clear':True},timeout=10);r.raise_for_status()
                 cleanup_scratch(store)
-                initialized=True;last_kind=None
+                initialized=True
             except Exception:
-                await asyncio.sleep(2);continue
+                LOG.warning('Image startup cleanup unconfirmed; admission stopped')
+                return
         item=store.next_task(image=True)
         if item is None:
             await asyncio.sleep(.2);continue
         tid=item['id']
-        profile=(item['kind'],item['kind']=='image_edit' and item['options']['quality']=='fast')
-        item=task_transition(store,tid,status='running',stage='unloading' if last_kind!=profile else 'loading',expected_seq=item['stage_seq'])
-        if item['status'] != 'running':continue
-        job=asyncio.create_task(process_image(item,store,client,url,unload_models=last_kind!=profile,
-                                            event_stream_factory=event_stream_factory));active[tid]=job
+        job=asyncio.create_task(process_image(item,store,client,url,unload_models=False,
+                                            event_stream_factory=event_stream_factory,admission=admission));active[tid]=job
         try:
             result=await job
+            if result is None:continue
             task=store.worker_task(tid)
             if task['cancel_requested']:
                 reclaim_result(store,result['file_id'],owner=task['owner'])
                 task_transition(store,tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
             else:
                 task_transition(store,tid,status='completed',stage='completed',expected_seq=task['stage_seq'],result=result)
-            last_kind=profile
         except asyncio.CancelledError:
             task=store.worker_task(tid)
             if task['cancel_requested']:
                 task_transition(store,tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
-                last_kind=None
                 if asyncio.current_task().cancelling():raise
+            elif task['status']=='queued':
+                # No inference was submitted. Preserve the accepted intent for restart.
+                raise
             else:
                 store.update(tid,status='failed',error='Image worker interrupted')
                 record_current_task(store,tid)
@@ -313,6 +326,12 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             task_event(store,tid,{'type':'failed','error':'Image backend execution failed',
                              'blocked_reason':'backend_execution_error'})
             initialized=False
+        except ReleaseUnconfirmed:
+            task_event(store,tid,{'type':'failed','error':'Model release unconfirmed; operator recovery required',
+                                  'blocked_reason':'release_unconfirmed'})
+            return
+        except ResourceWaitExpired as exc:
+            task_event(store,tid,{'type':'failed','error':str(exc),'blocked_reason':'resource_wait_expired'})
         except SubmissionUncertain:
             LOG.exception('image backend outcome uncertain; admission stopped')
             task_event(store,tid,{'type':'failed','error':'Image submission outcome unknown; restart image backend and gateway',

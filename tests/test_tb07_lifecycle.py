@@ -459,7 +459,8 @@ def test_tb07_unload_request_is_a_stage_not_a_release_claim(owner_env):
         assert entered.wait(2)
         try:
             task = c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()
-            assert task['status'] == 'running' and task['stage'] == 'unloading'
+            assert task['status'] == 'queued' and task['stage'] == 'waiting_resources'
+            assert task['blocked_reason'] == 'release_unconfirmed'
             assert task['step'] is None
         finally:
             release.set()
@@ -591,7 +592,9 @@ def test_tb07_cancel_waits_for_accepted_free_request(owner_env):
             c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
             second = owner_env.submit(c, 'B').json()['id']
             assert not overlapped.wait(.5), 'next prompt preceded pending /free response'
-            assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()['stage'] == 'cancelling'
+            # No inference exists yet; queued cancellation is terminal, but serial
+            # ownership still holds until the pending release HTTP call settles.
+            assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()['stage'] == 'cancelled'
             assert c.get('/v1/tasks/' + second, headers=owner_env.auth('B')).json()['status'] == 'queued'
         finally:
             release.set()

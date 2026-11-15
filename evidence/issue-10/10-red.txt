@@ -1,0 +1,52 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb09_below_reserve_enters_wait_and_recovers_same_task __________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-503/test_tb09_below_reserve_enters0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf1ee13cfc680>, wait_task=<function owner_env.<locals>.wait_task at 0xf1ee13cffec0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf1ee13d3a030>
+
+    def test_tb09_below_reserve_enters_wait_and_recovers_same_task(owner_env, monkeypatch):
+        from pathlib import Path
+        import threading
+        recovered = threading.Event()
+        read_text = Path.read_text
+        def read(path, *args, **kwargs):
+            if str(path) == '/proc/meminfo':
+                return 'MemAvailable: '+str((60 if recovered.is_set() else 19)*1024**2)+' kB\n'
+            return read_text(path, *args, **kwargs)
+        monkeypatch.setattr(Path, 'read_text', read)
+        config = resources()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            available_bytes=(60 if recovered.is_set() else 19)*1024**3)
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            tid = owner_env.submit(c).json()['id']
+            waiting = owner_env.wait_task(c,tid,'A',lambda t:t.get('blocked_reason')=='system_memory' or t['status']=='failed')
+>           assert waiting['status']=='queued', waiting
+E           AssertionError: {'blocked_reason': None, 'cancel_requested': False, 'created': 1794728905, 'error': 'Image processing failed; see service log', ...}
+E           assert 'failed' == 'queued'
+E
+E             - queued
+E             + failed
+
+tests/test_tb09_safe_admission.py:262: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:343 image task task-2eaf0e5fe87a49a2867053543bac0907 failed (RuntimeError)
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 303, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 174, in process_image
+    if memory_available()<20*1024**3:raise RuntimeError('Image admission: available memory below 20GiB')
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Image admission: available memory below 20GiB
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_below_reserve_enters_wait_and_recovers_same_task
+1 failed, 47 deselected, 1 warning in 0.40s

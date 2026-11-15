@@ -10,7 +10,7 @@ from pathlib import Path
 import httpx
 
 from image_test_harness import https_server
-from services.gateway import create_app
+from image_test_harness import image_app as create_app
 from scripts.build_image_client_bundle import build_bundle
 
 

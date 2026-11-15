@@ -1,0 +1,43 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_tb09_factory_loads_only_pinned_config_and_unknown_release_still_waits __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-511/test_tb09_factory_loads_only_p0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe995bf27d440>, wait_task=<function owner_env.<locals>.wait_task at 0xe995bf27d580>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-511/test_tb09_factory_loads_only_p0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe995bf4482c0>
+
+    def test_tb09_factory_loads_only_pinned_config_and_unknown_release_still_waits(owner_env,tmp_path,monkeypatch):
+        import json,hashlib,time
+        from services.gateway import create_app
+        from services.image_telemetry import host_identity
+        from fastapi.testclient import TestClient
+        import httpx
+        path,_,telemetry=approved_config(tmp_path,monkeypatch)
+        monkeypatch.setenv('IMAGE_RESOURCE_CONFIG',str(path))
+        monkeypatch.setenv('IMAGE_RESOURCE_CONFIG_SHA256',hashlib.sha256(path.read_bytes()).hexdigest())
+        monkeypatch.setenv('IMAGE_RUNTIME_HASH','runtime')
+        row={'available_bytes':60*1024**3,'cgroup_headroom_bytes':50*1024**3,'observed_at':time.monotonic(),
+            'resident_profiles':None,'running_prompts':[],'release_epoch':2,'release_proven':None,
+            'host_id':host_identity(),'runtime_hash':'runtime','session_id':'session','errors':[]}
+        memory=telemetry/'memory.jsonl';memory.write_text(json.dumps(row)+'\n');memory.chmod(0o600)
+        backend=owner_env.new_backend()
+        app=create_app(owner_env.root,owner_env.keys['legacy'],key_registry=owner_env.registry,
+            identity_mode='staging',transport=httpx.MockTransport(backend),images_enabled=True,
+            audio_enabled=False,event_stream_factory=backend.event_stream)
+        with TestClient(app) as c:
+            response=owner_env.submit(c)
+>           assert response.status_code==202,response.text
+E           AssertionError: {"detail":"Image profile unavailable: no valid resource evidence/configuration"}
+E           assert 503 == 202
+E            +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_tb09_safe_admission.py:377: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_factory_loads_only_pinned_config_and_unknown_release_still_waits
+1 failed, 68 deselected, 1 warning in 0.21s

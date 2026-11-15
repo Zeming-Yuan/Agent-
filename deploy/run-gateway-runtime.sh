@@ -3,6 +3,18 @@ set -euo pipefail
 cd /home/clusteradmin/Desktop/Agent多模态服务
 image="$(cat .private/runtime-image-id)"
 mkdir -p .private/runtime
+configuration_args=()
+if [[ -n "${IMAGE_RESOURCE_CONFIG_DIR:-}" ]]; then
+  # Dedicated private directory contains only admission.json and approved evidence.
+  test -n "${IMAGE_TELEMETRY_DIR:-}"
+  test -n "${IMAGE_RESOURCE_CONFIG_SHA256:-}"
+  test -n "${IMAGE_RUNTIME_HASH:-}"
+  IMAGE_RESOURCE_CONFIG="$IMAGE_RESOURCE_CONFIG_DIR/admission.json" \
+    .venv/bin/python -m services.image_resource_config --check-config "$IMAGE_RESOURCE_CONFIG_DIR/admission.json"
+  configuration_args+=(--mount "type=bind,src=$IMAGE_RESOURCE_CONFIG_DIR,dst=/resource-config,readonly")
+  configuration_args+=(--env IMAGE_RESOURCE_CONFIG=/resource-config/admission.json)
+  configuration_args+=(--env "IMAGE_RESOURCE_CONFIG_SHA256=$IMAGE_RESOURCE_CONFIG_SHA256" --env "IMAGE_RUNTIME_HASH=$IMAGE_RUNTIME_HASH")
+fi
 observation_args=()
 if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
   mkdir -p "$IMAGE_TELEMETRY_DIR"
@@ -11,7 +23,7 @@ if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
   observation_args+=(--mount "type=bind,src=/etc/machine-id,dst=/host-machine-id,readonly")
   observation_args+=(--env IMAGE_TELEMETRY_DIR=/observations --env IMAGE_HOST_ID_FILE=/host-machine-id)
 fi
-docker run "${observation_args[@]}" --name agent-mm-gateway-runtime --network host --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m \
+docker run "${observation_args[@]}" "${configuration_args[@]}" --name agent-mm-gateway-runtime --network host --read-only --tmpfs /tmp:rw,nosuid,nodev,size=512m \
   --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges --memory 2g --pids-limit 128 \
   --mount "type=bind,src=$PWD/services,dst=/work/services,readonly" \
   --mount "type=bind,src=$PWD/.private/runtime,dst=/work/.private/runtime" \

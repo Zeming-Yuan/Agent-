@@ -284,3 +284,17 @@ git commit -m "test(image): t09 boundaries and recovery"
 ## 预算有效期的时钟约定
 
 部署配置持久化 UTC expires_at；加载时换算为本次启动的 monotonic 截止：valid_until = monotonic_now + max(0, expires_at - utc_now)。MemoryBudget.valid_until 仅为内存对象，不将单调时钟值写回持久配置；重启后重新换算，过期配置保持禁用。测试中的 now/valid_until 是同一单调时钟域。
+
+## T09 execution 2026-11-15 — slice A
+
+User approved offline implementation with #9/#24 open and the three public seams; fixed source base da2acfb62b8abd478f18b4cc84b448e87003ed66. Policy/release-proof/queued-wait/recovery/pre-prompt recheck implemented by vertical RED→GREEN cycles. Focused35 and affected selector65 passed, one existing AnyIO warning. Existing fixtures explicitly inject synthetic resources. Public evidence is credential-redacted/whitespace-normalized; these are test credentials, never production data. See evidence/issue-10/progress.md for rulings. Full configuration/input-envelope/fault matrix remains slice B. Hardware baseline not_run; no enabled production profile or performance claim. ADR0004 is used because ADR0002 already records task lifecycle.
+
+## T09 execution 2026-11-15 — slice B
+
+Implemented explicit profile/input-envelope gating, reference pixel checks, controlled-calibration approval/parameter/raw-baseline pins, bounded private backend sample reader and default factory/launcher wiring. Added resource-fault, proof-loss, timeout/cancel/idem/owner, all existing mode graph boundaries, CLI and queued-restart evidence. Fresh ticket85passed; explicit16affected files414passed; bash syntax0. No full gates; unconfigured type/lint/build/CI/Compose/seed/scannersN/A. Only external inference/resource/time/file-fault boundaries are substituted. Evidence map: evidence/issue-10/acceptance.md.
+
+Independent A review fixes have their own RED→GREEN evidence; new reserve-order P2 from re-review reproduced and repaired in B. Shared services integrated serially in one checkout. No hardware baseline or performance comparison: not_run/inconclusive. All current execution uses conservative cold budgets; hot optimization waits for#12. Positive actual old-profile proof is still absent from T08, not invented by config loading; follow-up#26 must supply/validate it. #10 remainsOPEN. No normal production profile config, deployment/restart/guard/model action performed. #24/#12/#15 retain physical/platform/recovery acceptance.
+
+Final review repair22RED→GREEN: pending/free ACK now fails/degrades within configured wait deadline while retaining control until settlement. Fresh repaired ticket86passed/affected415passed; all physical limits remain not_run/未验证 and#26OPEN. Re-review after fixed commit.
+
+Cancelled-release HTTP-result validation23RED→GREEN; final ticket88passed/affected417passed, syntax0. Fixed source re-review and selective original-product delivery next. Actual producer#26/hardware/profile/desktop/recovery remain open, no broader completion claim.

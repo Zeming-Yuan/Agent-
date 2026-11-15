@@ -1,0 +1,46 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb09_cancel_does_not_hide_failure_of_owned_release_request[http_error] __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-538/test_tb09_cancel_does_not_hide0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe3153a6b6a20>, wait_task=<function owner_env.<locals>.wait_task at 0xe3153a6b6b60>)
+failure = 'http_error'
+
+    @pytest.mark.parametrize('failure',['http_error','disconnect'])
+    def test_tb09_cancel_does_not_hide_failure_of_owned_release_request(owner_env,failure):
+        import asyncio,threading,time,httpx
+        backend=owner_env.new_backend()
+        entered=threading.Event();release=threading.Event();returned=threading.Event()
+        async def external(request):
+            if request.url.path=='/free':
+                entered.set()
+                await asyncio.to_thread(release.wait,2.)
+                returned.set()
+                if failure=='disconnect':raise httpx.ReadError('unknown release outcome',request=request)
+                return httpx.Response(503,json={'error':'release failed'})
+            return await backend(request)
+        with client_with_resources(owner_env,external,**resources()) as c:
+            tid=owner_env.submit(c).json()['id']
+            assert entered.wait(1)
+            assert c.post('/v1/tasks/'+tid+'/cancel',headers=owner_env.auth('A')).json()['status']=='cancelled'
+            release.set()
+            assert returned.wait(1)
+            deadline=time.monotonic()+.25
+            while time.monotonic()<deadline:
+                health=c.get('/health',headers=owner_env.auth('A'))
+                if health.status_code==503:break
+                time.sleep(.01)
+>           assert health.status_code==503,health.text
+E           AssertionError: {"status":"ready","backends":{"main":{"status":"ready"},"image":{"status":"ready"}}}
+E           assert 200 == 503
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_tb09_safe_admission.py:594: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_cancel_does_not_hide_failure_of_owned_release_request[http_error]
+1 failed, 1 passed, 86 deselected, 1 warning in 1.00s

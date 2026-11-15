@@ -1,0 +1,41 @@
+.F.....                                                                  [100%]
+=================================== FAILURES ===================================
+__ test_tb09_private_backend_samples_preserve_unknown_signals[missing_errors] __
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-509/test_tb09_private_backend_samp1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf972ea36c1a0>
+fault = 'missing_errors'
+
+    @pytest.mark.parametrize('fault',['valid_unknown','missing_errors','partial','host','runtime','world_readable','symlink'])
+    def test_tb09_private_backend_samples_preserve_unknown_signals(tmp_path, monkeypatch, fault):
+        import json,time
+        from services.image_resource_config import read_resource_sample
+        from services.image_telemetry import host_identity
+        directory=tmp_path/'samples';directory.mkdir(mode=0o700)
+        row={'available_bytes':60*1024**3,'cgroup_headroom_bytes':50*1024**3,'observed_at':time.monotonic(),
+            'resident_profiles':None,'running_prompts':[],'release_epoch':1,'release_proven':None,
+            'release_task_id':None,'host_id':host_identity(),'runtime_hash':'runtime','session_id':'session','errors':[]}
+        if fault=='host':row['host_id']='other'
+        if fault=='runtime':row['runtime_hash']='other'
+        if fault=='missing_errors':row.pop('errors')
+        path=directory/'memory.jsonl';path.write_text(json.dumps(row)+('' if fault=='partial' else '\n'));path.chmod(0o600)
+        if fault=='world_readable':path.chmod(0o644)
+        if fault=='symlink':
+            target=directory/'old';path.rename(target);path.symlink_to(target)
+        sample=read_resource_sample(directory,'runtime')
+        if fault=='valid_unknown':
+            assert sample is not None and sample.resident_profiles is None and sample.release_proven is None
+>       else:assert sample is None
+             ^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert ResourceSample(available_bytes=64424509440, cgroup_headroom_bytes=53687091200, observed_at=197248.631285895, resident_...st_id='eec8d526cf12b861de49b5ba45d93e99408dfe6e6a15862122a0d643db347e21', runtime_hash='runtime', session_id='session') is None
+
+tests/test_tb09_safe_admission.py:354: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_private_backend_samples_preserve_unknown_signals[missing_errors]
+1 failed, 6 passed, 61 deselected, 1 warning in 0.04s

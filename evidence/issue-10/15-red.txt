@@ -1,0 +1,36 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_tb09_startup_cleanup_failure_stops_admission_without_retry_loop _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-513/test_tb09_startup_cleanup_fail0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf9eb96bb9580>, wait_task=<function owner_env.<locals>.wait_task at 0xf9eb96bb96c0>)
+
+    def test_tb09_startup_cleanup_failure_stops_admission_without_retry_loop(owner_env):
+        import httpx,time
+        backend=owner_env.new_backend()
+        attempts=[]
+        async def external(request):
+            if request.url.path=='/interrupt':
+                attempts.append(True)
+                return httpx.Response(503,json={'error':'unconfirmed'})
+            return await backend(request)
+        with client_with_resources(owner_env,external,**resources()) as c:
+            deadline=time.monotonic()+.4
+            while time.monotonic()<deadline:
+                health=c.get('/health',headers=owner_env.auth('A'))
+                if health.status_code==503:break
+                time.sleep(.01)
+>           assert health.status_code==503,health.text
+E           AssertionError: {"status":"ready","backends":{"main":{"status":"ready"},"image":{"status":"ready"}}}
+E           assert 200 == 503
+E            +  where 200 = <Response [200 OK]>.status_code
+
+tests/test_tb09_safe_admission.py:400: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_startup_cleanup_failure_stops_admission_without_retry_loop
+1 failed, 69 deselected, 1 warning in 0.62s

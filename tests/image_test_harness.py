@@ -42,3 +42,31 @@ def https_server(app, tmp_path):
     finally:
         server.should_exit=True;thread.join(timeout=5);sock.close()
         assert not thread.is_alive(),'TLS test server failed to stop'
+
+
+def synthetic_resources(*, available=60*1024**3, wait_timeout=2., fault=None):
+    import time
+    import dataclasses
+    from services.image_telemetry import ResourceSample
+    from services.image_resources import MemoryBudget
+    def sample(tid):
+        row = ResourceSample(60*1024**3,50*1024**3,time.monotonic(),frozenset(),(),2,
+            release_proven=True,release_task_id=tid,host_id='host',runtime_hash='runtime',session_id='session')
+        return dataclasses.replace(row, available_bytes=available, release_task_id=tid,
+                                   release_epoch=time.monotonic_ns(), **(fault or {}))
+    envelope = {'sizes': ['1024x1024','1152x896','896x1152','1280x768','768x1280'],
+                'max_references': 3, 'max_reference_pixels': 16_000_000, 'foreground': True,
+                'max_prompt_chars': 4000, 'max_title_chars': 60}
+    return {'resource_sampler': sample,
+            'memory_budgets': {p: MemoryBudget(10*1024**3, 2*1024**3, 20*1024**3,
+                time.monotonic()+3600, 'runtime') for p in ('generate','fast','standard','high')},
+            'resource_settings': {'max_age': 1., 'stable_window': .02, 'wait_timeout': wait_timeout,
+                                  'input_envelopes': {p: dict(envelope) for p in ('generate','fast','standard','high')}},
+            'image_runtime_hash': 'runtime'}
+
+
+
+def image_app(*args, **kwargs):
+    """Existing integration fixtures explicitly inject synthetic external resources."""
+    from services.gateway import create_app
+    return create_app(*args, **{**synthetic_resources(), **kwargs})

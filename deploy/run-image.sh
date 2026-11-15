@@ -6,6 +6,15 @@ mkdir -p .private/runtime/comfy/{input,output,temp,user}
 chmod 700 .private/runtime/comfy
 # Files are admitted only after download SHA256 verification has completed.
 test -f /data/models/agent-mm-z-image-turbo/.verified.json
+configuration_args=()
+if [[ -n "${IMAGE_RESOURCE_CONFIG_DIR:-}" ]]; then
+  # Dedicated private directory contains only admission.json and approved evidence.
+  test -n "${IMAGE_TELEMETRY_DIR:-}"
+  test -n "${IMAGE_RESOURCE_CONFIG_SHA256:-}"
+  test -n "${IMAGE_RUNTIME_HASH:-}"
+  IMAGE_RESOURCE_CONFIG="$IMAGE_RESOURCE_CONFIG_DIR/admission.json" \
+    .venv/bin/python -m services.image_resource_config --check-config "$IMAGE_RESOURCE_CONFIG_DIR/admission.json"
+fi
 observation_args=()
 if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
   mkdir -p "$IMAGE_TELEMETRY_DIR"
@@ -17,7 +26,7 @@ if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
   observation_args+=(--env "IMAGE_RUNTIME_ID=$image")
   observation_args+=(--env IMAGE_TELEMETRY_DIR=/observations --env IMAGE_HOST_ID_FILE=/host-machine-id)
 fi
-docker run "${observation_args[@]}" --name agent-mm-image --gpus all --network host --ipc private --shm-size 2g \
+docker run "${observation_args[@]}" "${configuration_args[@]}" --name agent-mm-image --gpus all --network host --ipc private --shm-size 2g \
   --user "$(id -u):$(id -g)" --read-only --tmpfs /tmp:rw,nosuid,nodev,size=1g \
   --cap-drop ALL --security-opt no-new-privileges --memory 75g --memory-swap 75g --pids-limit 256 \
   --mount type=bind,src=/data/models/agent-mm-z-image-turbo,dst=/opt/ComfyUI/models,readonly \

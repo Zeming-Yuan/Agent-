@@ -27,13 +27,19 @@ def apply_event(task: dict, event: dict, *, backend_stopped=False, result_saved=
     elif kind == 'failed':
         out.update(status='failed', stage='failed', error=event.get('error'),
                    blocked_reason=event.get('blocked_reason'))
+    elif kind == 'resource_wait':
+        if task['status'] != 'queued' or task.get('cancel_requested'):
+            return out
+        if task.get('stage') == 'waiting_resources' and task.get('blocked_reason') == event['reason']:
+            return out
+        out.update(stage='waiting_resources', blocked_reason=event['reason'])
     elif kind == 'stage':
         stage = event['stage']
         if task.get('cancel_requested') or stage not in STAGE_ORDER:
             return out
         if STAGE_ORDER[stage] <= STAGE_ORDER.get(task.get('stage'), -1):
             return out
-        out.update(status=event.get('status', task['status']), stage=stage)
+        out.update(status=event.get('status', task['status']), stage=stage, blocked_reason=None)
     elif kind == 'progress':
         if task.get('cancel_requested') or task.get('stage') != 'generating':
             return out

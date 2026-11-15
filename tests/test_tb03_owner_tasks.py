@@ -145,7 +145,7 @@ def test_tb03_concurrent_same_owner_replays_and_cross_owner_keys_are_atomic(owne
 @pytest.mark.parametrize('kind', ['transcribe', 'audio_understand', 'pdf', 'video'])
 def test_tb03_existing_media_task_access_is_scoped(owner_env, kind):
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     import httpx
     app = create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
                      identity_mode='staging', run_worker=False,
@@ -398,7 +398,7 @@ def test_tb03_restart_and_restored_copy_keep_task_identity_and_revocation(owner_
     import sqlite3
     from contextlib import closing
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.identity import KeyRegistry
     import httpx
     backend = owner_env.new_backend()

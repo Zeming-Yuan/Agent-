@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb09_lost_release_at_final_resource_read_stops_new_admission _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-496/test_tb09_lost_release_at_fina0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe8174c7a4220>, wait_task=<function owner_env.<locals>.wait_task at 0xe8174c7a77e0>)
+
+    def test_tb09_lost_release_at_final_resource_read_stops_new_admission(owner_env):
+        config = resources(wait_timeout=.1)
+        config['resource_settings']['stable_window'] = .00001
+        original = config['resource_sampler']
+        reads = 0
+        def sample(tid):
+            nonlocal reads
+            reads += 1
+            row = original(tid)
+            return dataclasses.replace(row, release_proven=False) if reads >= 4 else row
+        config['resource_sampler'] = sample
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            tid = owner_env.submit(c).json()['id']
+            owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed')
+            assert backend.jobs == []
+>           assert c.get('/health',headers=owner_env.auth('A')).status_code == 503
+E           AssertionError: assert 200 == 503
+E            +  where 200 = <Response [200 OK]>.status_code
+E            +    where <Response [200 OK]> = get('/health', headers={'Authorization': 'Bearer REDACTED'})
+E            +      where get = <starlette.testclient.TestClient object at 0xe8174c7060c0>.get
+E            +      and   {'Authorization': 'Bearer REDACTED'} = <function owner_env.<locals>.<lambda> at 0xe8174c7a6c00>('A')
+E            +        where <function owner_env.<locals>.<lambda> at 0xe8174c7a6c00> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-496/test_tb09_lost_release_at_fina0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe8174c7a4220>, wait_task=<function owner_env.<locals>.wait_task at 0xe8174c7a77e0>).auth
+
+tests/test_tb09_safe_admission.py:214: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_lost_release_at_final_resource_read_stops_new_admission
+1 failed, 37 deselected, 1 warning in 0.41s
