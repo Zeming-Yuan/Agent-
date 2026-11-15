@@ -38,6 +38,7 @@ class Store:
         self.files.mkdir(mode=0o700, exist_ok=True)
         self.db = self.root / 'state.sqlite3'
         self.max_pending = max_pending
+        self.image_resource_view = None
         with self.connect() as db:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
@@ -56,6 +57,15 @@ class Store:
               blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
             INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
               SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
+            ''')
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS image_enqueues(enqueue_seq INTEGER PRIMARY KEY AUTOINCREMENT,
+              task_id TEXT NOT NULL UNIQUE);
+            CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              last_owner TEXT, claimed_task TEXT);
+            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_enqueues(task_id)
+              SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
             ''')
             columns = {row['name'] for row in db.execute('PRAGMA table_info(task_runtime)')}
             for name in ('step', 'steps'):
@@ -166,8 +176,9 @@ class Store:
 
     def task(self, tid, *, owner):
         with self.connect() as db:
+            db.execute('BEGIN')
             require_owner(db, 'task', tid, owner)
-            return self._task(db, tid)
+            return self._queue_task(db, self._task(db, tid), self._image_snapshot(db))
 
     def lookup_request(self, owner, request_key, fingerprint):
         """Read an existing owner request without requiring backend readiness."""
@@ -182,7 +193,7 @@ class Store:
             if row['fingerprint'] != fingerprint:
                 raise HTTPException(409, 'Idempotency key reused with different request')
             require_owner(db, 'task', row['task_id'], owner)
-            return self._task(db, row['task_id'])
+            return self._queue_task(db, self._task(db, row['task_id']), self._image_snapshot(db))
 
     def list_tasks(self, owner, *, status=None, after=None, limit=20):
         if status is not None and status not in ('queued', 'running', 'completed', 'failed', 'cancelled'):
@@ -207,7 +218,8 @@ class Store:
                 ON o.kind='task' AND o.object_id=t.id WHERE """ + ' AND '.join(clauses) +
                 ' ORDER BY t.created,t.rowid LIMIT ?', (*params, limit + 1)).fetchall()
             page = rows[:limit]
-            return {'object': 'list', 'data': [self._task(db, row['id']) for row in page],
+            snapshot = self._image_snapshot(db)
+            return {'object': 'list', 'data': [self._queue_task(db, self._task(db, row['id']), snapshot) for row in page],
                     'has_more': len(rows) > limit,
                     'next_cursor': page[-1]['id'] if len(rows) > limit else None}
 
@@ -257,6 +269,8 @@ class Store:
             db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
                        (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, None, fingerprint, now, now))
             db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('task', tid, owner))
+            if kind in ('image_generate', 'image_edit'):
+                db.execute('INSERT INTO image_enqueues(task_id) VALUES(?)', (tid,))
             db.execute('''INSERT INTO task_runtime(task_id,stage,stage_seq,stage_started_at,
                 stage_updated_at,blocked_reason,cancel_requested) VALUES(?,?,?,?,?,?,?)''',
                 (tid, 'queued', 0, now, now, None, 0))
@@ -335,6 +349,7 @@ class Store:
     def recover(self):
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            db.execute('UPDATE image_schedule SET claimed_task=NULL WHERE singleton=1')
             for row in db.execute("SELECT id FROM tasks WHERE status='running'").fetchall():
                 self._event_tx(db, row['id'], {'type': 'failed', 'error': 'Service restarted during processing'})
 
@@ -343,3 +358,84 @@ class Store:
             op = 'IN' if image else 'NOT IN'
             row = db.execute(f"SELECT id FROM tasks WHERE status='queued' AND kind {op} ('image_generate','image_edit') ORDER BY created,rowid LIMIT 1").fetchone()
         return self.worker_task(row['id']) if row else None
+
+    def _image_rows(self, db):
+        rows = db.execute("""SELECT t.id,o.owner,e.enqueue_seq FROM tasks t
+            JOIN image_enqueues e ON e.task_id=t.id
+            JOIN object_owners o ON o.kind='task' AND o.object_id=t.id
+            WHERE t.status='queued' ORDER BY e.enqueue_seq""").fetchall()
+        return [dict(row) for row in rows]
+
+    def claim_image_task(self, resource_view):
+        from .image_queue import choose_next
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            schedule = db.execute('SELECT * FROM image_schedule WHERE singleton=1').fetchone()
+            if schedule['claimed_task'] is not None:
+                return None
+            heads = []
+            owners = set()
+            for row in self._image_rows(db):
+                if row['owner'] in owners:
+                    continue
+                owners.add(row['owner'])
+                item = self._task(db, row['id'])
+                decision = resource_view(item) if resource_view else None
+                row['eligible'] = decision is None or decision.allowed
+                if decision is not None and not decision.allowed:
+                    self._event_tx(db, row['id'], {'type':'resource_wait','reason':decision.reason})
+                heads.append(row)
+            tid = choose_next(heads, schedule['last_owner'])
+            if tid is None:
+                return None
+            owner = next(row['owner'] for row in heads if row['id'] == tid)
+            db.execute('UPDATE image_schedule SET last_owner=?,claimed_task=? WHERE singleton=1', (owner, tid))
+            item = self._task(db, tid)
+            item['owner'] = owner
+            return item
+
+    def release_image_claim(self, tid):
+        with self.connect() as db:
+            db.execute('UPDATE image_schedule SET claimed_task=NULL WHERE singleton=1 AND claimed_task=?', (tid,))
+
+    def _image_snapshot(self, db):
+        schedule = db.execute('SELECT * FROM image_schedule WHERE singleton=1').fetchone()
+        rows = self._image_rows(db)
+        for row in rows:
+            decision = self.image_resource_view(self._task(db, row['id'])) if self.image_resource_view else None
+            row.update(eligible=decision is None or decision.allowed,
+                       reason=decision.reason if decision else 'ready')
+        return rows, schedule['last_owner'], schedule['claimed_task']
+
+    def _queue_task(self, db, item, snapshot):
+        from .image_queue import queue_ahead
+        if item['kind'] not in ('image_generate','image_edit'):
+            return item
+        rows, last_owner, claimed = snapshot
+        item['queue_ahead'] = (queue_ahead(rows,item['id'],last_owner,claimed)
+                               if item['status'] in ('queued','running') else None)
+        row = next((row for row in rows if row['id'] == item['id']), None)
+        item['queue_reason'] = row['reason'] if row and not row['eligible'] else None
+        return item
+
+    def expire_image_waits(self, timeout):
+        """Expire only owner heads, independently of other owners' inference clocks."""
+        reasons = []
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            schedule = db.execute('SELECT claimed_task FROM image_schedule WHERE singleton=1').fetchone()
+            seen = set()
+            for row in self._image_rows(db):
+                if row['owner'] in seen:
+                    continue
+                seen.add(row['owner'])
+                if row['id'] == schedule['claimed_task']:
+                    continue
+                task = self._task(db, row['id'])
+                if task['stage'] == 'waiting_resources' and time.time()-task['stage_started_at'] >= timeout:
+                    reason = task['blocked_reason']
+                    category = 'resource_wait_expired' if reason in ('system_memory','container_memory') else 'release_unconfirmed'
+                    self._event_tx(db, row['id'], {'type':'failed','error':'Image resource wait expired: '+str(reason),
+                                                 'blocked_reason':category})
+                    reasons.append(category)
+        return reasons

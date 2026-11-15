@@ -405,16 +405,17 @@ def test_tb09_startup_cleanup_failure_stops_admission_without_retry_loop(owner_e
 def test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window(owner_env):
     import time
     config=resources(wait_timeout=.5)
-    initial=True
+    # Extra readonly queue observations must not consume a synthetic release.
+    released_event = __import__('threading').Event()
     def sample(tid):
-        nonlocal initial
-        row=dataclasses.replace(release_sample(int(time.monotonic()*10)/10),release_task_id=tid,
-                                release_epoch=1 if initial else 2)
-        initial=False
-        return row
+        return dataclasses.replace(release_sample(int(time.monotonic()*10)/10),release_task_id=tid,
+                                   release_epoch=2 if released_event.is_set() else 1)
     config['resource_sampler']=sample
     backend=owner_env.new_backend()
-    with client_with_resources(owner_env,backend,**config) as c:
+    async def external(request):
+        if request.url.path == '/free':released_event.set()
+        return await backend(request)
+    with client_with_resources(owner_env,external,**config) as c:
         tid=owner_env.submit(c).json()['id']
         done=owner_env.wait_task(c,tid,'A',lambda t:t['status'] in ('failed','completed'))
         assert done['status']=='completed',done
@@ -445,20 +446,21 @@ def test_tb09_brief_headroom_spike_is_not_a_stable_safe_start(owner_env):
 def test_tb09_faults_do_not_submit_inference_and_release_uncertainty_degrades(owner_env,fault,reason,degraded):
     import time,httpx
     config=resources(wait_timeout=.12)
-    original=config['resource_sampler'];reads=0
+    original=config['resource_sampler']
+    released_event=__import__('threading').Event()
     def sample(tid):
-        nonlocal reads
-        reads+=1;row=original(tid)
+        row=original(tid)
         change={
             'ack_only':{'release_epoch':2},'unknown_proof':{'release_proven':None},
             'old_running':{'running_prompts':('orphan',)},'unknown_residents':{'resident_profiles':None},
             'container':{'cgroup_headroom_bytes':1},'stale':{'observed_at':time.monotonic()-10},
-            'wrong_session':{'session_id':'session' if reads==1 else 'restarted'},
+            'wrong_session':{'session_id':'restarted' if released_event.is_set() else 'session'},
         }.get(fault,{})
         return dataclasses.replace(row,**change)
     config['resource_sampler']=sample
     backend=owner_env.new_backend()
     async def external(request):
+        if request.url.path=='/free':released_event.set()
         if fault=='free_error' and request.url.path=='/free':return httpx.Response(503,json={})
         return await backend(request)
     with client_with_resources(owner_env,external,**config) as c:

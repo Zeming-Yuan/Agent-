@@ -1,0 +1,92 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+________ test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-555/test_tb09_cached_sampler_reads0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfee5e56a2ac0>, wait_task=<function owner_env.<locals>.wait_task at 0xfee5e56a2c00>)
+
+    def test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window(owner_env):
+        import time
+        config=resources(wait_timeout=.5)
+        initial=True
+        def sample(tid):
+            nonlocal initial
+            row=dataclasses.replace(release_sample(int(time.monotonic()*10)/10),release_task_id=tid,
+                                    release_epoch=1 if initial else 2)
+            initial=False
+            return row
+        config['resource_sampler']=sample
+        backend=owner_env.new_backend()
+        with client_with_resources(owner_env,backend,**config) as c:
+            tid=owner_env.submit(c).json()['id']
+            done=owner_env.wait_task(c,tid,'A',lambda t:t['status'] in ('failed','completed'))
+>           assert done['status']=='completed',done
+E           AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794732158, 'error': 'Model release unconfirmed; operator recovery required', ...}
+E           assert 'failed' == 'completed'
+E             
+E             - completed
+E             + failed
+
+tests/test_tb09_safe_admission.py:420: AssertionError
+_ test_tb09_faults_do_not_submit_inference_and_release_uncertainty_degrades[wrong_session-release_unconfirmed-True] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-555/test_tb09_faults_do_not_submit0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfee5e45f8900>, wait_task=<function owner_env.<locals>.wait_task at 0xfee5e45f94e0>)
+fault = 'wrong_session', reason = 'release_unconfirmed', degraded = True
+
+    @pytest.mark.parametrize('fault,reason,degraded',[
+        ('ack_only','release_unconfirmed',True),('unknown_proof','release_unconfirmed',True),
+        ('old_running','release_unconfirmed',True),('unknown_residents','release_unconfirmed',True),
+        ('container','resource_wait_expired',False),('stale','release_unconfirmed',True),
+        ('wrong_session','release_unconfirmed',True),('free_error','release_unconfirmed',True)])
+    def test_tb09_faults_do_not_submit_inference_and_release_uncertainty_degrades(owner_env,fault,reason,degraded):
+        import time,httpx
+        config=resources(wait_timeout=.12)
+        original=config['resource_sampler'];reads=0
+        def sample(tid):
+            nonlocal reads
+            reads+=1;row=original(tid)
+            change={
+                'ack_only':{'release_epoch':2},'unknown_proof':{'release_proven':None},
+                'old_running':{'running_prompts':('orphan',)},'unknown_residents':{'resident_profiles':None},
+                'container':{'cgroup_headroom_bytes':1},'stale':{'observed_at':time.monotonic()-10},
+                'wrong_session':{'session_id':'session' if reads==1 else 'restarted'},
+            }.get(fault,{})
+            return dataclasses.replace(row,**change)
+        config['resource_sampler']=sample
+        backend=owner_env.new_backend()
+        async def external(request):
+            if fault=='free_error' and request.url.path=='/free':return httpx.Response(503,json={})
+            return await backend(request)
+        with client_with_resources(owner_env,external,**config) as c:
+            tid=owner_env.submit(c,request_key='fault').json()['id']
+>           done=owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed')
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:466: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+c = <starlette.testclient.TestClient object at 0xfee5e5495400>
+tid = 'task-31c64600ad42422c8a37c50a9a608c21', owner = 'A'
+predicate = <function test_tb09_faults_do_not_submit_inference_and_release_uncertainty_degrades.<locals>.<lambda> at 0xfee5e46c8180>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-31c64600ad42422c8a37c50a9a608c21', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'completed', 'progress': 1.0, 'result': {'file_id': 'file-df86544bb2ee4206a4d7e8b7801e04b0', 'content_url': '/v1/files/file-df86544bb2ee4206a4d7e8b7801e04b0/content', 'mime_type': 'image/png', 'model': 'spark-image', 'seed': 0, 'quality': 'standard', 'note': 'AI生成图片。'}, 'error': None, 'created': 1794732159, 'updated': 1794732159, 'stage': 'completed', 'stage_seq': 4, 'stage_started_at': 1794732159.6245215, 'stage_updated_at': 1794732159.6245215, 'blocked_reason': None, 'cancel_requested': False, 'step': None, 'steps': None, 'queue_ahead': None, 'queue_reason': None}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window
+FAILED tests/test_tb09_safe_admission.py::test_tb09_faults_do_not_submit_inference_and_release_uncertainty_degrades[wrong_session-release_unconfirmed-True]
+2 failed, 86 deselected, 1 warning in 4.10s

@@ -81,6 +81,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         resource_sampler,memory_budgets,resource_settings,image_runtime_hash = (
             config.get(key) for key in ('resource_sampler','memory_budgets','resource_settings','image_runtime_hash'))
     admission = ImageAdmission(resource_sampler, memory_budgets, resource_settings, image_runtime_hash)
+    store.image_resource_view = admission.queue_decision if images_enabled else None
     active = {}
     main_slots = asyncio.Semaphore(2)
     audio_slots = asyncio.Semaphore(1)
@@ -397,7 +398,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
             task, changed = store.request_cancel(tid, owner=request.state.principal.owner)
             if changed and tid in active:
                 active[tid].cancel()
-            return task
+            return store.task(tid, owner=request.state.principal.owner)
         if task['status'] in ('queued','running'):
             task = store.update(tid,status='cancelled')
             if tid in active:

@@ -156,3 +156,13 @@ status 保留 queued/running/completed/failed/cancelled。stage、stage_seq、st
 完整证据和未验证边界见evidence/issue-8/acceptance.md；实际双端Harness、真实后端及生产发布仍未验证。
 
 T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。
+
+## T10 公平轮转（离线切片 A）
+
+图片任务按 owner 稳定轮转，同 owner 按持久 enqueue_seq FIFO。SQLite 旁表保存轮转游标及唯一执行 claim；任务仍可在 T09 释放/资源等待时保持 queued，claim 覆盖清理与在途控制请求，终态可见不会提前放行下一单。取消不重置游标，重启清除已失效 claim 并保留轮转位置。
+
+任务查询/本人列表/提交响应增加动态 `queue_ahead`，包含当前占用图片执行权的一单；非图片媒体不计入。它只表示当前只读资源与公平队列快照，不表示固定 ETA。目标或其 owner 队首缺少资源条件时返回 null，`queue_reason` 给出可用诊断。MCP 用中文呈现当前单数/资源等待。HTTP 不输出他人任务详情、owner、内部游标或序号。
+
+只读容量预判复用 T09 预算与采样；不会为估算排位调用卸载/加载。其他可执行 owner 可绕过阻塞 owner，本人后续任务不能越过队首。实际开工仍必须通过 T09 释放证明、连续稳定窗口和立即复查。现有全局4个未完成媒体任务与2GiB文件边界、幂等重放顺序、串行与20GiB保护保持原契约，不新增个人配额。
+
+本票目前仅离线外部后端/资源替身验证；真实 GPU、释放证明、HTTPS 生产与双端桌面 Harness 未验证。#10 保持 OPEN，不能据此启用生产 profile。

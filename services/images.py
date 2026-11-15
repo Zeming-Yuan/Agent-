@@ -295,7 +295,12 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None,admis
             except Exception:
                 LOG.warning('Image startup cleanup unconfirmed; admission stopped')
                 return
-        item=store.next_task(image=True)
+        if admission is not None:
+            expired = store.expire_image_waits(admission.settings['wait_timeout'])
+            if 'release_unconfirmed' in expired:
+                admission.unavailable_reason = 'Image resource evidence unavailable; operator recovery required'
+                return
+        item=store.claim_image_task(admission.queue_decision if admission is not None else None)
         if item is None:
             await asyncio.sleep(.2);continue
         tid=item['id']
@@ -348,3 +353,4 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None,admis
             initialized=False
         finally:
             active.pop(tid,None)
+            store.release_image_claim(tid)

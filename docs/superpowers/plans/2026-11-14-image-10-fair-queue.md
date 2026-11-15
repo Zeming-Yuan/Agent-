@@ -12,7 +12,7 @@
 
 **Ticket:** T10；Blocked by：T09。需要 T09 明确可执行/资源等待与控制权释放语义；共享调度状态串行整合。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 2026-11-15 按用户确认离线执行单票；原产品非 Git，受控源码 checkout 为 /home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115，分支 feat/issue-11-fair-queue，固定基线 5e64eb080341a28b35e912e52e8273e16e2fbcd2。切片 A 实现与 RED/GREEN、95 项受影响验证见 evidence/issue-11/；切片 B 与独立审查继续。#10 OPEN、实机与双端 Harness 未验收。下文未实施/预期描述保留为原计划历史，不作为实测结论。
 
 ## Global Constraints
 

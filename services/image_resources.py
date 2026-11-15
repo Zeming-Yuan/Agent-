@@ -150,6 +150,16 @@ class ImageAdmission:
         except Exception:
             return None
 
+    def queue_decision(self, item):
+        """Read-only conservative capacity preview; never authorizes /prompt."""
+        if not self.configured(item):
+            return AdmissionDecision(False, 'invalid_budget')
+        sample = self.sample(item['id'])
+        if sample is not None and sample.runtime_hash != self.runtime_hash:
+            return AdmissionDecision(False, 'missing_evidence')
+        return admit(sample, self.budget(item), now=time.monotonic(), runtime_hash=self.runtime_hash,
+                     released=True, max_age=self.settings['max_age'])
+
     async def prepare(self, item, store, client, url):
         from .images import settled_post, settle
         tid = item['id']
