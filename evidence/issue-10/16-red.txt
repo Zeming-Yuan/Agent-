@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-515/test_tb09_cached_sampler_reads0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xea4a7be5c220>, wait_task=<function owner_env.<locals>.wait_task at 0xea4a7be5d3a0>)
+
+    def test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window(owner_env):
+        import time
+        config=resources(wait_timeout=.5)
+        initial=True
+        def sample(tid):
+            nonlocal initial
+            row=dataclasses.replace(release_sample(int(time.monotonic()*10)/10),release_task_id=tid,
+                                    release_epoch=1 if initial else 2)
+            initial=False
+            return row
+        config['resource_sampler']=sample
+        backend=owner_env.new_backend()
+        with client_with_resources(owner_env,backend,**config) as c:
+            tid=owner_env.submit(c).json()['id']
+            done=owner_env.wait_task(c,tid,'A',lambda t:t['status'] in ('failed','completed'))
+>           assert done['status']=='completed',done
+E           AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794729247, 'error': 'Model release unconfirmed; operator recovery required', ...}
+E           assert 'failed' == 'completed'
+E
+E             - completed
+E             + failed
+
+tests/test_tb09_safe_admission.py:420: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_cached_sampler_reads_do_not_invent_or_destroy_window
+1 failed, 70 deselected, 1 warning in 0.46s

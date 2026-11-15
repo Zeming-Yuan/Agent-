@@ -95,7 +95,8 @@ def test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized(own
         owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
     rows = [json.loads(line) for line in (directory/'tasks.jsonl').read_text().splitlines()]
     task_rows = [r for r in rows if r['task_id'] == tid]
-    assert {'unloading', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+    assert {'waiting_resources', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+    assert {'release_requested','release_acknowledged','release_proof_confirmed'} <= {r.get('event') for r in task_rows}
     assert any(r.get('prompt_id') == backend.jobs[0]['prompt_id'] for r in task_rows)
     assert all(r['profile'] == profile and r['input_size']['reference_count'] == (0 if profile == 'generate' else 1) for r in task_rows)
     assert all(r['owner_tag'] != 'A' for r in task_rows)

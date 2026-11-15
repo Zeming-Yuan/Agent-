@@ -1,0 +1,274 @@
+FFFFFFFF.                                                                [100%]
+=================================== FAILURES ===================================
+____ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[expired] _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a96594220>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a96597a60>)
+fault = 'expired'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-cf8c1435cc384c9b9e724b5ec00b5205","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+____ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[runtime] _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a963ded40>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a963de8e0>)
+fault = 'runtime'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-010200b6eb0c4a0c8625584d0f8d0e6d","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+____ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[reserve] _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a963fb600>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a963fac00>)
+fault = 'reserve'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-d047776bc1bd4845b069779512ecc2dd","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+_ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[missing_envelope] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e3/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a963f9080>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a963f8fe0>)
+fault = 'missing_envelope'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-ba3646e1a6a44303b4152259de7bd6a9","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+______ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[size] ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e4/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a955b77e0>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a955b6fc0>)
+fault = 'size'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-b3461d1f126846df96ac76ea91bfcf69","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+___ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[references] ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e5/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a9556a160>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a9556a200>)
+fault = 'references'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-8b5864573d824e7ab722cbee7c05455d","kind":"image_edit","file_id":"file-428dda60b7c647a49588ec14bb810205","options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":["file-428dda60b7c647a49588ec14bb810205"],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+_____ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[prompt] _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e6/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a95568900>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a955680e0>)
+fault = 'prompt'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-a6d2b2869d4747c9ad27a62fdc7d1e84","kind":"image_generate","file_id":null,"options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":null,"title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728851,"updated":1794728851,"stage":"queued","stage_seq":0,"stage_started_at":1794728851.0,"stage_updated_at":1794728851.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+___ test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[foreground] ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-501/test_tb09_unsigned_or_out_of_e7/runtime'), registry=<...tion owner_env.<locals>.submit at 0xef4a963fa840>, wait_task=<function owner_env.<locals>.wait_task at 0xef4a963f8b80>)
+fault = 'foreground'
+
+    @pytest.mark.parametrize('fault',['expired','runtime','reserve','missing_envelope','size','references',
+        'prompt','foreground','nan_setting'])
+    def test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted(owner_env, fault):
+        import time
+        config = resources()
+        if fault in ('expired','runtime','reserve'):
+            field = {'expired':{'valid_until':time.monotonic()-1},'runtime':{'runtime_hash':'other'},
+                     'reserve':{'reserve_bytes':19*1024**3}}[fault]
+            config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], **field)
+        if fault == 'missing_envelope':config['resource_settings']['input_envelopes'] = {}
+        if fault == 'size':config['resource_settings']['input_envelopes']['generate']['sizes'] = ['1280x768']
+        if fault == 'references':config['resource_settings']['input_envelopes']['standard']['max_references'] = 0
+        if fault == 'prompt':config['resource_settings']['input_envelopes']['generate']['max_prompt_chars'] = 2
+        if fault == 'foreground':config['resource_settings']['input_envelopes']['generate']['foreground'] = False
+        if fault == 'nan_setting':config['resource_settings']['max_age'] = float('nan')
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            options = {}
+            if fault == 'references':options = {'kind':'image_edit','image_ids':[owner_env.upload(c)]}
+            if fault == 'foreground':options = {'foreground_file_id':owner_env.upload(c)}
+            response = owner_env.submit(c, **options)
+>           assert response.status_code == 503, response.text
+E           AssertionError: {"id":"task-adb4f796a88c4df69f3ca451a9e8e1ca","kind":"image_generate","file_id":"file-775d53ab0dcd49a69d1bc9542f1881bd","options":{"prompt":"fixture","size":"1024x1024","seed":0,"quality":"standard","image_ids":[],"foreground_file_id":"file-775d53ab0dcd49a69d1bc9542f1881bd","title":""},"status":"queued","progress":0.0,"result":null,"error":null,"created":1794728852,"updated":1794728852,"stage":"queued","stage_seq":0,"stage_started_at":1794728852.0,"stage_updated_at":1794728852.0,"blocked_reason":null,"cancel_requested":false,"step":null,"steps":null}
+E           assert 202 == 503
+E            +  where 202 = <Response [202 Accepted]>.status_code
+
+tests/test_tb09_safe_admission.py:239: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[expired]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[runtime]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[reserve]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[missing_envelope]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[size]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[references]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[prompt]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unsigned_or_out_of_envelope_work_is_never_accepted[foreground]
+8 failed, 1 passed, 38 deselected, 1 warning in 1.20s

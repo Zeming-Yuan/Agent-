@@ -1,0 +1,221 @@
+........................................................................ [ 17%]
+............................................FFFF...........F............ [ 34%]
+...............................F........................................ [ 52%]
+........................................................................ [ 69%]
+........................................................................ [ 87%]
+.....................................................                    [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[generate] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfddde3fe7b00>, wait_task=<function owner_env.<locals>.wait_task at 0xfddde3fe5b20>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfddde2129370>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv0')
+profile = 'generate'
+
+    @pytest.mark.parametrize('profile', ['generate','fast','standard','high'])
+    def test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized(owner_env, monkeypatch, tmp_path, profile):
+        import json
+        directory = tmp_path/'observations'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            options = {} if profile == 'generate' else {'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':profile}
+            tid = owner_env.submit(c, prompt='PRIVATE-PROMPT-SENTINEL', **options).json()['id']
+            owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        rows = [json.loads(line) for line in (directory/'tasks.jsonl').read_text().splitlines()]
+        task_rows = [r for r in rows if r['task_id'] == tid]
+>       assert {'unloading', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+E       AssertionError: assert {'completed',..., 'unloading'} <= {'completed',...ng_resources'}
+E
+E         Extra items in the left set:
+E         'unloading'
+
+tests/test_tb08_memory_evidence.py:98: AssertionError
+_ test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[fast] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfddde2283420>, wait_task=<function owner_env.<locals>.wait_task at 0xfddde22813a0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfddde2060f20>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv1')
+profile = 'fast'
+
+    @pytest.mark.parametrize('profile', ['generate','fast','standard','high'])
+    def test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized(owner_env, monkeypatch, tmp_path, profile):
+        import json
+        directory = tmp_path/'observations'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            options = {} if profile == 'generate' else {'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':profile}
+            tid = owner_env.submit(c, prompt='PRIVATE-PROMPT-SENTINEL', **options).json()['id']
+            owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        rows = [json.loads(line) for line in (directory/'tasks.jsonl').read_text().splitlines()]
+        task_rows = [r for r in rows if r['task_id'] == tid]
+>       assert {'unloading', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+E       AssertionError: assert {'completed',..., 'unloading'} <= {'completed',...ng_resources'}
+E
+E         Extra items in the left set:
+E         'unloading'
+
+tests/test_tb08_memory_evidence.py:98: AssertionError
+_ test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[standard] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfddde2090040>, wait_task=<function owner_env.<locals>.wait_task at 0xfddde2092980>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfddde1ed6810>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv2')
+profile = 'standard'
+
+    @pytest.mark.parametrize('profile', ['generate','fast','standard','high'])
+    def test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized(owner_env, monkeypatch, tmp_path, profile):
+        import json
+        directory = tmp_path/'observations'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            options = {} if profile == 'generate' else {'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':profile}
+            tid = owner_env.submit(c, prompt='PRIVATE-PROMPT-SENTINEL', **options).json()['id']
+            owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        rows = [json.loads(line) for line in (directory/'tasks.jsonl').read_text().splitlines()]
+        task_rows = [r for r in rows if r['task_id'] == tid]
+>       assert {'unloading', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+E       AssertionError: assert {'completed',..., 'unloading'} <= {'completed',...ng_resources'}
+E
+E         Extra items in the left set:
+E         'unloading'
+
+tests/test_tb08_memory_evidence.py:98: AssertionError
+_ test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[high] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv3/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfddde2249120>, wait_task=<function owner_env.<locals>.wait_task at 0xfddde2249800>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfddde2203e30>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_priv3')
+profile = 'high'
+
+    @pytest.mark.parametrize('profile', ['generate','fast','standard','high'])
+    def test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized(owner_env, monkeypatch, tmp_path, profile):
+        import json
+        directory = tmp_path/'observations'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            options = {} if profile == 'generate' else {'kind':'image_edit','image_ids':[owner_env.upload(c)],'quality':profile}
+            tid = owner_env.submit(c, prompt='PRIVATE-PROMPT-SENTINEL', **options).json()['id']
+            owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        rows = [json.loads(line) for line in (directory/'tasks.jsonl').read_text().splitlines()]
+        task_rows = [r for r in rows if r['task_id'] == tid]
+>       assert {'unloading', 'loading', 'saving', 'completed'} <= {r.get('stage') for r in task_rows}
+E       AssertionError: assert {'completed',..., 'unloading'} <= {'completed',...ng_resources'}
+E
+E         Extra items in the left set:
+E         'unloading'
+
+tests/test_tb08_memory_evidence.py:98: AssertionError
+_ test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_obse0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfddde20e1760>, wait_task=<function owner_env.<locals>.wait_task at 0xfddde20e22a0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfddde40a3bc0>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_tb08_memory_evidence_obse0')
+
+    def test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence(owner_env, monkeypatch, tmp_path):
+        import io
+        import json
+        import subprocess
+        import sys
+        import threading
+        import time
+        import httpx
+        from PIL import Image
+        from image_test_harness import image_app as create_app
+        from services.image_telemetry import host_identity, write_private_jsonl
+        from image_test_harness import https_server
+        directory = tmp_path/'obs'
+        monkeypatch.setenv('IMAGE_TELEMETRY_DIR', str(directory))
+        host = host_identity()
+        backend = owner_env.new_backend()
+        png = io.BytesIO(); Image.new('RGB', (1024, 1024), 'green').save(png, format='PNG'); backend.png = png.getvalue()
+        stop = threading.Event()
+        def samples():
+            while not stop.is_set():
+                write_private_jsonl(directory, 'memory.jsonl', {
+                    'utc_ns': time.time_ns(), 'observed_at': time.monotonic(), 'host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'session_id': 'fixture-session',
+                    'available_bytes': 40*1024**3, 'cgroup_current_bytes': 2*1024**3,
+                    'cgroup_peak_bytes': 3*1024**3, 'cgroup_headroom_bytes': 73*1024**3,
+                    'cgroup_limit_bytes': 75*1024**3, 'resident_profiles': None,
+                    'gpu_allocated_bytes': 1024, 'gpu_reserved_bytes': 2048, 'release_epoch': 0,
+                    'running_prompts': [], 'errors': [], 'sampling_gap_seconds': None})
+                stop.wait(.05)
+        async def external(request):
+            if request.url.path.startswith('/history/'):
+                await asyncio.sleep(.03)  # let controlled external node events arrive before history proof
+            result = await backend(request)
+            if request.url.path == '/prompt':
+                body = json.loads(request.content)
+                for node in ('4','7','8','9'):
+                    backend.events_to_emit.put({'type':'executing','data':{'prompt_id':body['prompt_id'],'node':node}})
+                write_private_jsonl(directory, 'lifecycle.jsonl', {
+                    'event': 'execution_started', 'task_id': body['client_id'], 'prompt_id': body['prompt_id'],
+                    'utc_ns': time.time_ns(), 'observed_at': time.monotonic(), 'host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'session_id': 'fixture-session'})
+            return result
+        app = create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+            identity_mode='staging', transport=httpx.MockTransport(external), run_worker=True,
+            audio_enabled=False, images_enabled=True, event_stream_factory=backend.event_stream)
+        write_private_jsonl(directory, 'environment.jsonl', {'host_id':host, 'runtime_hash':'fixture-runtime',
+            'descriptor': {'comfy_version':'0.33.2','image_id':'fixture-image','model_manifests':{}}})
+        sampler = threading.Thread(target=samples); sampler.start()
+        try:
+            with https_server(app, tmp_path) as (port, cert):
+                key = tmp_path/'personal.key'; key.write_text(owner_env.keys['A']); key.chmod(0o600)
+                config = tmp_path/'observe.json'
+                config.write_text(json.dumps({'base_url': f'https://127.0.0.1:{port}', 'api_key_file': str(key),
+                    'ca_file': str(cert), 'telemetry_source': str(directory), 'expected_host_id': host,
+                    'runtime_hash': 'fixture-runtime', 'timeout_seconds': 5, 'baseline_seconds': .25,
+                    'baseline_tolerance_bytes': 1024, 'options': {'prompt': 'PRIVATE-CLI-PROMPT', 'seed': 17}}))
+                cmd = [sys.executable, '-m', 'scripts.benchmark_images', '--scenario', 'observe',
+                       '--config', str(config), '--report-dir', str(tmp_path/'reports')]
+                outcomes = [subprocess.run(cmd, capture_output=True, text=True, timeout=15) for _ in range(2)]
+>               for result in outcomes: assert result.returncode == 0, result.stdout+result.stderr
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AssertionError: {"baseline": {"after": {"max_available_bytes": 42949672960, "min_available_bytes": 42949672960, "samples": 5, "stable": true}, "before": {"max_available_bytes": 42949672960, "min_available_bytes": 42949672960, "samples": 5, "stable": true}, "status": "stable", "tolerance_bytes": 1024}, "baseline_status": "not_calibrated", "errors": ["task_stage_gap"], "max_cgroup_current_bytes": 2147483648, "max_cgroup_peak_bytes": 3221225472, "max_gpu_allocated_bytes": 1024, "max_gpu_reserved_bytes": 2048, "min_available_bytes": 42949672960, "profile": "generate", "release_operations_seconds": [], "release_proven": null, "run_id": "4abfd801053c46dbb2778ea90a674016", "stage_durations_seconds": {"generating": 0.006428049, "loading": 0.009898802, "queued": 0.007092516, "saving": 0.085759285, "waiting_resources": 0.030439003}, "status": "completed", "task_id": "task-a5b42e19356644c49d409af4ff2d4fba", "timings": null, "total_attempts": 1, "valid_samples": 0}
+E
+E               assert 1 == 0
+E                +  where 1 = CompletedProcess(args=['/home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python', '-m', 'scripts.benchmark_images', '--..._id": "task-a5b42e19356644c49d409af4ff2d4fba", "timings": null, "total_attempts": 1, "valid_samples": 0}\n', stderr='').returncode
+
+tests/test_tb08_memory_evidence.py:269: AssertionError
+_______________ test_same_image_model_keeps_weights_between_jobs _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-523/test_same_image_model_keeps_we0')
+
+    def test_same_image_model_keeps_weights_between_jobs(tmp_path):
+        frees=[]
+        def backend(req):
+            if req.url.path=='/system_stats':return httpx.Response(200,json={'system':{}})
+            if req.url.path=='/queue':return httpx.Response(200,json={'queue_running':[],'queue_pending':[]})
+            if req.url.path=='/free':frees.append(True)
+            if req.url.path=='/prompt':return httpx.Response(200,json={'prompt_id':'job'})
+            if req.url.path=='/history/job':return httpx.Response(200,json={'job':{'status':{'completed':True,'status_str':'success'},'outputs':{'9':{'images':[{'filename':'done.png','subfolder':'','type':'output'}]}}}})
+            if req.url.path=='/view':return httpx.Response(200,content=png())
+            return httpx.Response(200,json={})
+        with TestClient(create_app(tmp_path,'test-secret-token',transport=httpx.MockTransport(backend),audio_enabled=False,images_enabled=True)) as c:
+            for text in ('one','two'):
+                assert c.post('/v1/images/generations',headers=AUTH,json={'prompt':text}).status_code==200
+        # Reset only on model changes. Clearing every time destroys warm inference latency.
+>       assert len(frees)==1
+E       assert 2 == 1
+E        +  where 2 = len([True, True])
+
+tests/test_images.py:206: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[generate]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[fast]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[standard]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_private_task_trace_is_correlated_and_sanitized[high]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_evidence
+FAILED tests/test_images.py::test_same_image_model_keeps_weights_between_jobs
+6 failed, 407 passed, 1 warning in 92.71s (0:01:32)

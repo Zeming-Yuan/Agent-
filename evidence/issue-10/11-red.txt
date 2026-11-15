@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__ test_tb09_reference_pixels_must_fit_approved_envelope_before_backend_work ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-505/test_tb09_reference_pixels_mus0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf5026f948040>, wait_task=<function owner_env.<locals>.wait_task at 0xf5026f948180>)
+
+    def test_tb09_reference_pixels_must_fit_approved_envelope_before_backend_work(owner_env):
+        config = resources()
+        config['resource_settings']['input_envelopes']['standard']['max_reference_pixels'] = 16
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env,backend,**config) as c:
+            fid = owner_env.upload(c)
+            response = owner_env.submit(c,kind='image_edit',image_ids=[fid])
+            assert response.status_code == 202
+            done = owner_env.wait_task(c,response.json()['id'],'A',lambda t:t['status'] in ('failed','completed'))
+>           assert done['status']=='failed' and 'envelope' in done['error']
+E           AssertionError: assert ('completed' == 'failed'
+E
+E             - failed
+E             + completed)
+
+tests/test_tb09_safe_admission.py:277: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_reference_pixels_must_fit_approved_envelope_before_backend_work
+1 failed, 48 deselected, 1 warning in 0.43s

@@ -25,11 +25,7 @@ def admit(sample, budget, *, now, runtime_hash, released, max_age):
         return AdmissionDecision(False, 'release_unconfirmed')
     if not all(finite(value) for value in (now, max_age, sample.observed_at)) or max_age <= 0 or not 0 <= now-sample.observed_at <= max_age:
         return AdmissionDecision(False, 'stale_sample')
-    if (not finite(budget.valid_until) or budget.valid_until <= now or not runtime_hash
-            or budget.runtime_hash != runtime_hash
-            or any(type(value) is not int or value < 0 for value in
-                   (budget.peak_increment_bytes, budget.margin_bytes, budget.reserve_bytes))
-            or budget.reserve_bytes < 20*1024**3):
+    if not valid_budget(budget, now, runtime_hash):
         return AdmissionDecision(False, 'invalid_budget')
     if sample.errors or any(type(value) is not int or value < 0 for value in
                             (sample.available_bytes, sample.cgroup_headroom_bytes)):
@@ -40,6 +36,23 @@ def admit(sample, budget, *, now, runtime_hash, released, max_age):
     if sample.cgroup_headroom_bytes < need:
         return AdmissionDecision(False, 'container_memory')
     return AdmissionDecision(True, 'ready')
+
+
+def valid_budget(budget, now, runtime_hash):
+    return (isinstance(budget, MemoryBudget) and finite(budget.valid_until) and budget.valid_until > now
+        and bool(runtime_hash) and budget.runtime_hash == runtime_hash
+        and all(type(value) is int and value >= 0 for value in
+                (budget.peak_increment_bytes, budget.margin_bytes, budget.reserve_bytes))
+        and budget.reserve_bytes >= 20*1024**3)
+
+
+def valid_envelope(envelope):
+    return (isinstance(envelope, dict) and isinstance(envelope.get('sizes'), list) and bool(envelope['sizes'])
+        and all(isinstance(size,str) for size in envelope['sizes'])
+        and type(envelope.get('foreground')) is bool
+        and all(type(envelope.get(key)) is int and low <= envelope[key] <= high for key,low,high in
+                (('max_references',0,3),('max_reference_pixels',1,16_000_000),
+                 ('max_prompt_chars',1,4000),('max_title_chars',0,60))))
 
 
 def finite(value):
@@ -70,7 +83,7 @@ def released(samples, after_epoch, stable_window):
 
 import asyncio
 import time
-from .image_telemetry import task_event
+from .image_telemetry import record_current_task, task_event
 
 
 class ResourceWaitExpired(RuntimeError):
@@ -90,7 +103,8 @@ class ImageAdmission:
     def __init__(self, sampler=None, budgets=None, settings=None, runtime_hash=None):
         self.sampler = sampler
         self.budgets = budgets or {}
-        self.settings = settings or {}
+        import copy
+        self.settings = copy.deepcopy(settings or {})
         self.runtime_hash = runtime_hash
         self.proof = []
 
@@ -102,9 +116,32 @@ class ImageAdmission:
                 or any(not finite(self.settings.get(key)) or self.settings[key] <= 0
                        for key in ('max_age', 'stable_window', 'wait_timeout'))):
             return False
+        envelopes = self.settings.get('input_envelopes', {})
+        if not isinstance(envelopes, dict):return False
+        now = time.monotonic()
         if item is None:
-            return bool(self.budgets)
-        return self.budget(item) is not None
+            return any(valid_budget(budget,now,self.runtime_hash) and valid_envelope(envelopes.get(profile))
+                       for profile,budget in self.budgets.items())
+        envelope = envelopes.get(profile_for(item))
+        if not valid_budget(self.budget(item),now,self.runtime_hash) or not valid_envelope(envelope):return False
+        opts = item['options']
+        return (opts['size'] in envelope['sizes'] and len(opts['image_ids']) <= envelope['max_references']
+            and (not opts['foreground_file_id'] or envelope['foreground'])
+            and len(opts['prompt']) <= envelope['max_prompt_chars'] and len(opts['title']) <= envelope['max_title_chars'])
+
+    def validate_inputs(self, item, store):
+        from PIL import Image
+        if not self.configured(item):
+            raise ResourceWaitExpired('Image profile or input envelope unavailable')
+        envelope = self.settings['input_envelopes'][profile_for(item)]
+        opts = item['options']
+        try:
+            for fid in opts['image_ids'] + ([opts['foreground_file_id']] if opts['foreground_file_id'] else []):
+                with Image.open(store.path(fid,owner=store.worker_task(item['id'])['owner'])) as image:
+                    if image.width*image.height > envelope['max_reference_pixels']:
+                        raise ValueError('Outside input envelope')
+        except (OSError,ValueError) as exc:
+            raise ResourceWaitExpired('Image input outside calibrated envelope') from exc
 
     def sample(self, tid):
         try:
@@ -133,9 +170,11 @@ class ImageAdmission:
         identity = (initial.host_id, initial.runtime_hash, initial.session_id)
         task_event(store,tid,{'type':'resource_wait','reason':'release_unconfirmed'})
         # A single owned request. HTTP completion alone never authorizes loading.
+        record_current_task(store,tid,operation='release',event='release_requested')
         try:
             response = await settled_post(client, url+'/free', json={'unload_models': True, 'free_memory': True})
             response.raise_for_status()
+            record_current_task(store,tid,operation='release',event='release_acknowledged')
         except asyncio.CancelledError:
             raise
         except Exception as exc:
@@ -152,16 +191,25 @@ class ImageAdmission:
             if not correlated:
                 self.proof = []
             else:
-                if self.proof and (not finite(sample.observed_at) or not 0 < sample.observed_at-self.proof[-1].observed_at <= min(.2,self.settings['max_age'])+1e-9):
-                    self.proof = []
-                self.proof.append(sample)
+                if not self.proof or sample != self.proof[-1]:
+                    if self.proof and (not finite(sample.observed_at) or not 0 < sample.observed_at-self.proof[-1].observed_at <= min(.2,self.settings['max_age'])+1e-9):
+                        self.proof = []
+                    self.proof.append(sample)
                 while len(self.proof) > 2 and self.proof[-1].observed_at-self.proof[1].observed_at >= self.settings['stable_window']:
                     self.proof.pop(0)
             proven = correlated and released(self.proof, epoch, self.settings['stable_window'])
             decision = admit(sample, self.budget(item), now=now, runtime_hash=self.runtime_hash,
                              released=proven, max_age=self.settings['max_age'])
             if decision.allowed:
-                return True
+                for row in self.proof:
+                    historical = admit(row,self.budget(item),now=row.observed_at,runtime_hash=self.runtime_hash,
+                                       released=True,max_age=self.settings['max_age'])
+                    if not historical.allowed:
+                        decision = historical
+                        break
+                if decision.allowed:
+                    record_current_task(store,tid,operation='release',event='release_proof_confirmed')
+                    return True
             task_event(store, tid, {'type': 'resource_wait', 'reason': decision.reason})
             if now-start >= self.settings['wait_timeout']:
                 if not proven:
@@ -176,7 +224,9 @@ class ImageAdmission:
             and (sample.host_id, sample.runtime_hash, sample.session_id, sample.release_task_id) ==
                 (last.host_id, last.runtime_hash, last.session_id, item['id'])
             and sample.release_epoch >= last.release_epoch and sample.resident_profiles == frozenset()
-            and finite(sample.observed_at) and 0 < sample.observed_at-last.observed_at <= min(.2,self.settings['max_age'])+1e-9)
+            and finite(sample.observed_at) and finite(last.observed_at)
+            and ((sample == last) or 0 < sample.observed_at-last.observed_at <= min(.2,self.settings['max_age'])+1e-9)
+            and 0 <= time.monotonic()-sample.observed_at <= min(.2,self.settings['max_age'])+1e-9)
         decision = admit(sample, self.budget(item), now=time.monotonic(), runtime_hash=self.runtime_hash,
                          released=proven, max_age=self.settings['max_age'])
         if not decision.allowed:

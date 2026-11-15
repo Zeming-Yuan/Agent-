@@ -75,6 +75,11 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
              ownership_report['unowned_files'], ownership_report['unowned_tasks'],
              ownership_report['unowned_idempotency_records'], ownership_report['running_tasks'])
     from .image_resources import ImageAdmission
+    if images_enabled and all(value is None for value in (resource_sampler,memory_budgets,resource_settings,image_runtime_hash)):
+        from .image_resource_config import load_resources
+        config = load_resources()
+        resource_sampler,memory_budgets,resource_settings,image_runtime_hash = (
+            config.get(key) for key in ('resource_sampler','memory_budgets','resource_settings','image_runtime_hash'))
     admission = ImageAdmission(resource_sampler, memory_budgets, resource_settings, image_runtime_hash)
     active = {}
     main_slots = asyncio.Semaphore(2)
@@ -120,7 +125,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         task = asyncio.create_task(worker()) if run_worker else None
         image_task = None
         app.state.image_worker = None
-        if images_enabled and run_worker:
+        if images_enabled and run_worker and admission.configured():
             from .images import image_worker
             from .comfy_events import ComfyEventStream
             image_task = asyncio.create_task(image_worker(store, client, image_url, active,

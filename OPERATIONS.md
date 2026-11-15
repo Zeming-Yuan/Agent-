@@ -365,3 +365,28 @@ Collector timeout/disconnection does not cancel accepted work. Recover with the 
 系统准入为MemAvailable >= 新增峰值+保守裕量+至少20GiB；容器余量独立覆盖峰值+裕量，不相加统一内存口径。开工前立即复查，等待计时独立于已有900秒推理时钟。取消等待任务不产生推理；若/free仍在途，串行控制权继续等其结算，不能借终态放行下一单。所有模型仍按冷释放验证，未优化热驻留。
 
 回退：先停新接单、保全任务/文件/注册表和证据，确认外部工作及控制请求结束；只使用保留owner/取消/清理和安全准入的版本。不能回退为20GiB静态判断或移除保护器。无schema迁移，无生产部署/重启/模型负载；实机和Windows/macOS Harness仍未验证。证据见evidence/issue-10/progress.md。
+
+## T09 切片 B：配置、故障与恢复边界
+
+生产默认不加载任何合成预算；没有有效配置时不启动图片worker，图片健康为503且新创作503。只有本人已有幂等请求、任务列表/查询和结果下载继续可用。`ResourceSample`新增字段均为可空证明元数据；当前T08实际后端仍没有release_proven/release_task_id，不能据此通过准入。批准文件存在也不会补齐这些信号。
+
+受控标定配置使用专属0700目录及0600普通文件；不得放个人Key、业务素材或其他私有运行文件。维护者先核对真实安全起点、保护器运行、后端空闲、host/runtime、原始基线和预算依据，再将审阅后的配置SHA256登记为可信部署环境的`IMAGE_RESOURCE_CONFIG_SHA256`。这是人工批准的内容固定，不是密码学签名，也不是硬件验收；不能由测试夹具生成生产批准。`IMAGE_RUNTIME_HASH`必须是实际观测运行时哈希，不是镜像名/随意字符串。`IMAGE_TELEMETRY_DIR`为T08专属私有观测目录。
+
+配置名为`admission.json`。顶层字段：version=1、mode=controlled_calibration、approved_by、host_id、runtime_hash、expires_at_utc、guard_active=true、backend_idle=true、parameters_sha256、baseline、settings、profiles。`parameters_sha256`是仅含settings/profiles对象的排序紧凑JSON（不允许NaN）的SHA256；baseline包含同目录普通文件的basename/path和SHA256。原始baseline为连续JSONL，各行必须含同一非空session_id、host_id/runtime_hash、observed_at、errors=[]和系统/容器有效余量；连续窗口覆盖stable_window、间隔不超过min(200ms,max_age)，且所有profile预算均适合安全起点。摘要和形状校验只验证完整性/一致性，维护者仍须对真实来源与保护器负责。
+
+settings必须明确提供正数max_age、stable_window、wait_timeout；无生产默认数值。profiles仅允许generate/fast/standard/high，每个包含budget（peak_increment_bytes、margin_bytes、reserve_bytes）与input_envelope（sizes、max_references、max_reference_pixels、foreground、max_prompt_chars、max_title_chars）。reserve至少20GiB，预算按全任务增量与保守裕量覆盖对应输入。expires_at_utc在加载时转换为本进程monotonic截止，不能跨主机相减monotonic。系统/容器余量分别检查，绝不相加。配置加载后不会自动延长有效期。
+
+可复制的离线配置校验入口（必须先准备经审阅的私有文件和上述可信环境变量）：
+
+```bash
+.venv/bin/python -m services.image_resource_config --check-config "$IMAGE_RESOURCE_CONFIG_DIR/admission.json"
+bash -n deploy/run-image.sh deploy/run-gateway-runtime.sh
+```
+
+配置无效CLI非零退出，不输出私有内容。两个既有launcher在设置IMAGE_RESOURCE_CONFIG_DIR时先调用校验；gateway只读挂载该专属目录并传入批准摘要/运行时，保留原有75GiB容器、20GiB保护及全部模型flags。未配置时gateway安全拒绝创作，不会自动回退旧静态准入。正常生产profile认证与热驻留预算由#12提供；当前loader只支持受控标定起点。没有修改systemd环境、运行脚本、重启容器或部署生产。
+
+运行时先完成参考图上传/事件连接，再在同一worker控制权内请求释放、等实际连续证明、验证整个安全余量窗口，claim后立即再次读取并提交/prompt。请求/ACK/证明分别记录为私有release_requested、release_acknowledged、release_proof_confirmed；提交打点在实际提交前保留连续stage_seq。未知信号、重复读、陈旧/未来采样、采样空洞、后端会话变化、残留旧prompt或LoRA驻留都不能启动推理。所有profile当前采用保守冷释放；这可能降低热请求速度，尚无本轮性能结论。
+
+内存不足保持queued/waiting_resources并解释system_memory/container_memory；时间上限使用配置wait_timeout，超限明确failed，900秒推理时钟仍从实际推理开始。显式取消仅本人任务，queued可直接cancelled，但在途控制请求仍须结算才能释放worker。正常关闭时未启动推理的queued任务保留，恢复后按原task_id继续；running仍按既有恢复规则失败，不能自动重跑。释放请求失败/结果未知、证明丢失或启动清理失败时worker停止、健康降级，新工作503，已有记录仍可恢复。启动清理只尝试一次，不无限自动恢复/加载。
+
+回滚继续保全数据库、文件、注册表与证据；先停接单、确认旧推理/控制请求结束，再恢复保留owner/T07清理/T09准入的版本。预算/证明无法确认则保持禁用。没有新数据库格式、seed、不可逆迁移或新的公共观测接口。生产恢复、实机安全切换/真实采样及Windows/macOS Harness均未验证，后续#24、#12、#15承接；#10不因离线测试关闭。

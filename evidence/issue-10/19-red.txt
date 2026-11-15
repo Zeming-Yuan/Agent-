@@ -1,0 +1,31 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb09_shutdown_preserves_queued_wait_for_safe_restart ___________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-520/test_tb09_shutdown_preserves_q0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfde86290e340>, wait_task=<function owner_env.<locals>.wait_task at 0xfde86290e480>)
+
+    def test_tb09_shutdown_preserves_queued_wait_for_safe_restart(owner_env):
+        backend=owner_env.new_backend()
+        with client_with_resources(owner_env,backend,**resources(available=25*1024**3)) as c:
+            tid=owner_env.submit(c,request_key='resume-after-shutdown').json()['id']
+            owner_env.wait_task(c,tid,'A',lambda t:t.get('blocked_reason')=='system_memory')
+        assert backend.jobs==[]
+        with client_with_resources(owner_env,backend,**resources()) as c:
+            done=owner_env.wait_task(c,tid,'A',lambda t:t['status'] in ('failed','completed'))
+>           assert done['status']=='completed',done
+E           AssertionError: {'blocked_reason': None, 'cancel_requested': False, 'created': 1794729394, 'error': 'Image worker interrupted', ...}
+E           assert 'failed' == 'completed'
+E
+E             - completed
+E             + failed
+
+tests/test_tb09_safe_admission.py:527: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_shutdown_preserves_queued_wait_for_safe_restart
+1 failed, 83 deselected, 1 warning in 0.48s

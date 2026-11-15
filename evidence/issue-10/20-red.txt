@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_tb09_operator_approval_cannot_make_unidentified_baseline_valid ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-524/test_tb09_operator_approval_ca0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfeb10dc46c30>
+
+    def test_tb09_operator_approval_cannot_make_unidentified_baseline_valid(tmp_path,monkeypatch):
+        import json,hashlib
+        from services.image_resource_config import load_resources
+        path,cfg,_=approved_config(tmp_path,monkeypatch)
+        raw=path.parent/'baseline.jsonl'
+        rows=[json.loads(line) for line in raw.read_text().splitlines()]
+        for row in rows:row['session_id']={'unknown':'session'}
+        raw.write_text(''.join(json.dumps(row)+'\n' for row in rows))
+        cfg['baseline']['sha256']=hashlib.sha256(raw.read_bytes()).hexdigest()
+        path.write_text(json.dumps(cfg))
+        digest=hashlib.sha256(path.read_bytes()).hexdigest()
+>       assert load_resources(path,expected_sha256=digest,runtime_hash='runtime')=={}
+E       AssertionError: assert {'image_runti...imeout': 2.0}} == {}
+E
+E         Left contains 4 more items:
+E         {'image_runtime_hash': 'runtime',
+E          'memory_budgets': {'fast': MemoryBudget(peak_increment_bytes=10737418240,
+E                                                  margin_bytes=2147483648,
+E                                                  reserve_bytes=21474836480,
+E                                                  valid_until=201281.88506940161,...
+E
+E         ...Full output truncated (61 lines hidden), use '-vv' to show
+
+tests/test_tb09_safe_admission.py:543: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_operator_approval_cannot_make_unidentified_baseline_valid
+1 failed, 84 deselected, 1 warning in 0.06s

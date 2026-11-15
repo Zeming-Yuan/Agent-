@@ -1,0 +1,190 @@
+FFFFFFFFFFFF                                                             [100%]
+=================================== FAILURES ===================================
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[valid] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a74410>
+fault = 'valid'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[unsigned] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a8b620>
+fault = 'unsigned'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[hash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a89850>
+fault = 'hash'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[expired] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a89970>
+fault = 'expired'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[runtime] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a8ae10>
+fault = 'runtime'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[guard] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029a8bb30>
+fault = 'guard'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[baseline_hash] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv6')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aad130>
+fault = 'baseline_hash'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[no_baseline] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv7')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aadbe0>
+fault = 'no_baseline'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[not_calibrated] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv8')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aae3f0>
+fault = 'not_calibrated'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[permissions] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv9')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aafda0>
+fault = 'permissions'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[nan] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv10')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aac4d0>
+fault = 'nan'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+_ test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[changed_parameters] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-507/test_tb09_only_operator_approv11')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf4c029aaf050>
+fault = 'changed_parameters'
+
+    @pytest.mark.parametrize('fault',['valid','unsigned','hash','expired','runtime','guard','baseline_hash',
+        'no_baseline','not_calibrated','permissions','nan','changed_parameters'])
+    def test_tb09_only_operator_approved_evidence_bound_calibration_config_loads(tmp_path, monkeypatch, fault):
+        import json,hashlib,time
+>       from services.image_resource_config import load_resources
+E       ModuleNotFoundError: No module named 'services.image_resource_config'
+
+tests/test_tb09_safe_admission.py:312: ModuleNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[valid]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[unsigned]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[hash]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[expired]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[runtime]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[guard]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[baseline_hash]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[no_baseline]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[not_calibrated]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[permissions]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[nan]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_only_operator_approved_evidence_bound_calibration_config_loads[changed_parameters]
+12 failed, 49 deselected, 1 warning in 0.10s
