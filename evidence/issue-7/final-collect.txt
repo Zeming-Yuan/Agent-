@@ -1,0 +1,48 @@
+tests/test_tb06_mcp_resume.py::test_tb06_lost_response_replays_after_bridge_restart
+tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_edit]
+tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_generate]
+tests/test_tb06_mcp_resume.py::test_tb06_new_intent_and_conflict
+tests/test_tb06_mcp_resume.py::test_tb06_direct_bridge_entrypoint_runs_outside_source_cwd
+tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[]
+tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa]
+tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[bad\nheader]
+tests/test_tb06_mcp_resume.py::test_tb06_invalid_request_identity_never_submits[\u4e2d\u6587]
+tests/test_tb06_mcp_resume.py::test_tb06_mcp_owner_service_partition_rotation_and_server_recovery
+tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[network]
+tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[invalid_png]
+tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[permission]
+tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[disk]
+tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[directory]
+tests/test_tb06_mcp_resume.py::test_tb06_personal_bundle_is_explicit_and_runs_stdio_outside_repo
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_rejects_runtime_and_credential_assets
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[./spark_image_tools.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[./client/request_journal.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[Client/extra.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[docs//helper.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[C:/helper.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[client./request_journal.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[Client /request_journal.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[spark?image?tools.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[spark<image>tools.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[spark_image_tools.py\x00extra.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[docs\x01/helper.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[CON.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[spark_image_tools.py/helper.py]
+tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[api_key/helper.py]
+tests/test_tb06_mcp_resume.py::test_tb06_concurrent_clients_keep_one_request_mapping[False]
+tests/test_tb06_mcp_resume.py::test_tb06_concurrent_clients_keep_one_request_mapping[True]
+tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://raw-secret@spark.invalid/v1]
+tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1?secret=/v1]
+tests/test_tb06_mcp_resume.py::test_tb06_service_identity_rejects_credentials_and_query[https://spark.invalid/v1#secret/v1]
+tests/test_tb06_mcp_resume.py::test_tb06_journal_never_replaces_an_accepted_task
+tests/test_tb06_mcp_resume.py::test_tb06_auth_scope_and_deleted_results_do_not_resubmit
+tests/test_tb06_mcp_resume.py::test_tb06_unwritable_journal_prevents_submission
+tests/test_tb06_mcp_stdio.py::test_tb06_mcp_resume_stdio_kill_restart_and_save_recovery
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+40/280 tests collected (240 deselected) in 0.20s

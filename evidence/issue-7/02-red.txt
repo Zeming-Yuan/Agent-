@@ -1,0 +1,167 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_ test_tb06_reference_recovery_reuses_upload_and_content_identity[image_edit] __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-302/test_tb06_reference_recovery_r0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfe4b0d8a16c0>, wait_task=<function owner_env.<locals>.wait_task at 0xfe4b0d8a1760>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-302/test_tb06_reference_recovery_r0')
+kind = 'image_edit'
+
+    @pytest.mark.parametrize('kind',['image_edit','image_generate'])
+    def test_tb06_reference_recovery_reuses_upload_and_content_identity(owner_env, tmp_path, kind):
+        backend = owner_env.new_backend()
+        source = tmp_path/'素材 one.png'
+        png = io.BytesIO()
+        foreground = Image.new('RGBA',(8,8),(0,0,0,0))
+        foreground.putpixel((3,3),(0,200,0,255))
+        foreground.save(png,format='PNG')
+        source.write_bytes(png.getvalue())
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport = GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3',drop_submit=True)
+            async def invoke(bridge):
+                if kind == 'image_edit':
+                    return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                return await bridge.generate('fixture','1024x1024',0,'',str(source),request_id='ref')
+            async def run():
+                one = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    with pytest.raises(httpx.ReadError):
+                        await invoke(one)
+                finally:
+                    await one.close()
+                original = gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'][0]
+                owner_env.wait_task(gateway,original['id'],'A',lambda t:t['status']=='completed')
+                two = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    uploads = [r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']
+                    assert len(uploads) == 1
+                    fid = original['options']['image_ids'][0] if kind=='image_edit' else original['options']['foreground_file_id']
+                    assert gateway.delete('/v1/files/'+fid,headers=owner_env.auth('A')).status_code == 200
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    assert len(backend.jobs) == 1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']) == 2
+                finally:
+                    await two.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:112:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:93: in run
+    await invoke(one)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+bridge = <client.spark_image_tools.ImageBridge object at 0xfe4b0d608710>
+
+    async def invoke(bridge):
+        if kind == 'image_edit':
+>           return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: ImageBridge.edit() got an unexpected keyword argument 'request_id'
+
+tests/test_tb06_mcp_resume.py:87: TypeError
+_ test_tb06_reference_recovery_reuses_upload_and_content_identity[image_generate] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-302/test_tb06_reference_recovery_r1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfe4b0d63cd60>, wait_task=<function owner_env.<locals>.wait_task at 0xfe4b0d63ccc0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-302/test_tb06_reference_recovery_r1')
+kind = 'image_generate'
+
+    @pytest.mark.parametrize('kind',['image_edit','image_generate'])
+    def test_tb06_reference_recovery_reuses_upload_and_content_identity(owner_env, tmp_path, kind):
+        backend = owner_env.new_backend()
+        source = tmp_path/'素材 one.png'
+        png = io.BytesIO()
+        foreground = Image.new('RGBA',(8,8),(0,0,0,0))
+        foreground.putpixel((3,3),(0,200,0,255))
+        foreground.save(png,format='PNG')
+        source.write_bytes(png.getvalue())
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport = GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3',drop_submit=True)
+            async def invoke(bridge):
+                if kind == 'image_edit':
+                    return await bridge.edit('fixture',[str(source)],'1024x1024','fast',0,request_id='ref')
+                return await bridge.generate('fixture','1024x1024',0,'',str(source),request_id='ref')
+            async def run():
+                one = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    with pytest.raises(httpx.ReadError):
+                        await invoke(one)
+                finally:
+                    await one.close()
+                original = gateway.get('/v1/tasks',headers=owner_env.auth('A')).json()['data'][0]
+                owner_env.wait_task(gateway,original['id'],'A',lambda t:t['status']=='completed')
+                two = bridge_for(owner_env,tmp_path,transport)
+                try:
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    uploads = [r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']
+                    assert len(uploads) == 1
+                    fid = original['options']['image_ids'][0] if kind=='image_edit' else original['options']['foreground_file_id']
+                    assert gateway.delete('/v1/files/'+fid,headers=owner_env.auth('A')).status_code == 200
+                    replay = await invoke(two)
+                    assert replay['id'] == original['id']
+                    assert len(backend.jobs) == 1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/files']) == 2
+                finally:
+                    await two.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:112:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:100: in run
+    replay = await invoke(two)
+             ^^^^^^^^^^^^^^^^^
+tests/test_tb06_mcp_resume.py:88: in invoke
+    return await bridge.generate('fixture','1024x1024',0,'',str(source),request_id='ref')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+client/spark_image_tools.py:60: in generate
+    journal.prepare(request_id,fingerprint,payload)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <client.request_journal.RequestJournal object at 0xfe4b0c82f410>
+request_id = 'ref'
+fingerprint = 'eff6f1dded9b186d0804d5a5060f7854cfd154239212635af07436e459ff00f0'
+payload = {'kind': 'image_generate', 'options': {'foreground_file_id': 'file-7fdec268ae674134b4e5789ebb2334cd', 'prompt': 'fixture', 'seed': 0, 'size': '1024x1024', ...}}
+
+    def prepare(self, request_id: str, fingerprint: str, payload: dict) -> dict:
+        if not isinstance(request_id,str) or not re.fullmatch(r'[\x21-\x7e]{1,128}',request_id):
+            raise ValueError('request_id must be 1..128 printable ASCII characters without spaces')
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute('BEGIN IMMEDIATE')
+            key = (self.service, self.owner, request_id)
+            row = db.execute('SELECT fingerprint,payload,task_id FROM requests '
+                             'WHERE service=? AND owner=? AND request_id=?', key).fetchone()
+            if row and row[0] != fingerprint:
+>               raise ValueError('request id reused with different input')
+E               ValueError: request id reused with different input
+
+client/request_journal.py:31: ValueError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_edit]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_reference_recovery_reuses_upload_and_content_identity[image_generate]
+2 failed, 7 deselected, 1 warning in 0.59s

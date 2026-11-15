@@ -1,0 +1,65 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb06_personal_bundle_is_explicit_and_runs_stdio_outside_repo _______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-309/test_tb06_personal_bundle_is_e0')
+
+    def test_tb06_personal_bundle_is_explicit_and_runs_stdio_outside_repo(tmp_path):
+>       from scripts.build_image_client_bundle import build_bundle
+
+tests/test_tb06_mcp_resume.py:254:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts/build_image_client_bundle.py:10: in <module>
+    shutil.copy2(root/'.private/agent-api.key',out/'api_key');(out/'api_key').chmod(0o600)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/shutil.py:475: in copy2
+    copyfile(src, dst, follow_symlinks=follow_symlinks)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+src = PosixPath('/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/.private/agent-api.key')
+dst = PosixPath('/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/.private/mac-image-tools/api_key')
+
+    def copyfile(src, dst, *, follow_symlinks=True):
+        """Copy data from src to dst in the most efficient way possible.
+
+        If follow_symlinks is not set and src is a symbolic link, a new
+        symlink will be created instead of copying the file it points to.
+
+        """
+        sys.audit("shutil.copyfile", src, dst)
+
+        if _samefile(src, dst):
+            raise SameFileError("{!r} and {!r} are the same file".format(src, dst))
+
+        file_size = 0
+        for i, fn in enumerate([src, dst]):
+            try:
+                st = _stat(fn)
+            except OSError:
+                # File most likely does not exist
+                pass
+            else:
+                # XXX What about other special files? (sockets, devices...)
+                if stat.S_ISFIFO(st.st_mode):
+                    fn = fn.path if isinstance(fn, os.DirEntry) else fn
+                    raise SpecialFileError("`%s` is a named pipe" % fn)
+                if _WINDOWS and i == 0:
+                    file_size = st.st_size
+
+        if not follow_symlinks and _islink(src):
+            os.symlink(os.readlink(src), dst)
+        else:
+>           with open(src, 'rb') as fsrc:
+                 ^^^^^^^^^^^^^^^
+E           FileNotFoundError: [Errno 2] No such file or directory: '/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/.private/agent-api.key'
+
+/usr/lib/python3.12/shutil.py:260: FileNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_personal_bundle_is_explicit_and_runs_stdio_outside_repo
+1 failed, 15 deselected, 1 warning in 0.14s

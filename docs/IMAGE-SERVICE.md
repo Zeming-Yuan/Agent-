@@ -108,3 +108,33 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 已contract的strict运行时重启先只读验证完整归属，再在worker启动前将中断的running任务标记failed（Service restarted during processing）；queued和completed保留。worker恢复时先沿用既有后端清理策略，再执行queued，不续算或重放failed任务。迁移/维护预检仍拒绝running；无归属、悬空、跨人、缺请求映射等仍拒绝启动且不写库。
 
 本票34项恢复测试、逐AC映射和复测命令见 evidence/issue-6/acceptance.md；进程崩溃通过子进程os._exit复现，图片推理使用受控外部协议替身。生产部署、真实HTTPS/MCP/图片节点、Windows/macOS Harness、GPU内存/性能尚未验证，由后续现有票继续验收。未配置类型/静态/构建门禁（N/A），没有把受影响回归当作全量门禁。
+
+## T06 MCP 续取：切片 A（2026-11-15，离线）
+
+公共桥接首次生成前先通过 GET /v1/me 确定 owner，将 request_id 与业务指纹持久化后才 POST /tasks，使用同一 Idempotency-Key。generate_image 可传 request_id；跨调用重试必须复用该值，新创作省略时生成新 UUID，不能按提示词永久去重。同键不同输入在本地拒绝。默认日志 ~/.local/state/spark-image-tools/requests.sqlite3，也可传 journal_path；日志按规范服务 URL 与稳定 owner 隔离，不存 Key。
+
+切片 A 仅交付无参考素材生成的持久身份；编辑/素材、本人列表、原子保存及显式个人包入口由切片 B 接线。证据 evidence/issue-7/：01-red 缺 journal_path，01-green 真实 call_tool/HTTP/Store/worker 丢响应重启后同任务且一次后端执行，a-regression 3 passed。生产、双端 Harness 与真实后端未验证；未配置类型/静态/构建检查为 N/A。
+
+T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，非法值在任务提交前拒绝；公共脚本兼容直接启动与包内导入。a-cli-red/green与a-id-red/a-review-green保留复现及验证证据。
+
+## T06 公共 MCP 恢复契约（2026-11-15，离线实现）
+
+`generate_image` / `edit_image` 均返回 `id` 和 `request_id`。明确新创作省略 request_id；提交响应丢失时先 `list_image_tasks` 查本人本地请求映射与服务端任务，再用原 request_id/参数重试。`list_image_tasks(status=None,after=None,limit=20)` 返回服务端原有 object/data/has_more/next_cursor，加当前服务与 owner 的本地 `requests:[{request_id,task_id}]`；task_id=null 表示尚未收到接纳响应。服务端分页筛选只作用于 data，本地 requests 是该分区完整映射。日志丢失仍能从 data 找任务；用 `get_image_task` 查询/下载，只有用户明确要求才取消。
+
+生成前景与编辑素材以有序内容摘要参与业务指纹，已确认上传ID逐个持久化；重试验证本人素材仍可读则复用，404才重新上传相同内容，沿用请求键。更换图片内容或业务参数必须新建意图。服务端幂等/状态仍为权威，日志不是第二状态机。相同Key轮换为同owner时继续读取原日志；切换owner或服务不展示旧分区。URL不得携带凭证、query或fragment。
+
+`get_image_task` 只查询并下载已有结果；PNG完整解码、尺寸有效及32MiB上限校验成功后，以同目录0600临时文件、fsync、原子替换保存。网络、目录权限、磁盘故障或非法PNG保留旧目标与服务端completed，修复后再次取同一task_id；已删除结果返回404，不重新生成。MCP真实ImageContent在保存成功后返回。
+
+公共Python依赖见 client/image-tools-requirements.txt。桥接CLI要求显式 `--config`，配置中的 api_key_file/ca_file/journal_path/output_dir 相对配置文件解析，支持中文/空格路径；CLI默认日志为配置旁 requests.sqlite3，库构造器默认 ~/.local/state/spark-image-tools/requests.sqlite3，可显式 journal_path。
+
+公共构建API：`build_bundle(config_path:Path, platform_assets:dict[str,Path], output_path:Path)->Path`，模块 scripts.build_image_client_bundle。平台资源是显式名称到文件的映射，仅接收同扩展名的 .md/.command/.ps1/.py；不扫描目录、不接收运行库/Key/私有目录/覆盖公共模块。保留公共 requirements.txt、配置、模块与根入口。新输出必须不存在，包文件0600。个人配置必须显式提供 base_url/api_key_file/ca_file，可选output_dir；包内只放该Key、CA及所选资源，日志不打包。示例（路径均为执行时私有输入）：
+
+```bash
+python scripts/build_image_client_bundle.py --config /private/person/image.json --output /private/delivery/person-mac.zip --asset README.md=client/mac/README.md --asset install-mac.command=client/mac/install-mac.command
+```
+
+包结构固定为 SparkImageTools/，根 spark_image_tools.py 转入 client/ 中同一公共桥接实现，包含 client/request_journal.py。T12/T13只提供平台安装/config资源，不复制协议或并行修改公共文件。本票在Linux真实stdio+临时TLS+真实HTTP鉴权/Store/worker上验收；外部推理替身，未代替实际双端Harness/真实后端验收。逐AC、RED/GREEN和限制见 evidence/issue-7/acceptance.md。
+
+T06 B审查修复：平台资源名称必须是规范相对POSIX路径，拒绝 ./、重复分隔符、Windows盘符与大小写形式的client公共目录覆盖；防止ZIP解压归一化后替换公共入口。b-review-path-red/green记录复现及验证。
+
+T06 Windows路径保护补充：拒绝路径分量末尾点/空格、Windows保留设备名、非法字符与控制字符，并拒绝已有包文件作为目录前缀。避免解压器替换非法字符、截断NUL或大小写处理后覆盖公共入口/日志模块；实际Windows系统验收仍未运行。

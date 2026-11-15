@@ -1,0 +1,78 @@
+F.FFF                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[./spark_image_tools.py] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-322/test_tb06_bundle_cannot_replac0')
+name = './spark_image_tools.py'
+
+    @pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+    def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
+        from scripts.build_image_client_bundle import build_bundle
+        key=tmp_path/'key';key.write_text('test-personal-credential')
+        config=tmp_path/'config.json'
+        config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+        asset=tmp_path/'helper.py';asset.write_text('raise RuntimeError("entrypoint replaced")')
+>       with pytest.raises(ValueError):build_bundle(config,{name:asset},tmp_path/'rejected.zip')
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:309: Failed
+_ test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[Client/extra.py] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-322/test_tb06_bundle_cannot_replac2')
+name = 'Client/extra.py'
+
+    @pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+    def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
+        from scripts.build_image_client_bundle import build_bundle
+        key=tmp_path/'key';key.write_text('test-personal-credential')
+        config=tmp_path/'config.json'
+        config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+        asset=tmp_path/'helper.py';asset.write_text('raise RuntimeError("entrypoint replaced")')
+>       with pytest.raises(ValueError):build_bundle(config,{name:asset},tmp_path/'rejected.zip')
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:309: Failed
+_ test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[docs//helper.py] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-322/test_tb06_bundle_cannot_replac3')
+name = 'docs//helper.py'
+
+    @pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+    def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
+        from scripts.build_image_client_bundle import build_bundle
+        key=tmp_path/'key';key.write_text('test-personal-credential')
+        config=tmp_path/'config.json'
+        config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+        asset=tmp_path/'helper.py';asset.write_text('raise RuntimeError("entrypoint replaced")')
+>       with pytest.raises(ValueError):build_bundle(config,{name:asset},tmp_path/'rejected.zip')
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:309: Failed
+_ test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[C:/helper.py] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-322/test_tb06_bundle_cannot_replac4')
+name = 'C:/helper.py'
+
+    @pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+    def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
+        from scripts.build_image_client_bundle import build_bundle
+        key=tmp_path/'key';key.write_text('test-personal-credential')
+        config=tmp_path/'config.json'
+        config.write_text(json.dumps({'base_url':'https://spark.invalid/v1','api_key_file':str(key),'ca_file':str(CA)}))
+        asset=tmp_path/'helper.py';asset.write_text('raise RuntimeError("entrypoint replaced")')
+>       with pytest.raises(ValueError):build_bundle(config,{name:asset},tmp_path/'rejected.zip')
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb06_mcp_resume.py:309: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[./spark_image_tools.py]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[Client/extra.py]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[docs//helper.py]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_bundle_cannot_replace_public_modules_through_path_aliases[C:/helper.py]
+4 failed, 1 passed, 25 deselected, 1 warning in 0.17s

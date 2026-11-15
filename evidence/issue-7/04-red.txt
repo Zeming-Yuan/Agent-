@@ -1,0 +1,318 @@
+.FFFF                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_tb06_save_failure_preserves_completed_and_existing_target[invalid_png] __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfae388507560>, wait_task=<function owner_env.<locals>.wait_task at 0xfae388507920>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfae3888306e0>
+fault = 'invalid_png'
+
+    @pytest.mark.parametrize('fault',['network','invalid_png','permission','disk','directory'])
+    def test_tb06_save_failure_preserves_completed_and_existing_target(owner_env,tmp_path,monkeypatch,fault):
+        backend=owner_env.new_backend()
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport=GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+                    done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+                    fid=done['result']['file_id']
+                    target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+                    with monkeypatch.context() as patch:
+                        def fail(*args,**kwargs):
+                            if fault=='disk':raise OSError(28,'No space left on device')
+                            raise PermissionError('read-only destination')
+                        if fault in ('network','invalid_png'):transport.download_fault=fault
+                        elif fault=='permission':patch.setattr('os.replace',fail)
+                        elif fault=='disk':patch.setattr('os.fsync',fail)
+                        else:patch.setattr('tempfile.mkstemp',fail)
+                        with pytest.raises(Exception):
+                            await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                        assert target.read_bytes()==b'old-result'
+                        assert set(target.parent.iterdir())=={target}
+                    transport.download_fault=None
+                    result=await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                    content=result[0] if isinstance(result,tuple) else result
+                    import base64
+                    image=next(x for x in content if x.type=='image')
+                    assert base64.b64decode(image.data)==backend.png==target.read_bytes()
+                    assert gateway.get('/v1/tasks/'+state['id'],headers=owner_env.auth('A')).json()['status']=='completed'
+                    assert len(backend.jobs)==1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/tasks'])==1
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:249:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge=bridge_for(owner_env,tmp_path,transport)
+        try:
+            state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+            done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+            fid=done['result']['file_id']
+            target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+            with monkeypatch.context() as patch:
+                def fail(*args,**kwargs):
+                    if fault=='disk':raise OSError(28,'No space left on device')
+                    raise PermissionError('read-only destination')
+                if fault in ('network','invalid_png'):transport.download_fault=fault
+                elif fault=='permission':patch.setattr('os.replace',fail)
+                elif fault=='disk':patch.setattr('os.fsync',fail)
+                else:patch.setattr('tempfile.mkstemp',fail)
+>               with pytest.raises(Exception):
+E               Failed: DID NOT RAISE <class 'Exception'>
+
+tests/test_tb06_mcp_resume.py:234: Failed
+__ test_tb06_save_failure_preserves_completed_and_existing_target[permission] __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfae38839e2a0>, wait_task=<function owner_env.<locals>.wait_task at 0xfae38839fe20>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfae3883c83e0>
+fault = 'permission'
+
+    @pytest.mark.parametrize('fault',['network','invalid_png','permission','disk','directory'])
+    def test_tb06_save_failure_preserves_completed_and_existing_target(owner_env,tmp_path,monkeypatch,fault):
+        backend=owner_env.new_backend()
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport=GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+                    done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+                    fid=done['result']['file_id']
+                    target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+                    with monkeypatch.context() as patch:
+                        def fail(*args,**kwargs):
+                            if fault=='disk':raise OSError(28,'No space left on device')
+                            raise PermissionError('read-only destination')
+                        if fault in ('network','invalid_png'):transport.download_fault=fault
+                        elif fault=='permission':patch.setattr('os.replace',fail)
+                        elif fault=='disk':patch.setattr('os.fsync',fail)
+                        else:patch.setattr('tempfile.mkstemp',fail)
+                        with pytest.raises(Exception):
+                            await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                        assert target.read_bytes()==b'old-result'
+                        assert set(target.parent.iterdir())=={target}
+                    transport.download_fault=None
+                    result=await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                    content=result[0] if isinstance(result,tuple) else result
+                    import base64
+                    image=next(x for x in content if x.type=='image')
+                    assert base64.b64decode(image.data)==backend.png==target.read_bytes()
+                    assert gateway.get('/v1/tasks/'+state['id'],headers=owner_env.auth('A')).json()['status']=='completed'
+                    assert len(backend.jobs)==1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/tasks'])==1
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:249:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge=bridge_for(owner_env,tmp_path,transport)
+        try:
+            state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+            done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+            fid=done['result']['file_id']
+            target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+            with monkeypatch.context() as patch:
+                def fail(*args,**kwargs):
+                    if fault=='disk':raise OSError(28,'No space left on device')
+                    raise PermissionError('read-only destination')
+                if fault in ('network','invalid_png'):transport.download_fault=fault
+                elif fault=='permission':patch.setattr('os.replace',fail)
+                elif fault=='disk':patch.setattr('os.fsync',fail)
+                else:patch.setattr('tempfile.mkstemp',fail)
+>               with pytest.raises(Exception):
+E               Failed: DID NOT RAISE <class 'Exception'>
+
+tests/test_tb06_mcp_resume.py:234: Failed
+_____ test_tb06_save_failure_preserves_completed_and_existing_target[disk] _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv3/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfae3883fdf80>, wait_task=<function owner_env.<locals>.wait_task at 0xfae3883ffc40>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfae387620fb0>
+fault = 'disk'
+
+    @pytest.mark.parametrize('fault',['network','invalid_png','permission','disk','directory'])
+    def test_tb06_save_failure_preserves_completed_and_existing_target(owner_env,tmp_path,monkeypatch,fault):
+        backend=owner_env.new_backend()
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport=GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+                    done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+                    fid=done['result']['file_id']
+                    target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+                    with monkeypatch.context() as patch:
+                        def fail(*args,**kwargs):
+                            if fault=='disk':raise OSError(28,'No space left on device')
+                            raise PermissionError('read-only destination')
+                        if fault in ('network','invalid_png'):transport.download_fault=fault
+                        elif fault=='permission':patch.setattr('os.replace',fail)
+                        elif fault=='disk':patch.setattr('os.fsync',fail)
+                        else:patch.setattr('tempfile.mkstemp',fail)
+                        with pytest.raises(Exception):
+                            await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                        assert target.read_bytes()==b'old-result'
+                        assert set(target.parent.iterdir())=={target}
+                    transport.download_fault=None
+                    result=await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                    content=result[0] if isinstance(result,tuple) else result
+                    import base64
+                    image=next(x for x in content if x.type=='image')
+                    assert base64.b64decode(image.data)==backend.png==target.read_bytes()
+                    assert gateway.get('/v1/tasks/'+state['id'],headers=owner_env.auth('A')).json()['status']=='completed'
+                    assert len(backend.jobs)==1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/tasks'])==1
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:249:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge=bridge_for(owner_env,tmp_path,transport)
+        try:
+            state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+            done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+            fid=done['result']['file_id']
+            target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+            with monkeypatch.context() as patch:
+                def fail(*args,**kwargs):
+                    if fault=='disk':raise OSError(28,'No space left on device')
+                    raise PermissionError('read-only destination')
+                if fault in ('network','invalid_png'):transport.download_fault=fault
+                elif fault=='permission':patch.setattr('os.replace',fail)
+                elif fault=='disk':patch.setattr('os.fsync',fail)
+                else:patch.setattr('tempfile.mkstemp',fail)
+>               with pytest.raises(Exception):
+E               Failed: DID NOT RAISE <class 'Exception'>
+
+tests/test_tb06_mcp_resume.py:234: Failed
+__ test_tb06_save_failure_preserves_completed_and_existing_target[directory] ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv4/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfae3885077e0>, wait_task=<function owner_env.<locals>.wait_task at 0xfae3885074c0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-307/test_tb06_save_failure_preserv4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfae3883939e0>
+fault = 'directory'
+
+    @pytest.mark.parametrize('fault',['network','invalid_png','permission','disk','directory'])
+    def test_tb06_save_failure_preserves_completed_and_existing_target(owner_env,tmp_path,monkeypatch,fault):
+        backend=owner_env.new_backend()
+        with owner_env.client(backend=backend,run_worker=True) as gateway:
+            transport=GatewayTransport(gateway,journal=tmp_path/'requests.sqlite3')
+            async def run():
+                bridge=bridge_for(owner_env,tmp_path,transport)
+                try:
+                    state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+                    done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+                    fid=done['result']['file_id']
+                    target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+                    with monkeypatch.context() as patch:
+                        def fail(*args,**kwargs):
+                            if fault=='disk':raise OSError(28,'No space left on device')
+                            raise PermissionError('read-only destination')
+                        if fault in ('network','invalid_png'):transport.download_fault=fault
+                        elif fault=='permission':patch.setattr('os.replace',fail)
+                        elif fault=='disk':patch.setattr('os.fsync',fail)
+                        else:patch.setattr('tempfile.mkstemp',fail)
+                        with pytest.raises(Exception):
+                            await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                        assert target.read_bytes()==b'old-result'
+                        assert set(target.parent.iterdir())=={target}
+                    transport.download_fault=None
+                    result=await build_server(bridge).call_tool('get_image_task',{'task_id':state['id'],'wait_seconds':0})
+                    content=result[0] if isinstance(result,tuple) else result
+                    import base64
+                    image=next(x for x in content if x.type=='image')
+                    assert base64.b64decode(image.data)==backend.png==target.read_bytes()
+                    assert gateway.get('/v1/tasks/'+state['id'],headers=owner_env.auth('A')).json()['status']=='completed'
+                    assert len(backend.jobs)==1
+                    assert len([r for r in transport.requests if r.method=='POST' and r.url.path=='/v1/tasks'])==1
+                finally:
+                    await bridge.close()
+>           asyncio.run(run())
+
+tests/test_tb06_mcp_resume.py:249:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge=bridge_for(owner_env,tmp_path,transport)
+        try:
+            state=await bridge.generate('fixture','1024x1024',0,'','',request_id='save')
+            done=owner_env.wait_task(gateway,state['id'],'A',lambda t:t['status']=='completed')
+            fid=done['result']['file_id']
+            target=tmp_path/'out'/(fid+'.png');target.parent.mkdir();target.write_bytes(b'old-result')
+            with monkeypatch.context() as patch:
+                def fail(*args,**kwargs):
+                    if fault=='disk':raise OSError(28,'No space left on device')
+                    raise PermissionError('read-only destination')
+                if fault in ('network','invalid_png'):transport.download_fault=fault
+                elif fault=='permission':patch.setattr('os.replace',fail)
+                elif fault=='disk':patch.setattr('os.fsync',fail)
+                else:patch.setattr('tempfile.mkstemp',fail)
+>               with pytest.raises(Exception):
+E               Failed: DID NOT RAISE <class 'Exception'>
+
+tests/test_tb06_mcp_resume.py:234: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[invalid_png]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[permission]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[disk]
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_save_failure_preserves_completed_and_existing_target[directory]
+4 failed, 1 passed, 10 deselected, 1 warning in 1.97s

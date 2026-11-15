@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb06_direct_bridge_entrypoint_runs_outside_source_cwd __________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-296/test_tb06_direct_bridge_entryp0')
+
+    def test_tb06_direct_bridge_entrypoint_runs_outside_source_cwd(tmp_path):
+        script = Path(__file__).resolve().parents[1]/'client/spark_image_tools.py'
+        env = {k:v for k,v in os.environ.items() if k != 'PYTHONPATH'}
+        result = subprocess.run([sys.executable,str(script),'--help'],cwd=tmp_path,env=env,
+                                capture_output=True,text=True,timeout=10)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/client/spark_image_tools.py", line 15, in <module>
+E             from client.request_journal import RequestJournal
+E         ModuleNotFoundError: No module named 'client'
+E
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python', '/home/clusteradmin/.codex/workspaces...in <module>\n    from client.request_journal import RequestJournal\nModuleNotFoundError: No module named \'client\'\n').returncode
+
+tests/test_tb06_mcp_resume.py:103: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb06_mcp_resume.py::test_tb06_direct_bridge_entrypoint_runs_outside_source_cwd
+1 failed, 2 deselected, 1 warning in 0.37s

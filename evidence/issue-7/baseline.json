@@ -1,0 +1,42 @@
+{
+  "base": "45fa55afde3cbe97549f89ccb18eb71c5e677b68",
+  "product": "/home/clusteradmin/Desktop/Agent\u591a\u6a21\u6001\u670d\u52a1",
+  "paths": [
+    {
+      "path": "client/spark_image_tools.py",
+      "sha256": "c04c50f6937d75238dcae27ac77aefd36845d2fcea1878217fe28a75ad333f5f"
+    },
+    {
+      "path": "scripts/build_image_client_bundle.py",
+      "sha256": "bc6a5bf24102ca298ec128266aec42127e0e953f0faf36c0f73ca39d871f3485"
+    },
+    {
+      "path": "tests/test_image_bridge.py",
+      "sha256": "caead53e0bea33c4cabb59b61c4153a0fda6c4cef088679ada926cc9a0c4aa7e"
+    },
+    {
+      "path": "tests/conftest.py",
+      "sha256": "1c20a175d19db62a62722af18cb7eca3f17328b585cfb3d771295fe14986a480"
+    },
+    {
+      "path": "services/gateway.py",
+      "sha256": "de977d3742d7a59a3270bc4161522a57082a0372a2fee30f264c1574b69e8f96"
+    },
+    {
+      "path": "services/store.py",
+      "sha256": "47f19d931940642763ae51e1e45b592b554bdae27b96ddb4129d711da2678c06"
+    },
+    {
+      "path": "docs/IMAGE-SERVICE.md",
+      "sha256": "86da487d87154933910dabad5d6ea4f64523d76536a8ae8ec12e49c9dfc88e67"
+    },
+    {
+      "path": "OPERATIONS.md",
+      "sha256": "20a6bf70fff6999b3a4f0a35ebfb950bda052a940f9b9d279693bd7b90b82646"
+    },
+    {
+      "path": "docs/adr/0001-owner-scoped-storage.md",
+      "sha256": "cdd306fdabdc5a807e248eb29486284c1702222f95a193c162e7afaa15db897d"
+    }
+  ]
+}
