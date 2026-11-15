@@ -1,0 +1,84 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-368/test_tb07_event_failure_keeps_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xeea480d6c220>, wait_task=<function owner_env.<locals>.wait_task at 0xeea480d6c2c0>)
+
+    def test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend(owner_env):
+        import asyncio
+        backend = owner_env.new_backend(hold=True)
+        class BrokenEvents:
+            def __init__(self, url, client_id): pass
+            async def __aenter__(self): return self
+            async def __aexit__(self, *exc): return False
+            async def events(self):
+                while not backend.jobs: await asyncio.sleep(.01)
+                raise OSError('synthetic event disconnect')
+                yield
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=BrokenEvents) as c:
+            tid = owner_env.submit(c).json()['id']
+            try:
+>               task = owner_env.wait_task(c, tid, 'A', lambda t: t.get('blocked_reason') == 'events_unavailable')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:327:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xeea48091c440>
+tid = 'task-7d9f508c429748fa9a6b675ea6463324', owner = 'A'
+predicate = <function test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend.<locals>.<lambda> at 0xeea480800ea0>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-7d9f508c429748fa9a6b675ea6463324', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'running', 'progress': 0.1, 'result': None, 'error': None, 'created': 1794721913, 'updated': 1794721916, 'stage': 'loading', 'stage_seq': 1, 'stage_started_at': 1794721914.099248, 'stage_updated_at': 1794721914.099248, 'blocked_reason': None, 'cancel_requested': False, 'step': None, 'steps': None}
+
+tests/conftest.py:140: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:263 image cleanup unconfirmed; admission stopped
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 190, in process_image
+    await asyncio.sleep(.5)
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 665, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 215, in process_image
+    cleanup_job.result()
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 197, in cleanup
+    with contextlib.suppress(asyncio.CancelledError):await watcher
+                                                     ^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 160, in observe
+    async for raw in stream.events():
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/tests/test_tb07_lifecycle.py", line 322, in events
+    raise OSError('synthetic event disconnect')
+OSError: synthetic event disconnect
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 242, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 217, in process_image
+    raise CleanupUncertain('Image cleanup unconfirmed; operator recovery required') from exc
+services.images.CleanupUncertain: Image cleanup unconfirmed; operator recovery required
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend
+1 failed, 10 deselected, 1 warning in 3.23s

@@ -1,0 +1,84 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+____ test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-383/test_tb07_cancel_during_slow_s0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe731a5ca0ae0>, wait_task=<function owner_env.<locals>.wait_task at 0xe731a5ca0b80>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe731a5c85610>
+
+    def test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job(owner_env, monkeypatch):
+        import os
+        import threading
+        from pathlib import Path
+        backend = owner_env.new_backend()
+        entered = threading.Event(); release = threading.Event(); replied = threading.Event()
+        generated = []
+        original = os.fsync
+        def hold_save(fd):
+            path = Path('/proc/self/fd/' + str(fd)).resolve()
+            if path.parent == owner_env.root / 'files' and not generated:
+                generated.append(path.name)
+                entered.set()
+                assert release.wait(3), 'test save gate timed out'
+            return original(fd)
+        monkeypatch.setattr(os, 'fsync', hold_save)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert entered.wait(2)
+            responses = []
+            def cancel():
+                responses.append(c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A')))
+                replied.set()
+            sender = threading.Thread(target=cancel); sender.start()
+            try:
+                timely = replied.wait(.5)
+                if timely:
+                    assert responses[0].json()['stage'] == 'cancelling'
+                    assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()['status'] == 'running'
+                    second = owner_env.submit(c, 'B').json()['id']
+                    assert len(backend.jobs) == 1
+            finally:
+                release.set()
+                sender.join(3)
+>           assert timely, 'saving blocked the HTTP cancel/query interface'
+E           AssertionError: saving blocked the HTTP cancel/query interface
+E           assert False
+
+tests/test_tb07_lifecycle.py:373: AssertionError
+______ test_tb07_cancelled_profile_cannot_reuse_previous_model_assumption ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-383/test_tb07_cancelled_profile_ca0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe731a4e87ba0>, wait_task=<function owner_env.<locals>.wait_task at 0xe731a4e87e20>)
+
+    def test_tb07_cancelled_profile_cannot_reuse_previous_model_assumption(owner_env):
+        backend = owner_env.new_backend()
+        frees = []
+        async def external(request):
+            if request.url.path == '/free': frees.append(True)
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            first = owner_env.submit(c).json()['id']
+            owner_env.wait_task(c, first, 'A', lambda t: t['status'] == 'completed')
+            backend.started.clear(); backend.finish.clear()
+            reference = owner_env.upload(c)
+            edit = owner_env.submit(c, kind='image_edit', image_ids=[reference], quality='fast').json()['id']
+            assert backend.started.wait(2)
+            c.post('/v1/tasks/' + edit + '/cancel', headers=owner_env.auth('A'))
+            owner_env.wait_task(c, edit, 'A', lambda t: t['status'] == 'cancelled')
+            backend.finish.set()
+            last = owner_env.submit(c).json()['id']
+            owner_env.wait_task(c, last, 'A', lambda t: t['status'] == 'completed')
+>           assert len(frees) == 3  # cancelled edit leaves residency unknown
+            ^^^^^^^^^^^^^^^^^^^^^^
+E           assert 2 == 3
+E            +  where 2 = len([True, True])
+
+tests/test_tb07_lifecycle.py:434: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancelled_profile_cannot_reuse_previous_model_assumption
+2 failed, 13 deselected, 1 warning in 1.76s

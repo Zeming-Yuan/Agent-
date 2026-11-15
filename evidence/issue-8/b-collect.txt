@@ -1,0 +1,34 @@
+tests/test_tb07_lifecycle.py::test_tb07_cancel_waits_until_backend_stopped
+tests/test_tb07_lifecycle.py::test_tb07_shutdown_during_cancel_waits_for_cleanup
+tests/test_tb07_lifecycle.py::test_tb07_cancel_and_completion_have_one_terminal
+tests/test_tb07_lifecycle.py::test_tb07_task_read_is_one_committed_snapshot
+tests/test_tb07_lifecycle.py::test_tb07_waiting_backend_exposes_stage_and_no_invented_steps
+tests/test_tb07_lifecycle.py::test_tb07_stages_cannot_regress_and_survive_restart
+tests/test_tb07_lifecycle.py::test_tb07_sampling_events_belong_to_prompt_and_never_regress
+tests/test_tb07_lifecycle.py::test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect
+tests/test_tb07_lifecycle.py::test_tb07_stop_failure_halts_admission_but_preserves_queries
+tests/test_tb07_lifecycle.py::test_tb07_save_is_durable_before_success_and_failure_is_not_completed
+tests/test_tb07_lifecycle.py::test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend[open]
+tests/test_tb07_lifecycle.py::test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend[closed]
+tests/test_tb07_lifecycle.py::test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend[error]
+tests/test_tb07_lifecycle.py::test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job
+tests/test_tb07_lifecycle.py::test_tb07_mcp_reports_chinese_stages_without_fake_percentage
+tests/test_tb07_lifecycle.py::test_tb07_cancelled_profile_cannot_reuse_previous_model_assumption
+tests/test_tb07_lifecycle.py::test_tb07_unload_request_is_a_stage_not_a_release_claim
+tests/test_tb07_lifecycle.py::test_tb07_late_internal_update_cannot_overwrite_terminal
+tests/test_tb07_lifecycle.py::test_tb07_owned_execution_error_fails_after_cleanup_without_leaking_payload
+tests/test_tb07_lifecycle.py::test_tb07_state_counterexamples[cancelled-True-event0-True-True-cancelled]
+tests/test_tb07_lifecycle.py::test_tb07_state_counterexamples[running-True-event1-False-False-running]
+tests/test_tb07_lifecycle.py::test_tb07_state_counterexamples[running-True-event2-True-False-cancelled]
+tests/test_tb07_lifecycle.py::test_tb07_state_counterexamples[running-False-event3-False-False-running]
+tests/test_tb07_lifecycle.py::test_tb07_state_counterexamples[running-False-event4-False-False-running]
+tests/test_tb07_lifecycle.py::test_tb07_cas_rejects_stale_writer_and_preserves_phase_start
+tests/test_tb07_stdio.py::test_tb07_lifecycle_stdio_loading_saving_and_cancel_cleanup
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+26/306 tests collected (280 deselected) in 0.71s

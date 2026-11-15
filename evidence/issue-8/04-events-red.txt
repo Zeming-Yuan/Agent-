@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_tb07_sampling_events_belong_to_prompt_and_never_regress _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-359/test_tb07_sampling_events_belo0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfeb1597bbc40>, wait_task=<function owner_env.<locals>.wait_task at 0xfeb1597bbce0>)
+
+    def test_tb07_sampling_events_belong_to_prompt_and_never_regress(owner_env):
+        import uuid
+        backend = owner_env.new_backend(hold=True)
+>       with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:175:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def client(*,backend=None,run_worker=False,identity_mode="staging",event_stream_factory=None):
+        backend=backend or ImageBackend()
+        event_args = {} if event_stream_factory is None else {'event_stream_factory': event_stream_factory}
+>       app=create_app(env.root,keys["legacy"],key_registry=registry,
+            identity_mode=identity_mode,transport=httpx.MockTransport(backend),
+            run_worker=run_worker,audio_enabled=False,images_enabled=True,**event_args)
+E       TypeError: create_app() got an unexpected keyword argument 'event_stream_factory'
+
+tests/conftest.py:98: TypeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_sampling_events_belong_to_prompt_and_never_regress
+1 failed, 6 deselected, 1 warning in 0.06s

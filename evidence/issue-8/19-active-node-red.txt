@@ -1,0 +1,58 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_tb07_sampling_events_belong_to_prompt_and_never_regress _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-395/test_tb07_sampling_events_belo0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe31717add760>, wait_task=<function owner_env.<locals>.wait_task at 0xe31717add8a0>)
+
+    def test_tb07_sampling_events_belong_to_prompt_and_never_regress(owner_env):
+        import uuid
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert backend.started.wait(2)
+            assert backend.events_connected.is_set()  # subscription precedes prompt
+            pid = backend.jobs[0]['prompt_id']
+            def emit(kind, **data):
+                backend.events_to_emit.put({'type': kind, 'data': {'prompt_id': pid, **data}})
+            try:
+                emit('executing', node='7')
+                emit('progress', node='7', value=2, max=8)
+                sampling = owner_env.wait_task(c, tid, 'A', lambda t: t.get('step') == 2)
+                assert sampling['stage'] == 'generating'
+                assert sampling['steps'] == 8
+                emit('progress', node='7', value=2, max=8)  # duplicate
+                emit('progress', node='7', value=1, max=8)  # delayed
+                emit('progress', node='7', value=8, max=8, prompt_id=str(uuid.uuid4()))
+                emit('executing', node='2')  # delayed loader
+                emit('progress', node='7', value=3, max=8)
+>               next_sample = owner_env.wait_task(c, tid, 'A', lambda t: t.get('step') == 3)
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:195:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xe3171772ea20>
+tid = 'task-1476c4716de44afca345c38b8a36df91', owner = 'A'
+predicate = <function test_tb07_sampling_events_belong_to_prompt_and_never_regress.<locals>.<lambda> at 0xe3171769dc60>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-1476c4716de44afca345c38b8a36df91', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'running', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794722933, 'updated': 1794722934, 'stage': 'generating', 'stage_seq': 4, 'stage_started_at': 1794722934.1769564, 'stage_updated_at': 1794722934.1835966, 'blocked_reason': None, 'cancel_requested': False, 'step': 2, 'steps': 8}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_sampling_events_belong_to_prompt_and_never_regress
+1 failed, 24 deselected, 1 warning in 3.55s

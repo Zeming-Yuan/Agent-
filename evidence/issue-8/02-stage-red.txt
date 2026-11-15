@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb07_waiting_backend_exposes_stage_and_no_invented_steps _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-355/test_tb07_waiting_backend_expo0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf2b9f8e9f1a0>, wait_task=<function owner_env.<locals>.wait_task at 0xf2b9f8e9f240>)
+
+    def test_tb07_waiting_backend_exposes_stage_and_no_invented_steps(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert backend.started.wait(2)
+            try:
+                task = c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()
+>               assert task['stage'] == 'loading'
+E               AssertionError: assert 'running' == 'loading'
+E
+E                 - loading
+E                 + running
+
+tests/test_tb07_lifecycle.py:150: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_waiting_backend_exposes_stage_and_no_invented_steps
+1 failed, 4 deselected, 1 warning in 0.39s

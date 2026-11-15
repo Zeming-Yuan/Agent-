@@ -9,7 +9,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-343/tes
         import json
         import threading
         import time
-    
+
         backend = owner_env.new_backend(hold=True, hold_stop=True)
         stopping = threading.Event()
         async def external(request):
@@ -28,7 +28,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-343/tes
                 task = c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()
 >               assert task['status'] == 'running'
 E               AssertionError: assert 'cancelled' == 'running'
-E                 
+E
 E                 - running
 E                 + cancelled
 

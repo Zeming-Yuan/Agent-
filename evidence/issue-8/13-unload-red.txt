@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_tb07_unload_request_is_a_stage_not_a_release_claim ____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-381/test_tb07_unload_request_is_a_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe1a491c38860>, wait_task=<function owner_env.<locals>.wait_task at 0xe1a491c38900>)
+
+    def test_tb07_unload_request_is_a_stage_not_a_release_claim(owner_env):
+        import asyncio
+        import threading
+        backend = owner_env.new_backend()
+        entered = threading.Event(); release = threading.Event()
+        async def external(request):
+            if request.url.path == '/free':
+                entered.set()
+                assert await asyncio.to_thread(release.wait, 3)
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert entered.wait(2)
+            try:
+                task = c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()
+>               assert task['status'] == 'running' and task['stage'] == 'unloading'
+E               AssertionError: assert ('running' == 'running'
+E
+E                   running and 'loading' == 'unloading'
+E
+E                 - unloading
+E                 ? --
+E                 + loading)
+
+tests/test_tb07_lifecycle.py:452: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_unload_request_is_a_stage_not_a_release_claim
+1 failed, 14 deselected, 1 warning in 0.43s

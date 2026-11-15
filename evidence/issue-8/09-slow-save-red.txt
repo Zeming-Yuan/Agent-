@@ -1,0 +1,55 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-370/test_tb07_cancel_during_slow_s0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe1535f25c400>, wait_task=<function owner_env.<locals>.wait_task at 0xe1535f25c4a0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe1535f1fecc0>
+
+    def test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job(owner_env, monkeypatch):
+        import os
+        import threading
+        from pathlib import Path
+        backend = owner_env.new_backend()
+        entered = threading.Event(); release = threading.Event(); replied = threading.Event()
+        generated = []
+        original = os.fsync
+        def hold_save(fd):
+            path = Path('/proc/self/fd/' + str(fd)).resolve()
+            if path.parent == owner_env.root / 'files' and not generated:
+                generated.append(path.name)
+                entered.set()
+                assert release.wait(3), 'test save gate timed out'
+            return original(fd)
+        monkeypatch.setattr(os, 'fsync', hold_save)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert entered.wait(2)
+            responses = []
+            def cancel():
+                responses.append(c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A')))
+                replied.set()
+            sender = threading.Thread(target=cancel); sender.start()
+            try:
+                timely = replied.wait(.5)
+                if timely:
+                    assert responses[0].json()['stage'] == 'cancelling'
+                    assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()['status'] == 'running'
+                    second = owner_env.submit(c, 'B').json()['id']
+                    assert len(backend.jobs) == 1
+            finally:
+                release.set()
+                sender.join(3)
+>           assert timely, 'saving blocked the HTTP cancel/query interface'
+E           AssertionError: saving blocked the HTTP cancel/query interface
+E           assert False
+
+tests/test_tb07_lifecycle.py:371: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancel_during_slow_save_remains_queryable_and_holds_next_job
+1 failed, 11 deselected, 1 warning in 1.01s

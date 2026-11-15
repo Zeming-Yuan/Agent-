@@ -1,0 +1,56 @@
+.F.                                                                      [100%]
+=================================== FAILURES ===================================
+_ test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend[closed] _
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-391/test_tb07_event_failure_keeps_1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe6072a5322a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe6072a532de0>)
+failure = 'closed'
+
+    @pytest.mark.parametrize('failure', ['open', 'closed', 'error'])
+    def test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend(owner_env, failure):
+        import asyncio
+        backend = owner_env.new_backend(hold=True)
+        class BrokenEvents:
+            def __init__(self, url, client_id): pass
+            async def __aenter__(self):
+                if failure == 'open': raise OSError('synthetic connection failure')
+                return self
+            async def __aexit__(self, *exc): return False
+            async def events(self):
+                while not backend.jobs: await asyncio.sleep(.01)
+                if failure == 'closed': return
+                raise OSError('synthetic event disconnect')
+                yield
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=BrokenEvents) as c:
+            tid = owner_env.submit(c).json()['id']
+            try:
+>               task = owner_env.wait_task(c, tid, 'A', lambda t: t.get('blocked_reason') == 'events_unavailable')
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:335:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xe6072a5da750>
+tid = 'task-e28364ce6d2149b6bbf9b2cdf13912f5', owner = 'A'
+predicate = <function test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend.<locals>.<lambda> at 0xe6072a557e20>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-e28364ce6d2149b6bbf9b2cdf13912f5', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'running', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794722642, 'updated': 1794722642, 'stage': 'loading', 'stage_seq': 1, 'stage_started_at': 1794722642.559788, 'stage_updated_at': 1794722642.559788, 'blocked_reason': None, 'cancel_requested': False, 'step': None, 'steps': None}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_event_failure_keeps_truthful_stage_and_still_cleans_backend[closed]
+1 failed, 2 passed, 22 deselected, 1 warning in 5.00s

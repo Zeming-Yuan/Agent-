@@ -8,7 +8,7 @@ monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf8fa99afa9f0>
     def test_tb07_task_read_is_one_committed_snapshot(owner_env, monkeypatch):
         from contextlib import contextmanager
         import threading
-    
+
         with owner_env.client() as c:
             tid = owner_env.submit(c).json()['id']
             store = c.app.state.store

@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb07_save_is_durable_before_success_and_failure_is_not_completed _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-366/test_tb07_save_is_durable_befo0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf128e73bb7e0>, wait_task=<function owner_env.<locals>.wait_task at 0xf128e73bb740>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf128e73faf90>
+
+    def test_tb07_save_is_durable_before_success_and_failure_is_not_completed(owner_env, monkeypatch):
+        import os
+        from pathlib import Path
+        injected = []
+        original = os.fsync
+        def fail_generated(fd):
+            target = Path('/proc/self/fd/' + str(fd)).resolve()
+            if target.parent == owner_env.root / 'files':
+                injected.append(target)
+                raise OSError('synthetic fsync failure')
+            return original(fd)
+        monkeypatch.setattr(os, 'fsync', fail_generated)
+        with owner_env.client(run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('completed', 'failed'))
+>           assert done['status'] == 'failed'
+E           AssertionError: assert 'completed' == 'failed'
+E
+E             - failed
+E             + completed
+
+tests/test_tb07_lifecycle.py:306: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_save_is_durable_before_success_and_failure_is_not_completed
+1 failed, 9 deselected, 1 warning in 0.39s

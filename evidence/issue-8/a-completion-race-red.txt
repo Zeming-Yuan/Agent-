@@ -8,7 +8,7 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-350/tes
         import asyncio
         import json
         import threading
-    
+
         backend = owner_env.new_backend()
         cleanup_entered = threading.Event()
         cancel_entered = threading.Event()
@@ -56,8 +56,8 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-350/tes
 >           done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('completed', 'cancelled'))
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-tests/test_tb07_lifecycle.py:109: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tests/test_tb07_lifecycle.py:109:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 c = <starlette.testclient.TestClient object at 0xe83f9dc99e80>
 tid = 'task-b7d50c1cc0ec472cb59e036800db38b1', owner = 'A'

@@ -144,3 +144,13 @@ T06 Windows路径保护补充：拒绝路径分量末尾点/空格、Windows保�
 运行图片任务的显式取消返回 running/cancelling；cancel_requested 持久化，重复取消保持同一 stage_seq，不二次打断清理。只有定向停止及 scratch 清理返回后才 cancelled，再选择下一单。queued 可直接 cancelled。HTTP 查询仍按 owner 隔离；任务阶段存 task_runtime 旁表，状态/结果和阶段使用同一 BEGIN IMMEDIATE/CAS 更新。阶段事件及 MCP 中文展示由本票切片 B 补齐，本节不是整票验收声明。
 
 T07 A审查修复：原生 asyncio 重复取消不得打断清理；清理结算后向上继续传播服务关闭。取消与已返回结果相遇时明确 cancelled，回收尚未交付结果，不滞留 cancelling。状态和阶段以单条 JOIN 读取同一提交快照。
+
+## T07：真实阶段与终态（切片 B）
+
+status 保留 queued/running/completed/failed/cancelled。stage、stage_seq、stage_started_at/stage_updated_at（UTC epoch秒）、blocked_reason、cancel_requested、step/steps 为附加字段；同阶段有效采样只更新最近时间，不重置阶段起点。只有 generating 的可归属采样才有 step/steps；不表示整单完成百分比。重复/倒序/旧prompt事件不会推进序号，终态不可覆盖。
+
+固定 ComfyUI0.33.2：先建立 /ws?clientId=task_id 并收到匹配sid的status，再POST规范prompt_id。executing映射固定工作流加载、采样与解码/保存；无prompt_id的重连消息、二进制预览及无有效采样总数消息不作进度。观测断开保留最后阶段、清空采样并报告events_unavailable；没有盲目重连或推理重跑。MCP生成/查询/列表/取消均给中文阶段和近似等待秒数，隐藏旧progress占位值，不报ETA。
+
+/free阶段仅表示释放请求处理，不能证明模型已释放。实际安全释放与内存准入仍归T08/T09；本票没有改变20GiB保护、四单/2GiB上限或个人配额。运行取消先cancelling，定向停止、history/scratch及未交付输出清理结束后才cancelled；慢fsync不阻塞查询，取消等待写线程结算，不提前选择下一单。输出数据和目录fsync、SQLite owner元数据提交后才completed，可鉴权读取。保存失败是failed，停止/清理不明是failed并停worker、新工作503，已有查询/结果/幂等重放仍可用。错误原因submission_unknown、cleanup_unconfirmed、backend_execution_error不含后端原始业务payload。
+
+完整证据和未验证边界见evidence/issue-8/acceptance.md；实际双端Harness、真实后端及生产发布仍未验证。

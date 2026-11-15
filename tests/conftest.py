@@ -2,6 +2,7 @@ import asyncio
 import io
 import json
 import threading
+import queue
 import time
 import uuid
 from types import SimpleNamespace
@@ -12,15 +13,56 @@ from PIL import Image
 from services.gateway import create_app
 from services.identity import KeyRegistry
 
+class BackendEvents:
+    """Controlled external WebSocket boundary; never replaces gateway state."""
+    def __init__(self, backend):
+        self.backend = backend
+    async def __aenter__(self):
+        self.backend.events_connected.set()
+        return self
+    async def __aexit__(self, *exc):
+        return False
+    async def events(self):
+        while True:
+            try:
+                event = self.backend.events_to_emit.get_nowait()
+            except queue.Empty:
+                await asyncio.sleep(.01)
+            else:
+                yield event
+
+
+@pytest.fixture(autouse=True)
+def isolate_comfy_websocket(request, monkeypatch):
+    # Only the local protocol test may open a socket. Other tests inject the
+    # external event boundary, including legacy fixtures with HTTP-only backends.
+    if request.node.name == 'test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect':
+        return
+    class QuietEvents:
+        def __init__(self, url, client_id):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *exc):
+            return False
+        async def events(self):
+            await asyncio.Event().wait()
+            yield  # async generator, deliberately no invented backend events
+    monkeypatch.setattr('services.comfy_events.ComfyEventStream', QuietEvents)
+
+
 class ImageBackend:
     def __init__(self,hold=False,hold_stop=False):
         self.jobs=[]; self.running=set(); self.known=set()
+        self.events_to_emit=queue.Queue(); self.events_connected=threading.Event()
         self.started=threading.Event(); self.finish=threading.Event()
         self.release_stop=threading.Event(); self.offline=threading.Event()
         if not hold: self.finish.set()
         if not hold_stop: self.release_stop.set()
         buf=io.BytesIO(); Image.new("RGB",(8,8),"green").save(buf,format="PNG")
         self.png=buf.getvalue()
+    def event_stream(self, url, client_id):
+        return BackendEvents(self)
     async def __call__(self,req):
         p=req.url.path
         if p=="/system_stats":
@@ -69,11 +111,12 @@ def owner_env(tmp_path):
     keys={o:registry.issue(o) for o in ("legacy","A","B")}
     env=SimpleNamespace(root=tmp_path/"runtime",registry=registry,keys=keys,new_backend=ImageBackend)
     env.auth=lambda owner:{"Authorization":"Bearer "+keys[owner]}
-    def client(*,backend=None,run_worker=False,identity_mode="staging"):
+    def client(*,backend=None,run_worker=False,identity_mode="staging",event_stream_factory=None):
         backend=backend or ImageBackend()
+        event_args = {} if event_stream_factory is None else {'event_stream_factory': event_stream_factory}
         app=create_app(env.root,keys["legacy"],key_registry=registry,
             identity_mode=identity_mode,transport=httpx.MockTransport(backend),
-            run_worker=run_worker,audio_enabled=False,images_enabled=True)
+            run_worker=run_worker,audio_enabled=False,images_enabled=True,**event_args)
         return TestClient(app)
     env.client=client
     def upload(c,owner="A"):
