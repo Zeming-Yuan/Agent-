@@ -1,0 +1,52 @@
+....FFF                                                                  [100%]
+=================================== FAILURES ===================================
+______________ test_tb01_legacy_expand_requires_explicit_owner[] _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-78/test_tb01_legacy_expand_requir0')
+owner = ''
+
+    @pytest.mark.parametrize('owner', ['', '   ', None])
+    def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
+        from services.ownership import expand_ownership
+    
+        store = Store(tmp_path)
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='explicit legacy owner'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:65: Failed
+_____________ test_tb01_legacy_expand_requires_explicit_owner[   ] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-78/test_tb01_legacy_expand_requir1')
+owner = '   '
+
+    @pytest.mark.parametrize('owner', ['', '   ', None])
+    def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
+        from services.ownership import expand_ownership
+    
+        store = Store(tmp_path)
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='explicit legacy owner'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:65: Failed
+____________ test_tb01_legacy_expand_requires_explicit_owner[None] _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-78/test_tb01_legacy_expand_requir2')
+owner = None
+
+    @pytest.mark.parametrize('owner', ['', '   ', None])
+    def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
+        from services.ownership import expand_ownership
+    
+        store = Store(tmp_path)
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='explicit legacy owner'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:65: Failed
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[   ]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[None]
+3 failed, 4 passed in 0.32s

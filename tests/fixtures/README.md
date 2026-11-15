@@ -1,0 +1,3 @@
+# T01 legacy compatibility fixture
+
+`t01-legacy-services.zip` contains the exact original services sources from sanitized baseline commit `443fc6022af58f9679b99bc3fb2b40cbc616138c`. The manifest independently pins every file SHA256. Tests import this frozen package under a separate namespace, including the old Store, gateway and worker; the evolving implementation is not substituted for legacy code. This is a test-only offline copy, contains no data/keys/models, and must not be deployed. It lets both versions run against the same expanded synthetic database without requiring Git in the product directory.

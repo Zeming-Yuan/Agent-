@@ -1,0 +1,52 @@
+...............FFF                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_tb01_legacy_expand_modes_fail_closed_before_migration[typo] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-98/test_tb01_legacy_expand_modes_0')
+mode = 'typo'
+
+    @pytest.mark.parametrize('mode', ['typo', '', 'strict'])
+    def test_tb01_legacy_expand_modes_fail_closed_before_migration(tmp_path, mode):
+        from services.gateway import create_app
+    
+>       with pytest.raises(ValueError, match='identity_mode|owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:181: Failed
+_________ test_tb01_legacy_expand_modes_fail_closed_before_migration[] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-98/test_tb01_legacy_expand_modes_1')
+mode = ''
+
+    @pytest.mark.parametrize('mode', ['typo', '', 'strict'])
+    def test_tb01_legacy_expand_modes_fail_closed_before_migration(tmp_path, mode):
+        from services.gateway import create_app
+    
+>       with pytest.raises(ValueError, match='identity_mode|owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:181: Failed
+______ test_tb01_legacy_expand_modes_fail_closed_before_migration[strict] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-98/test_tb01_legacy_expand_modes_2')
+mode = 'strict'
+
+    @pytest.mark.parametrize('mode', ['typo', '', 'strict'])
+    def test_tb01_legacy_expand_modes_fail_closed_before_migration(tmp_path, mode):
+        from services.gateway import create_app
+    
+>       with pytest.raises(ValueError, match='identity_mode|owner migration'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb01_legacy_expand.py:181: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[typo]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[]
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[strict]
+3 failed, 15 passed, 1 warning in 0.92s

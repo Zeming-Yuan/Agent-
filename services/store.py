@@ -1,0 +1,140 @@
+"""Private file and durable job state. One configured Agent identity owns this store."""
+from contextlib import contextmanager
+import hashlib
+import json
+import sqlite3
+import time
+import uuid
+from pathlib import Path
+from fastapi import HTTPException
+
+
+class Store:
+    def __init__(self, root: Path, max_pending=4):
+        self.root = Path(root)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.files = self.root / 'files'
+        self.files.mkdir(mode=0o700, exist_ok=True)
+        self.db = self.root / 'state.sqlite3'
+        self.max_pending = max_pending
+        with self.connect() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
+            CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
+              options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
+              idem TEXT UNIQUE, fingerprint TEXT, created INTEGER, updated INTEGER);
+            ''')
+
+    @contextmanager
+    def connect(self):
+        db = sqlite3.connect(self.db, timeout=10)
+        db.row_factory = sqlite3.Row
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
+
+    def file(self, fid):
+        with self.connect() as db:
+            row = db.execute('SELECT * FROM files WHERE id=?', (fid,)).fetchone()
+        if row is None:
+            raise HTTPException(404, 'File not found')
+        return dict(row)
+
+    def path(self, fid):
+        self.file(fid)
+        # Only opaque IDs retrieved from SQLite can reach the filesystem.
+        return self.files / fid
+
+    def add_file(self, fid, name, size):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            used=db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
+            if used+size>2*1024**3: raise HTTPException(413,'File/storage limit exceeded')
+            db.execute('INSERT INTO files VALUES(?,?,?,?)', (fid, Path(name).name[:200], size, int(time.time())))
+        return self.file(fid)
+
+    def save_generated(self, fid, data, name):
+        path=self.files/fid
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            existing=db.execute('SELECT bytes FROM files WHERE id=?',(fid,)).fetchone()
+            if existing:
+                if existing['bytes']==len(data) and path.is_file() and path.read_bytes()==data:
+                    return self.file(fid)
+                raise HTTPException(409,'File ID conflicts with different content')
+            used=db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
+            if used+len(data)>2*1024**3: raise HTTPException(413,'File/storage limit exceeded')
+            try:
+                with path.open('xb') as out: out.write(data)
+                db.execute('INSERT INTO files VALUES(?,?,?,?)',(fid,name,len(data),int(time.time())))
+            except BaseException:
+                path.unlink(missing_ok=True)
+                raise
+        return self.file(fid)
+
+    def delete_file(self, fid):
+        self.file(fid)
+        with self.connect() as db:
+            if db.execute("""SELECT 1 FROM tasks WHERE status IN ('queued','running') AND
+                          (file_id=? OR json_extract(options,'$.foreground_file_id')=? OR
+                           EXISTS(SELECT 1 FROM json_each(tasks.options,'$.image_ids') WHERE value=?))""",
+                          (fid,fid,fid)).fetchone():
+                raise HTTPException(409, 'File has pending tasks')
+            (self.files / fid).unlink(missing_ok=True)
+            db.execute('DELETE FROM files WHERE id=?', (fid,))
+
+    def task(self, tid):
+        with self.connect() as db:
+            row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
+        if row is None:
+            raise HTTPException(404, 'Task not found')
+        item = dict(row)
+        for key in ('options', 'result'):
+            item[key] = json.loads(item[key]) if item[key] else None
+        for key in ('idem', 'fingerprint'):
+            item.pop(key)
+        return item
+
+    def submit(self, kind, fid, options, idem):
+        if fid is not None:
+            self.file(fid)
+        fingerprint = hashlib.sha256(json.dumps([kind, fid, options], sort_keys=True).encode()).hexdigest()
+        tid = 'task-' + uuid.uuid4().hex
+        now = int(time.time())
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            if idem:
+                row = db.execute('SELECT id,fingerprint FROM tasks WHERE idem=?', (idem,)).fetchone()
+                if row:
+                    if row['fingerprint'] != fingerprint:
+                        raise HTTPException(409, 'Idempotency key reused with different request')
+                    return self.task(row['id'])
+            count = db.execute("SELECT count(*) FROM tasks WHERE status IN ('queued','running')").fetchone()[0]
+            if count >= self.max_pending:
+                raise HTTPException(429, 'Media queue full', headers={'Retry-After':'10'})
+            db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
+                       (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, idem, fingerprint, now, now))
+        return self.task(tid)
+
+    def update(self, tid, **fields):
+        assert fields.keys() <= {'status', 'progress', 'result', 'error'}
+        if 'result' in fields:
+            fields['result'] = json.dumps(fields['result'], ensure_ascii=False)
+        fields['updated'] = int(time.time())
+        with self.connect() as db:
+            # Cancellation is terminal, even if an upstream request completes at the same instant.
+            db.execute('UPDATE tasks SET ' + ','.join(f'{k}=?' for k in fields) + " WHERE id=? AND status!='cancelled'",
+                       (*fields.values(), tid))
+        return self.task(tid)
+
+    def recover(self):
+        with self.connect() as db:
+            db.execute("UPDATE tasks SET status='failed',error='Service restarted during processing',updated=? WHERE status='running'", (int(time.time()),))
+
+    def next_task(self, image=False):
+        with self.connect() as db:
+            op = 'IN' if image else 'NOT IN'
+            row = db.execute(f"SELECT id FROM tasks WHERE status='queued' AND kind {op} ('image_generate','image_edit') ORDER BY created,rowid LIMIT 1").fetchone()
+        return self.task(row['id']) if row else None

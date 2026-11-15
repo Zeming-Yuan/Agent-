@@ -1,0 +1,194 @@
+{
+  "base": "443fc6022af58f9679b99bc3fb2b40cbc616138c",
+  "source": "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115",
+  "destination": "/home/clusteradmin/Desktop/Agent多模态服务",
+  "paths": {
+    "OPERATIONS.md": {
+      "before": "48bbfb8dc3423d23d05a9e3232d5d171b41bc9bdbfbc5c79be5f1ce47d859055",
+      "after": "b47da425cf25d32db6efe2bee0c63bbb56e6c3729603eb7711e97d4a79fec817"
+    },
+    "certificates/agent-root-ca.crt": {
+      "before": "86add5dc332c9c6c759318cb67826779d9994e8c667a8cb32550983c3733cfb8",
+      "after": "86add5dc332c9c6c759318cb67826779d9994e8c667a8cb32550983c3733cfb8"
+    },
+    "docs/adr/0001-owner-scoped-storage.md": {
+      "before": null,
+      "after": "4fcc68e5ce85654debec74d60a2f5c38cb43a54ca9e7ecde0c82d9838e3d788b"
+    },
+    "docs/superpowers/plans/2026-11-14-image-01-legacy-expand.md": {
+      "before": "cc423ab863bc546cd3bc36a3acea2c6178a3679e05d40a18e39bbee0d1b9d2c4",
+      "after": "2bcfdc1c4af4d509ed54df6de31244be9280900c0cf87e583c75e69831ff5275"
+    },
+    "evidence/issue-2/a-factory-red.txt": {
+      "before": null,
+      "after": "23c7808e2a4d21aeb85b5a512a8f1e11d33bba95b454b3eb1125092f6135000e"
+    },
+    "evidence/issue-2/a-green-initial.txt": {
+      "before": null,
+      "after": "09229b326b028651d725fa47cd1bae9fd8e0145ff8779bdb84ae2762c00ab737"
+    },
+    "evidence/issue-2/a-green.txt": {
+      "before": null,
+      "after": "1dfce0dd6b83bd470affc2fbea198d60c5918e5fb66f292c185ce1fbd58ba855"
+    },
+    "evidence/issue-2/a-owner-green.txt": {
+      "before": null,
+      "after": "75f8f2dfafb95c912476d6627a8694df8ec4f010fd4bdaa188c748916c0abff4"
+    },
+    "evidence/issue-2/a-owner-red.txt": {
+      "before": null,
+      "after": "342694506473e6fd5ace99b3a805ef0f62c4089f7a967c15ad67316811c95bf3"
+    },
+    "evidence/issue-2/a-preflight-green.txt": {
+      "before": null,
+      "after": "ba687f67e739d608d0c2920e1525f9fa9c54bbaf5dbf028d4955aed5701ab533"
+    },
+    "evidence/issue-2/a-preflight-red.txt": {
+      "before": null,
+      "after": "9a8230746f6008c29dd9a65426cb5a0fcfbfe137282915bcc305c5b00f9b1220"
+    },
+    "evidence/issue-2/a-red.txt": {
+      "before": null,
+      "after": "566a46ab8e38736a86e9bafb3aa639f29d232a61ff2c21dd70356878fc010c3b"
+    },
+    "evidence/issue-2/a-require-red.txt": {
+      "before": null,
+      "after": "f202a80e879d25522e24999ff02c6c2d012fc8e72a288c6bab61cb613d3a2687"
+    },
+    "evidence/issue-2/a-review-green.txt": {
+      "before": null,
+      "after": "63a2d3a27b2e1884a1ff319c01e083ea1398516c8a117888f733e7cbec785e87"
+    },
+    "evidence/issue-2/a-review-red.txt": {
+      "before": null,
+      "after": "3881505d70e411b9611da0e45dbf86e211c6afa3aecbb053df747d811e83b815"
+    },
+    "evidence/issue-2/acceptance.md": {
+      "before": null,
+      "after": "8964603e2bf6e777ac5a36d0ed2fe65917add619bdafb28569a096c70f69a464"
+    },
+    "evidence/issue-2/b-auth-green.txt": {
+      "before": null,
+      "after": "b410b06688ff33e4f01aa72642822a0ebd870b539fea3309f48111ce131b70d3"
+    },
+    "evidence/issue-2/b-auth-red.txt": {
+      "before": null,
+      "after": "61ce84d77cce8a4cd52182ed0e99a111b5c83cf807844a6b09f6e5845af8bcc6"
+    },
+    "evidence/issue-2/b-compatibility.txt": {
+      "before": null,
+      "after": "acc4f28e60baf305e7378bf12aa12b3683b06a0e29ab41f0f20ccec1612b4c25"
+    },
+    "evidence/issue-2/b-existing-test-env-green.txt": {
+      "before": null,
+      "after": "e4b3737494c48ab4c509b7d1b2ca241d756947248d500db0f63fb8d4e7ccce7c"
+    },
+    "evidence/issue-2/b-focused.txt": {
+      "before": null,
+      "after": "5cb142f3e06ac332666af6b165dce32dd96585010938e61ee2bc79865bbeeaf0"
+    },
+    "evidence/issue-2/b-identity-regression.txt": {
+      "before": null,
+      "after": "58f3b4d1f21314444cf4e32cd553b0cfbcfa6412fe56447e49a82afd0c131a79"
+    },
+    "evidence/issue-2/b-mode-green.txt": {
+      "before": null,
+      "after": "65a793515c521945ae4d564cd217b02ae5e72573a6f38d06211b5030d73c1053"
+    },
+    "evidence/issue-2/b-mode-red.txt": {
+      "before": null,
+      "after": "c75bc87a1b65193aefa8b8e4df4bf7d4e4483b3508c5e6923541c1c930bfac24"
+    },
+    "evidence/issue-2/b-old-new-flow.txt": {
+      "before": null,
+      "after": "a9bbe99e06a6f17b2ce535072c23135bb77e3817ae82ca4e1cf76687b13df8b6"
+    },
+    "evidence/issue-2/b-registry-green.txt": {
+      "before": null,
+      "after": "3421714fcf33cdc87a93e31bc4d27d5da4eb50f4a8d176b3f99eb0dd80a92e80"
+    },
+    "evidence/issue-2/b-registry-red.txt": {
+      "before": null,
+      "after": "4e3397d231f59a7c06bbcf558302a0a35ea16cf48a74b053454ef3208ca4748f"
+    },
+    "evidence/issue-2/b-validation-green.txt": {
+      "before": null,
+      "after": "d45b595d93a4d0db7fc7d1699fdb4046b2d5f4ca6e798b75a262d1d3486090e5"
+    },
+    "evidence/issue-2/b-validation-red.txt": {
+      "before": null,
+      "after": "597d54623acb90b105d1f18570dea8a6a7e849757320ff8fabda5c071c5a6672"
+    },
+    "evidence/issue-2/collect.txt": {
+      "before": null,
+      "after": "f6d90ab90d9a95afa874d5d34834ac7c2da4dc4687fcd1b3fefe61f2f51251e3"
+    },
+    "evidence/issue-2/progress.md": {
+      "before": null,
+      "after": "c9df77dad43728af282fd923834e91eab620204318eb9f87aa7966b34043b415"
+    },
+    "evidence/issue-2/review-a.md": {
+      "before": null,
+      "after": "38436b4b87ad3cb0b6b64f4c1a2129078a18800cbe5c3ef74d1206d708d3c5d2"
+    },
+    "evidence/issue-2/review-b.md": {
+      "before": null,
+      "after": "088443a8fd3fc9cd0acc009ecc596689128ea95a52195c4d2c4e4fbb0462f7aa"
+    },
+    "evidence/issue-2/suite-final.txt": {
+      "before": null,
+      "after": "3efbf674cefc836f53a4e65449fbd9aba29967fa1d26f08194fc701d40ffa7fd"
+    },
+    "evidence/issue-2/suite.txt": {
+      "before": null,
+      "after": "b529723cc0f63ac155524e19914c3fb655115f324339a056476140f02ca1a32b"
+    },
+    "services/gateway.py": {
+      "before": "ab2564c68992aea9bdd342eb58759c210d0f31b0fec6ba23c1801189f34d650a",
+      "after": "0d427be0bbb736e0f5eb7e927a0b2b5c81713920e3c2704f305b4b35af9c07e7"
+    },
+    "services/identity.py": {
+      "before": null,
+      "after": "a438d5ba9474351c43972e1e3d3513008242c62108f9549e5c16c8fb409e85d8"
+    },
+    "services/ownership.py": {
+      "before": null,
+      "after": "b9617644284be691e2dca77d64870fba1cb4927cf3242b0c2cae48249c0d903b"
+    },
+    "tests/conftest.py": {
+      "before": null,
+      "after": "1c20a175d19db62a62722af18cb7eca3f17328b585cfb3d771295fe14986a480"
+    },
+    "tests/fixtures/README.md": {
+      "before": null,
+      "after": "0ffef74ede4fabaf6d1a5a0356721d2680fcc863fd0fd9eeae2d8545ec6357f3"
+    },
+    "tests/fixtures/t01-legacy-manifest.json": {
+      "before": null,
+      "after": "3aa906a8d6357ace69437dac21f6a4490b0a4a0d7d1bac41efe530248eb794ce"
+    },
+    "tests/fixtures/t01-legacy-services.zip": {
+      "before": null,
+      "after": "2747688eee0d61172cf9af1ce8b722058805169a03037063f7e7434a0ddf1d4d"
+    },
+    "tests/test_images.py": {
+      "before": "7eedb6699d704a8fda8dd3c0128ca6b17634bcc77fde3e4c19d1927143566b8b",
+      "after": "a606cbe3951307daf635c3928df0798ebfee4077cf15809fbcc1ed76e1192dae"
+    },
+    "tests/test_tb01_legacy_expand.py": {
+      "before": null,
+      "after": "3e283cd6cfd20496bcd4b0d78337d1845373ad12d7fb20d51f97f4d249002c0e"
+    },
+    "evidence/issue-2/isolated-post-sync.txt": {
+      "before": null,
+      "after": "f55f2459dcd6dc426d64778dddd7db1ddfd69116b6e9dbbd55366a145a4aa5b2"
+    },
+    "evidence/issue-2/product-final.txt": {
+      "before": null,
+      "after": "1112321144a67960647dee4ce27336efec2dc3e9677628f491efd149ba1a213c"
+    }
+  },
+  "initial_sync_head": "d636e6564253b4aef53e67c8cbc2c77741748297",
+  "verified_payload_head": "7475033a978e7686a6c0e8c9709d7dde7f4e9c90",
+  "note": "Final payload hashes exclude this self-describing manifest. before is the pre-sync product preimage; new delivery evidence has no preimage. No deployment or private runtime changes."
+}

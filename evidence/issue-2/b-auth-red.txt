@@ -1,0 +1,32 @@
+..............F                                                          [100%]
+=================================== FAILURES ===================================
+___________ test_tb01_legacy_expand_legacy_mode_blocks_other_owners ____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-96/test_tb01_legacy_expand_legacy0/runtime'), registry=<s...tion owner_env.<locals>.submit at 0xf4201ad0bf60>, wait_task=<function owner_env.<locals>.wait_task at 0xf4201ad2c860>)
+caplog = <_pytest.logging.LogCaptureFixture object at 0xf4201ad1eba0>
+
+    def test_tb01_legacy_expand_legacy_mode_blocks_other_owners(owner_env, caplog):
+        import logging
+>       with caplog.at_level(logging.INFO, logger='agent-mm'), owner_env.client(identity_mode='legacy') as client:
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb01_legacy_expand.py:164: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def client(*,backend=None,run_worker=False,identity_mode="staging"):
+        backend=backend or ImageBackend()
+>       app=create_app(env.root,keys["legacy"],key_registry=registry,
+            identity_mode=identity_mode,transport=httpx.MockTransport(backend),
+            run_worker=run_worker,audio_enabled=False,images_enabled=True)
+E       TypeError: create_app() got an unexpected keyword argument 'key_registry'
+
+tests/conftest.py:64: TypeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_legacy_mode_blocks_other_owners
+1 failed, 14 passed, 1 warning in 0.63s

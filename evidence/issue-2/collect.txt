@@ -1,0 +1,37 @@
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preserves_positional_writes
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[False]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_is_read_only_and_counts_old_writes[True]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preserves_explicit_owner_on_retry
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_preflight_missing_database_does_not_create_it
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[   ]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_requires_explicit_owner[None]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_persists_identity_without_raw_keys
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[  -xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_rejects_ambiguous_or_weak_identity[A-short]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_cannot_reassign_a_key
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_legacy_mode_blocks_other_owners
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[typo]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_modes_fail_closed_before_migration[strict]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_staging_resolves_principal_without_token_fallback
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_concurrent_registration_keeps_one_identity
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_old_and_new_complete_image_flow_on_same_copy
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_original_cases_on_expanded_copy[old-test_upload_limit_paths_and_delete]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_original_cases_on_expanded_copy[old-test_task_idempotency_cancel_and_persistence]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_original_cases_on_expanded_copy[new-test_upload_limit_paths_and_delete]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_original_cases_on_expanded_copy[new-test_task_idempotency_cancel_and_persistence]
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_interrupted_transaction_can_retry_without_owner_loss
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_serializes_with_old_positional_writer
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_backup_restores_image_and_task_identity
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_default_key_revocation_survives_app_restart
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+29/79 tests collected (50 deselected) in 0.04s

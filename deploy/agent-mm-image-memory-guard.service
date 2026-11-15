@@ -1,0 +1,10 @@
+[Unit]
+Description=Keep 20GiB memory reserve for Spark02 image worker
+
+[Service]
+ExecStart=/home/clusteradmin/Desktop/Agent多模态服务/deploy/image-memory-guard.sh
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

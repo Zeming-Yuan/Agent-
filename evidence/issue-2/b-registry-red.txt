@@ -1,0 +1,20 @@
+.........F                                                               [100%]
+=================================== FAILURES ===================================
+_____ test_tb01_legacy_expand_registry_persists_identity_without_raw_keys ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-92/test_tb01_legacy_expand_regist0')
+
+    def test_tb01_legacy_expand_registry_persists_identity_without_raw_keys(tmp_path):
+>       from services.identity import KeyRegistry
+E       ModuleNotFoundError: No module named 'services.identity'
+
+tests/test_tb01_legacy_expand.py:117: ModuleNotFoundError
+=============================== warnings summary ===============================
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_registry_persists_identity_without_raw_keys
+1 failed, 9 passed, 1 warning in 0.47s

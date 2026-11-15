@@ -1,0 +1,19 @@
+[Unit]
+Description=Agent multimodal resident omni GPU backend
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+WorkingDirectory=/home/clusteradmin/Desktop/Agent多模态服务
+ExecStartPre=-/usr/bin/docker rm agent-mm-omni
+ExecStart=/home/clusteradmin/Desktop/Agent多模态服务/deploy/run-audio.sh omni
+ExecStop=-/usr/bin/docker stop -t 20 agent-mm-omni
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+UMask=0077
+MemoryMax=48G
+
+[Install]
+WantedBy=default.target

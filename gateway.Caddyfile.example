@@ -1,0 +1,17 @@
+{
+    admin off
+    auto_https disable_redirects
+    skip_install_trust
+}
+
+# AGENT_TLS_HOST: the final fixed private IP or internal DNS name.
+# AGENT_BIND_IP: the specific business-LAN interface, not 0.0.0.0.
+# Run with the same isolated XDG_DATA_HOME used by the TLS probe so the CA
+# remains stable. Configure client authentication at the real gateway.
+https://{$AGENT_TLS_HOST}:18443 {
+    bind {$AGENT_BIND_IP}
+    tls internal
+    reverse_proxy 127.0.0.1:18008 {
+        flush_interval -1
+    }
+}

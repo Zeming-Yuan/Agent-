@@ -1,0 +1,5 @@
+.private/
+.secrets/
+.venv/
+__pycache__/
+*.log

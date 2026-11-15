@@ -1,0 +1,45 @@
+........F                                                                [100%]
+=================================== FAILURES ===================================
+______ test_tb01_legacy_expand_gateway_initializes_compatibility_metadata ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-88/test_tb01_legacy_expand_gatewa0')
+caplog = <_pytest.logging.LogCaptureFixture object at 0xf2df42e6ddf0>
+
+    def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog):
+        from fastapi.testclient import TestClient
+        from services.gateway import create_app
+        from services.ownership import preflight_ownership
+    
+        store = Store(tmp_path)
+        fid = 'file-' + 'd' * 32
+        store.save_generated(fid, b'old result', 'result.png')
+        task = store.submit('image_generate', None, {}, 'old-request')
+        store.update(task['id'], status='completed', result={'file_id': fid})
+        import logging
+        caplog.set_level(logging.INFO, logger='agent-mm')
+        with TestClient(create_app(tmp_path, 'test-secret-token', run_worker=False)) as client:
+            auth = {'Authorization': 'Bearer test-secret-token'}
+            assert client.get('/v1/tasks/' + task['id'], headers=auth).json()['result'] == {'file_id': fid}
+            assert client.get('/v1/files/' + fid + '/content', headers=auth).content == b'old result'
+            assert preflight_ownership(store.db) == {
+                'unowned_files': 0, 'unowned_tasks': 0,
+                'unowned_idempotency_records': 0, 'running_tasks': 0,
+            }
+    
+>       assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in caplog.text
+E       AssertionError: assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in 'INFO     agent-mm:gateway.py:135 f32a04deea5348b4a4fd284b79b195a1 GET /v1/tasks/task-8898120d637a4210ba708139e78d51b5...t-mm:gateway.py:135 73571d21f8ed4cc59b97b629dc4c14ed GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n'
+E        +  where 'INFO     agent-mm:gateway.py:135 f32a04deea5348b4a4fd284b79b195a1 GET /v1/tasks/task-8898120d637a4210ba708139e78d51b5...t-mm:gateway.py:135 73571d21f8ed4cc59b97b629dc4c14ed GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200\n' = <_pytest.logging.LogCaptureFixture object at 0xf2df42e6ddf0>.text
+
+tests/test_tb01_legacy_expand.py:111: AssertionError
+------------------------------ Captured log call -------------------------------
+INFO     agent-mm:gateway.py:135 f32a04deea5348b4a4fd284b79b195a1 GET /v1/tasks/task-8898120d637a4210ba708139e78d51b5 200
+INFO     agent-mm:gateway.py:135 73571d21f8ed4cc59b97b629dc4c14ed GET /v1/files/file-dddddddddddddddddddddddddddddddd/content 200
+=============================== warnings summary ===============================
+tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb01_legacy_expand.py::test_tb01_legacy_expand_gateway_initializes_compatibility_metadata
+1 failed, 8 passed, 1 warning in 0.39s

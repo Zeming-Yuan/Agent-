@@ -1,0 +1,11 @@
+[Unit]
+Description=Protect20GiB available memory reserve from Agent main model
+After=network-online.target
+
+[Service]
+ExecStart=/home/spark01/agent-multimodal-service/deploy/main-memory-guard.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

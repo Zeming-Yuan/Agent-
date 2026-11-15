@@ -1,0 +1,12 @@
+FROM agent-mm-media-runtime:20261113
+USER root
+COPY .private/image-runtime/ComfyUI /opt/ComfyUI
+RUN python -m pip freeze > /tmp/base-freeze.txt && \
+    python -c "from pathlib import Path; p=Path('/tmp/base-freeze.txt'); Path('/tmp/torch-constraints.txt').write_text('\n'.join(x for x in p.read_text().splitlines() if x.lower().split('=')[0] in ('torch','torchvision','torchaudio')))" && \
+    sed '/^torch$/d; /^torchvision$/d; /^torchaudio$/d' /opt/ComfyUI/requirements.txt > /tmp/image-requirements.txt && \
+    python -m pip install --no-cache-dir -c /tmp/torch-constraints.txt -r /tmp/image-requirements.txt && \
+    python -m pip freeze > /opt/image-requirements.lock
+# Import-only stub, following NVIDIA's ComfyUI playbook; this worker has no audio workflows.
+RUN python -c "import site; from pathlib import Path; p=Path(site.getsitepackages()[0])/'torchaudio'; p.mkdir(exist_ok=True); (p/'__init__.py').write_text('__version__ = \"0.0.0+ngc-stub\"\nfrom . import functional, transforms\n'); [(p/(x+'.py')).write_text('def __getattr__(name):\n    raise RuntimeError(\"Audio workflows are disabled in this image worker\")\n') for x in ('functional','transforms')]"
+WORKDIR /opt/ComfyUI
+ENTRYPOINT ["python", "main.py"]

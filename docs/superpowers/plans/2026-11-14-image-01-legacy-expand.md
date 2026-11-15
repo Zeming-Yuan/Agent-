@@ -14,6 +14,22 @@
 
 **Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
 
+## 执行记录（2026-11-15）
+
+用户已明确授权执行 issue #2，确认迁移接口、KeyRegistry 与真实 HTTP/Store/worker 测试 seam，并授权在工作区外建立脱敏源码 Git checkout。以下“本次只批准编写计划”等表述保留为 2026-11-14 的历史记录，不限制此次已授权实现。
+
+本票原生串行完成两个切片，分支 `issue-2-legacy-expand` 位于 `/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115`；基线 `443fc602`，实现提交 `f1f8084`、预检修复 `0d555b5`、身份与兼容验证 `a6ef5ed`。源码基线 12/12 匹配，旧服务冻结副本 8/8 精确匹配。计划的核心/边界步骤已由实际 red→green、独立提交和各切片双轴 review 执行；不把历史代码示例或未勾选的原计划当成执行证据。
+
+验证：29 项 T01 已采集，受影响回归 31 passed，最终 pytest 全套 79 passed（1 项既有依赖弃用警告）。Standards 无发现；Spec 的 factory 预检 P2 已修复并复审通过，最终无未处理发现。证据及逐 AC 映射见 `evidence/issue-2/acceptance.md`；审查见 `review-a.md` / `review-b.md`；决策见 `progress.md` 与 Proposed ADR 0001。
+
+本次只完成离线合成旧数据副本验证和本地提交/同步；未部署、未推送。生产旧数据、实机后端与 Windows/macOS Harness 未验证。strict 暂拒绝启动，staging 仅隔离测试；文件/任务 owner 迁移继续由现有 #3/#4/#5（T02/T03/T04）承接，最终实机和双端由 #12—#15 承接；父规格不关闭。
+
+## PR 交付接续（2026-11-15）
+
+用户随后授权创建 PR，并在无冲突时合并。远端 main 原先仅含计划和规格；PR 分支 `pr/issue-2-legacy-expand` 从远端 main 建立，先引入已核对的公开源码基线，再逐提交接入 T01。远端独有的 `2026-11-14-image-source-baseline.json` 保留；脚本可执行权限与原审查树一致。原始审查提交号保留为本地来源记录，PR 上的对应提交号因接入远端历史而改变，冻结旧服务仍按独立 SHA256 校验。
+
+既有“未推送、未部署”记录描述前一个本地交付阶段；本次授权发布源码并合并 PR，不包含生产部署或启用多人入口。应用、测试与前述已审查版本逐字节核对；只补充交付记录及保留远端文档。类型/静态/构建门禁仍未配置，生产与双端实机验收仍未验证。
+
 ## Global Constraints
 
 - Windows 和 macOS 分别从实际桌面 Harness → MCP → HTTPS → 图片后端 → 鉴权取图 → 显示与本地保存验收。
