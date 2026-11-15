@@ -45,3 +45,9 @@ Spec node5 correction:29RED→GREEN, focused module53passed. Final affected12-fi
 ## Final source review
 
 Code HEADd5861af6b315dec0135f6bdafa203c93b8744775 independently re-reviewed Standards0/Spec0; all prior issues resolved, no deferred minors. Final-source-hashes matched after reviewers returned. Root affected206passed, focused53passed; reviewers independently5/7targeted passed. Later commits may record delivery metadata only; they do not change the reviewed product source.
+
+## Original product delivery
+
+90reviewed code/test/docs/evidence paths were verified against original preimages with0conflicts, backed up in the private rollback directory, selectively atomically replaced and SHA256-matched. Manifest records source68382e0 and reviewed code d5861af; later metadata does not modify source. Actual verification cwd /home/clusteradmin/Desktop/Agent多模态服务, supported .venv: same affected12-file command **206passed**, one existing AnyIO warning (product-final.txt). Both directories'9source/test/launcher hashes still match final-source-hashes.json after verification. No private runtime/config/key/model/database/production data copied; scoped path/symlink/private-key marker inspection found0suspicious payloads (not a configured security scanner). No temporary sync files remain in payload.
+
+Local source branch feat/issue-9-memory-evidence retained with independently testable slice/repair commits; no push/PR/deployment. Original directory stays non-Git. All software findings resolved; physical single-task >=5Hz/runtime/model/release/baseline acceptance remains **未验证/not_run** in#24, #9OPEN and parent#1 unchanged. Actual Windows/macOS Harness and production/physical recovery also未验证; unconfigured gates remainN/A. This is delivered offline code, not full issue9 acceptance.
