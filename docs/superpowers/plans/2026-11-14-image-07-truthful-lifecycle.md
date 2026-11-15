@@ -322,3 +322,9 @@ def test_tb07_other_prompt_and_invalid_steps_are_ignored():
     assert normalize_event({"type":"progress","data":{"prompt_id":"mine","node":"7","value":5,"max":4}},"mine","7") is None
     assert normalize_event({"type":"progress","data":{"prompt_id":"mine","node":"7","value":2,"max":4}},"mine","7")["step"] == 2
 ```
+
+## 2026-11-15 execution evidence
+
+用户已授权单票实现并确认固定基线60cad80和HTTP/实际stdio seam。切片A660a746/727e436完成并独立复审0/0；切片B的RED/GREEN、实际TLS stdio、固定WS协议与逐条AC映射见evidence/issue-8/acceptance.md。原计划末尾“仅批准编写计划”是历史状态，已由本次明确实现授权取代。
+
+共享checkout发生未解释的源码回退，已保全差异并使用本票专属受控clone继续；最终以固定提交和新鲜验证证据为准。没有生产部署、实机标定或Windows/macOS Harness结论；这些继续明确未验证。仅按用户要求运行受影响检查；未配置门禁N/A，详见验收记录。未证明旧模型释放，不把/free受理当作释放完成。

@@ -2,12 +2,15 @@
 from contextlib import contextmanager
 import hashlib
 import json
+import os
 import sqlite3
 import time
+import tempfile
 import uuid
 from pathlib import Path
 from fastapi import HTTPException
 from .ownership import require_owner
+from .task_lifecycle import apply_event
 
 
 def task_fingerprint(files: Path, kind, fid, options):
@@ -48,7 +51,16 @@ class Store:
             CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
               options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
               idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
             ''')
+            columns = {row['name'] for row in db.execute('PRAGMA table_info(task_runtime)')}
+            for name in ('step', 'steps'):
+                if name not in columns:
+                    db.execute(f'ALTER TABLE task_runtime ADD COLUMN {name} INTEGER')
 
     @contextmanager
     def connect(self):
@@ -93,7 +105,14 @@ class Store:
     def _save_generated(self, fid, data, name, *, owner, digest=None):
         path = self.files / fid
         created = False
+        fd, pending_name = tempfile.mkstemp(prefix='.pending-', dir=self.files)
+        pending = Path(pending_name)
         try:
+            # Slow data I/O precedes the write lock: cancel/query can still run.
+            with os.fdopen(fd, 'wb') as out:
+                out.write(data)
+                out.flush()
+                os.fsync(out.fileno())
             with self.connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 if digest is not None:
@@ -110,9 +129,14 @@ class Store:
                 used = db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
                 if used + len(data) > 2*1024**3:
                     raise HTTPException(413, 'File/storage limit exceeded')
-                with path.open('xb') as out:
-                    created = True
-                    out.write(data)
+                os.link(pending, path)  # exclusive publication, never replaces another result
+                created = True
+                pending.unlink()
+                directory = os.open(self.files, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(directory)
+                finally:
+                    os.close(directory)
                 db.execute('INSERT INTO files VALUES(?,?,?,?)', (fid, name, len(data), int(time.time())))
                 db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('file', fid, owner))
                 if digest is not None:
@@ -121,6 +145,8 @@ class Store:
             if created:
                 path.unlink(missing_ok=True)
             raise
+        finally:
+            pending.unlink(missing_ok=True)
         return self.file(fid, owner=owner), True
 
     def delete_file(self, fid, *, owner):
@@ -186,7 +212,9 @@ class Store:
                     'next_cursor': page[-1]['id'] if len(rows) > limit else None}
 
     def _task(self, db, tid):
-        row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
+        row = db.execute('''SELECT t.*,r.stage,r.stage_seq,r.stage_started_at,r.stage_updated_at,
+            r.blocked_reason,r.cancel_requested,r.step,r.steps FROM tasks t LEFT JOIN task_runtime r ON r.task_id=t.id
+            WHERE t.id=?''', (tid,)).fetchone()
         if row is None:
             raise HTTPException(404, 'Task not found')
         item = dict(row)
@@ -194,6 +222,7 @@ class Store:
             item[key] = json.loads(item[key]) if item[key] else None
         for key in ('idem', 'fingerprint'):
             item.pop(key)
+        item['cancel_requested'] = bool(item['cancel_requested'])
         return item
 
     def request_fingerprint(self, kind, fid, options, *, owner):
@@ -228,6 +257,9 @@ class Store:
             db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
                        (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, None, fingerprint, now, now))
             db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('task', tid, owner))
+            db.execute('''INSERT INTO task_runtime(task_id,stage,stage_seq,stage_started_at,
+                stage_updated_at,blocked_reason,cancel_requested) VALUES(?,?,?,?,?,?,?)''',
+                (tid, 'queued', 0, now, now, None, 0))
             if idem:
                 db.execute('INSERT INTO task_requests VALUES(?,?,?,?)', (owner, idem, fingerprint, tid))
         return self.task(tid, owner=owner)
@@ -242,21 +274,69 @@ class Store:
         item['owner'] = row['owner']
         return item
 
+    def transition(self, tid: str, *, status: str, stage: str, expected_seq: int,
+                   result: dict | None = None, error: str | None = None) -> dict:
+        kind = {'completed': 'save_complete', 'cancelled': 'backend_stopped', 'failed': 'failed'}.get(status, 'stage')
+        return self.event(tid, {'type': kind, 'status': status, 'stage': stage, 'result': result, 'error': error},
+                          expected_seq=expected_seq, backend_stopped=status == 'cancelled',
+                          result_saved=status == 'completed' and result is not None)
+
+    def event(self, tid, event, *, expected_seq=None, backend_stopped=False, result_saved=False):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            return self._event_tx(db, tid, event, expected_seq=expected_seq,
+                                 backend_stopped=backend_stopped, result_saved=result_saved)
+
+    def _event_tx(self, db, tid, event, *, expected_seq=None, backend_stopped=False, result_saved=False):
+        task = self._task(db, tid)
+        if expected_seq is not None and task['stage_seq'] != expected_seq:
+            return task
+        event = {**event, 'seq': event.get('seq', task['stage_seq'] + 1)}
+        out = apply_event(task, event, backend_stopped=backend_stopped, result_saved=result_saved)
+        if out == task:
+            return task
+        now = time.time()
+        started = task['stage_started_at'] if task['stage'] == out['stage'] else now
+        db.execute('''UPDATE task_runtime SET stage=?,stage_seq=?,stage_started_at=?,stage_updated_at=?,
+            cancel_requested=?,blocked_reason=?,step=?,steps=? WHERE task_id=?''',
+            (out['stage'], out['stage_seq'], started, now, out['cancel_requested'], out['blocked_reason'],
+             out.get('step'), out.get('steps'), tid))
+        db.execute('UPDATE tasks SET status=?,progress=?,result=?,error=?,updated=? WHERE id=?',
+                   (out['status'], out['progress'], json.dumps(out['result']) if out['result'] is not None else None,
+                    out['error'], int(now), tid))
+        return self._task(db, tid)
+
+    def request_cancel(self, tid, *, owner):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            require_owner(db, 'task', tid, owner)
+            task = self._task(db, tid)
+            out = self._event_tx(db, tid, {'type': 'cancel_requested'})
+            return out, out['stage_seq'] != task['stage_seq']
+
     def update(self, tid, **fields):
         assert fields.keys() <= {'status', 'progress', 'result', 'error'}
+        if 'status' in fields:
+            task = self.worker_task(tid)
+            if task['kind'] in ('image_generate', 'image_edit'):
+                status = fields['status']
+                return self.transition(tid, status=status, stage='loading' if status == 'running' else status,
+                    expected_seq=task['stage_seq'], result=fields.get('result'), error=fields.get('error'))
         if 'result' in fields:
             fields['result'] = json.dumps(fields['result'], ensure_ascii=False)
         fields['updated'] = int(time.time())
         with self.connect() as db:
             # Cancellation is terminal, even if an upstream request completes at the same instant.
-            db.execute('UPDATE tasks SET ' + ','.join(f'{k}=?' for k in fields) + " WHERE id=? AND status!='cancelled'",
+            db.execute('UPDATE tasks SET ' + ','.join(f'{k}=?' for k in fields) + " WHERE id=? AND status NOT IN ('completed','failed','cancelled')",
                        (*fields.values(), tid))
         with self.connect() as db:
             return self._task(db, tid)
 
     def recover(self):
         with self.connect() as db:
-            db.execute("UPDATE tasks SET status='failed',error='Service restarted during processing',updated=? WHERE status='running'", (int(time.time()),))
+            db.execute('BEGIN IMMEDIATE')
+            for row in db.execute("SELECT id FROM tasks WHERE status='running'").fetchall():
+                self._event_tx(db, row['id'], {'type': 'failed', 'error': 'Service restarted during processing'})
 
     def next_task(self, image=False):
         with self.connect() as db:

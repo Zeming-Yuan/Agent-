@@ -40,7 +40,8 @@ class TaskBody(BaseModel):
 def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                max_upload_bytes=64*1024*1024, max_pending=4, context_window=32768,
                audio_enabled=True, images_enabled=False,
-               key_registry: KeyRegistry | None = None, identity_mode: str = 'legacy'):
+               key_registry: KeyRegistry | None = None, identity_mode: str = 'legacy',
+               event_stream_factory=None):
     if identity_mode not in ('legacy', 'staging', 'strict'):
         raise ValueError('identity_mode must be legacy, staging or strict')
     if identity_mode == 'strict':
@@ -118,7 +119,9 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         app.state.image_worker = None
         if images_enabled and run_worker:
             from .images import image_worker
-            image_task = asyncio.create_task(image_worker(store, client, image_url, active))
+            from .comfy_events import ComfyEventStream
+            image_task = asyncio.create_task(image_worker(store, client, image_url, active,
+                                                         event_stream_factory=event_stream_factory or ComfyEventStream))
             app.state.image_worker=image_task
         yield
         if image_task:
@@ -375,6 +378,11 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     @app.post('/v1/tasks/{tid}/cancel')
     async def cancel(tid: str, request: Request):
         task = store.task(tid, owner=request.state.principal.owner)
+        if task['kind'] in ('image_generate', 'image_edit'):
+            task, changed = store.request_cancel(tid, owner=request.state.principal.owner)
+            if changed and tid in active:
+                active[tid].cancel()
+            return task
         if task['status'] in ('queued','running'):
             task = store.update(tid,status='cancelled')
             if tid in active:

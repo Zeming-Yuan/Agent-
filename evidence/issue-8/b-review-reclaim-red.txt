@@ -1,0 +1,75 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_tb07_result_reclamation_failure_halts_worker _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-405/test_tb07_result_reclamation_f0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf29f02d55a80>, wait_task=<function owner_env.<locals>.wait_task at 0xf29f02d55bc0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf29f02d05730>
+
+    def test_tb07_result_reclamation_failure_halts_worker(owner_env, monkeypatch):
+        import os
+        import threading
+        from pathlib import Path
+        backend = owner_env.new_backend()
+        entered = threading.Event(); release = threading.Event(); saved = []
+        fsync, unlink = os.fsync, Path.unlink
+        fault = [True]
+        def gate(fd):
+            path = Path('/proc/self/fd/' + str(fd)).resolve()
+            if path.parent == owner_env.root/'files' and not saved:
+                saved.append(path); entered.set(); assert release.wait(3)
+            return fsync(fd)
+        def deny_reclamation(path, *args, **kwargs):
+            if fault[0] and path.parent == owner_env.root/'files' and path.name.startswith('file-'):
+                raise PermissionError('synthetic result reclamation failure')
+            return unlink(path, *args, **kwargs)
+        monkeypatch.setattr(os, 'fsync', gate)
+        monkeypatch.setattr(Path, 'unlink', deny_reclamation)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']; assert entered.wait(2)
+            try:
+                c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+                second = owner_env.submit(c, 'B').json()['id']
+            finally:
+                release.set()
+            try:
+                failed = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'failed')
+>               assert failed['blocked_reason'] == 'cleanup_unconfirmed'
+E               AssertionError: assert None == 'cleanup_unconfirmed'
+
+tests/test_tb07_lifecycle.py:558: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:312 image task task-6fbc6ee9d8fa4b3792d23f8f8211fabd failed (PermissionError)
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 220, in process_image
+    await settle(asyncio.to_thread(store.save_generated,fid,data,'generated.png',owner=owner))
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 140, in settle
+    if interrupted:raise asyncio.CancelledError
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 281, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 256, in process_image
+    if not result_ready:discard_result()
+                        ^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/images.py", line 230, in discard_result
+    try:store.delete_file(saved_fid,owner=owner)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/store.py", line 161, in delete_file
+    (self.files / fid).unlink(missing_ok=True)
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/tests/test_tb07_lifecycle.py", line 545, in deny_reclamation
+    raise PermissionError('synthetic result reclamation failure')
+PermissionError: synthetic result reclamation failure
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_result_reclamation_failure_halts_worker
+1 failed, 26 deselected, 1 warning in 0.55s

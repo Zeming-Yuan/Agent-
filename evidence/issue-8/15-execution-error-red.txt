@@ -1,0 +1,45 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_tb07_owned_execution_error_fails_after_cleanup_without_leaking_payload __
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-387/test_tb07_owned_execution_erro0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf3704ac6ce00>, wait_task=<function owner_env.<locals>.wait_task at 0xf3704ac6cea0>)
+
+    def test_tb07_owned_execution_error_fails_after_cleanup_without_leaking_payload(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert backend.started.wait(2)
+            try:
+                backend.events_to_emit.put({'type': 'execution_error', 'data': {'prompt_id': backend.jobs[0]['prompt_id'],
+                    'node_id': '7', 'exception_message': 'private-prompt-key-fixture', 'current_inputs': {'prompt': 'private-prompt-key-fixture'}}})
+>               failed = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'failed')
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:483:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xf3704a7eae10>
+tid = 'task-64fdb5b691ae4b458ffde09295d3fb14', owner = 'A'
+predicate = <function test_tb07_owned_execution_error_fails_after_cleanup_without_leaking_payload.<locals>.<lambda> at 0xf3704a5f0720>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-64fdb5b691ae4b458ffde09295d3fb14', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'running', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794722364, 'updated': 1794722364, 'stage': 'loading', 'stage_seq': 2, 'stage_started_at': 1794722364.3335137, 'stage_updated_at': 1794722364.3335137, 'blocked_reason': None, 'cancel_requested': False, 'step': None, 'steps': None}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_owned_execution_error_fails_after_cleanup_without_leaking_payload
+1 failed, 16 deselected, 1 warning in 3.43s

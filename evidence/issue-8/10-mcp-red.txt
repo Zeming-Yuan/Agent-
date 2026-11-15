@@ -1,0 +1,76 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_tb07_mcp_reports_chinese_stages_without_fake_percentage _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-373/test_tb07_mcp_reports_chinese_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf7d89bf3c4a0>, wait_task=<function owner_env.<locals>.wait_task at 0xf7d89bf3c540>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-373/test_tb07_mcp_reports_chinese_0')
+
+    def test_tb07_mcp_reports_chinese_stages_without_fake_percentage(owner_env, tmp_path):
+        import asyncio
+        import json
+        from client.spark_image_tools import ImageBridge, build_server
+        from test_tb06_mcp_resume import GatewayTransport, CA
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True, event_stream_factory=backend.event_stream) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert backend.started.wait(2)
+            async def run():
+                bridge = ImageBridge('https://spark.invalid/v1', owner_env.keys['A'], CA, tmp_path / 'out',
+                    journal_path=tmp_path/'journal.sqlite3', transport=GatewayTransport(c))
+                try:
+                    server = build_server(bridge)
+                    result = await server.call_tool('get_image_task', {'task_id': tid, 'wait_seconds': 0})
+                    contents = result[0] if isinstance(result, tuple) else result
+                    state = json.loads(next(item.text for item in contents if item.type == 'text'))
+                    assert state['stage_text'] == '加载模型'
+                    assert state['stage_wait_seconds'] >= 0
+                    assert 'progress' not in state
+                    assert '%' not in json.dumps(state, ensure_ascii=False)
+                    backend.events_to_emit.put({'type': 'executing', 'data': {'prompt_id': backend.jobs[0]['prompt_id'], 'node': '7'}})
+                    backend.events_to_emit.put({'type': 'progress', 'data': {'prompt_id': backend.jobs[0]['prompt_id'], 'node': '7', 'value': 2, 'max': 8}})
+                    owner_env.wait_task(c, tid, 'A', lambda t: t.get('step') == 2)
+                    result = await server.call_tool('get_image_task', {'task_id': tid, 'wait_seconds': 0})
+                    contents = result[0] if isinstance(result, tuple) else result
+                    state = json.loads(next(item.text for item in contents if item.type == 'text'))
+                    assert state['stage_text'] == '生成图片'
+                    assert (state['step'], state['steps']) == (2, 8)
+                finally:
+                    await bridge.close()
+            try:
+>               asyncio.run(run())
+
+tests/test_tb07_lifecycle.py:409:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/asyncio/runners.py:194: in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/runners.py:118: in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/asyncio/base_events.py:687: in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    async def run():
+        bridge = ImageBridge('https://spark.invalid/v1', owner_env.keys['A'], CA, tmp_path / 'out',
+            journal_path=tmp_path/'journal.sqlite3', transport=GatewayTransport(c))
+        try:
+            server = build_server(bridge)
+            result = await server.call_tool('get_image_task', {'task_id': tid, 'wait_seconds': 0})
+            contents = result[0] if isinstance(result, tuple) else result
+            state = json.loads(next(item.text for item in contents if item.type == 'text'))
+>           assert state['stage_text'] == '加载模型'
+                   ^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'stage_text'
+
+tests/test_tb07_lifecycle.py:394: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_mcp_reports_chinese_stages_without_fake_percentage
+1 failed, 12 deselected, 1 warning in 0.56s

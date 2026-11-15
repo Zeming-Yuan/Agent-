@@ -1,0 +1,47 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_tb07_task_read_is_one_committed_snapshot _________________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-347/test_tb07_task_read_is_one_com0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf8fa99adf060>, wait_task=<function owner_env.<locals>.wait_task at 0xf8fa99adf100>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf8fa99afa9f0>
+
+    def test_tb07_task_read_is_one_committed_snapshot(owner_env, monkeypatch):
+        from contextlib import contextmanager
+        import threading
+
+        with owner_env.client() as c:
+            tid = owner_env.submit(c).json()['id']
+            store = c.app.state.store
+            connect = store.connect
+            querying = threading.get_ident()
+            fired = False
+            @contextmanager
+            def traced_connection():
+                nonlocal fired
+                with connect() as db:
+                    def on_read(sql):
+                        nonlocal fired
+                        if (not fired and threading.get_ident() == querying
+                                and sql.startswith('SELECT') and 'task_runtime' in sql):
+                            fired = True
+                            # A second HTTP request commits cancellation at the database read boundary.
+                            response = c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+                            assert response.status_code == 200
+                    db.set_trace_callback(on_read)
+                    yield db
+            monkeypatch.setattr(store, 'connect', traced_connection)
+            task = store.task(tid, owner='A')
+            assert fired
+>           assert (task['status'], task['stage']) in (('queued', 'queued'), ('cancelled', 'cancelled'))
+E           AssertionError: assert ('queued', 'cancelled') in (('queued', 'queued'), ('cancelled', 'cancelled'))
+
+tests/test_tb07_lifecycle.py:132: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_task_read_is_one_committed_snapshot
+1 failed, 3 deselected, 1 warning in 0.14s

@@ -285,3 +285,23 @@ T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，
 客户端日志包含提示词/内容摘要/素材ID，应与个人配置按私有文件保管。备份先停桥接写入，用SQLite backup或停写复制；保留日志及服务端DB/files/注册表的新写入。可回退公共包版本，但保留请求映射与owner语义；使用本人HTTP查询/下载兜底。不得清空映射自动重提、覆盖服务端新库或恢复公共共享访问。未修改服务端schema、保护器/容量/模型/队列策略，无生产迁移或部署。
 
 验证见evidence/issue-7：40项T06已采集；75项受影响测试（本票两个文件、旧桥接、T05）通过，含真实stdio进程被kill、重启、临时TLS、保存目录修复后真实ImageContent与一次后端执行。完整门禁未运行，按本轮用户要求仅验证受影响范围。类型/静态lint/构建CI/Compose/seed/安全扫描/变异检查未配置为N/A。生产发布/恢复、Windows/macOS Harness与真实后端/内存标定未验证，仍由既有平台/联合验收票承接。审查最终结果另见review-b.md。
+
+### T07 切片 A（离线源码）
+
+取消运行图片时观察 running/cancelling；不要把取消请求受理当作后台已停。重复取消不会打断正在进行的定向清理。下一单仍等待清理退出。新增 task_runtime 随 state.sqlite3 一起备份；停接单、保全新增数据、确认后端空闲后才回退到具备同等 owner 和取消保护的版本。未知提交仍停止 worker、新工作503。停止失败的持久诊断、事件/MCP 接线与更多竞态测试待切片B；生产、实机、平台未验证。
+
+T07 A审查修复：原生 asyncio 重复取消不得打断清理；清理结算后向上继续传播服务关闭。取消与已返回结果相遇时明确 cancelled，回收尚未交付结果，不滞留 cancelling。状态和阶段以单条 JOIN 读取同一提交快照。
+
+### T07 切片 B：阶段事件、持久结果与安全停止
+
+网关依赖增加固定websockets==16.0（与图片锁文件一致）。新增task_runtime为旁表、step/steps按显式列扩展；启动为历史任务补初始阶段，running仍按既有保守策略failed，不续算。备份仍同时保全最新DB/files/注册表/journal。重启或观察事件异常不要重新生成。
+
+MCP显示中文阶段和等待时间；events_unavailable说明观测不足，step/steps为空，HTTP history仍可确认已保存结果。unloading仅是/free请求阶段，不能当作旧模型释放证明。后续安全准入/实机曲线由T08/T09验证，20GiB guard不变。
+
+submission_unknown或cleanup_unconfirmed时worker退出，health和新图片工作503；已接纳任务、本人列表、已完成结果与原幂等请求可查询/重放。停止新接单并记录task/request ID，确认模型后端无孤儿工作，再按既有受控backend→gateway恢复顺序处理。不能只重启网关或换新键盲目重提。
+
+保存使用同目录私有.pending临时文件：慢写/fsync在线程、写库前结算，目录与元数据提交后才成功。取消等待该写入完成，清理未交付结果后才终态。进程崩溃可能留下未登记的.pending或尚未提交的最终文件；先停全部写入者并保全DB/files，离线核对后人工清理，不能在线按文件名删除。
+
+回退保留旁表和新增数据，只能使用仍保护owner、终态与清理且显式列写入task_runtime的版本；不得回退到切片A七列VALUES或旧提前cancelled版本。可先停新增事件/展示而保留最终生命周期规则，无需DROP旁表。生产发布、恢复演练、Windows/macOS Harness与真实模型未验证。验证命令、逐AC证据和审查见evidence/issue-8/acceptance.md；仅受影响门禁，未跑全套。
+
+T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。

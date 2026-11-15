@@ -1,0 +1,7 @@
+{
+  "services/images.py": "01f504ffc1e5f7d154756ce34599d584f6e38d1b8683799937b701a4dc5375af",
+  "services/store.py": "e546a248c22772ccac650175ee4cd1200f64040d060efff21e44c7142dd73296",
+  "services/task_lifecycle.py": "ad88241a3df92bea2aae9a3149f1b1eb03e12b599df444a2809a01a896c6783b",
+  "services/comfy_events.py": "4c6dbb235e3c8db5fd0d92a2e93cb98bca4673b8ccca343267230eea6a66cd9f",
+  "client/spark_image_tools.py": "9f13fc5b6fa9def6b4a72b093d32566d0c269cddf62010f0058acc5389d64b54"
+}

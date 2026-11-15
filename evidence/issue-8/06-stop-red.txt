@@ -1,0 +1,73 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_tb07_stop_failure_halts_admission_but_preserves_queries _________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-365/test_tb07_stop_failure_halts_a0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfb4c833113a0>, wait_task=<function owner_env.<locals>.wait_task at 0xfb4c83311440>)
+
+    def test_tb07_stop_failure_halts_admission_but_preserves_queries(owner_env):
+        import httpx
+        import json
+        import threading
+        backend = owner_env.new_backend(hold=True)
+        reject_stop = threading.Event(); reject_stop.set()
+        async def external(request):
+            if request.url.path == '/interrupt' and json.loads(request.content).get('prompt_id') and reject_stop.is_set():
+                return httpx.Response(503, json={'error': 'cannot confirm stop'})
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            tid = owner_env.submit(c, request_key='keep-original').json()['id']
+            assert backend.started.wait(2)
+            second = owner_env.submit(c, 'B').json()['id']
+            try:
+                c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+                failed = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'failed')
+>               assert failed['stage'] == 'failed'
+E               AssertionError: assert 'cancelling' == 'failed'
+E
+E                 - failed
+E                 + cancelling
+
+tests/test_tb07_lifecycle.py:279: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:262 image task task-f367832db34d41f982fb44b4ec0ee42f failed (CleanupUncertain)
+Traceback (most recent call last):
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 189, in process_image
+    await asyncio.sleep(.5)
+  File "/usr/lib/python3.12/asyncio/tasks.py", line 665, in sleep
+    return await future
+           ^^^^^^^^^^^^
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 214, in process_image
+    cleanup_job.result()
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 199, in cleanup
+    await clear_backend(client,url,pid)
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 88, in clear_backend
+    r=await client.post(url+'/interrupt',json={'prompt_id':prompt_id},timeout=10);r.raise_for_status()
+                                                                                  ^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'http://127.0.0.1:18013/interrupt'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 241, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/tmp/t07-stop-red-83rkc91_/services/images.py", line 216, in process_image
+    raise CleanupUncertain('Image cleanup unconfirmed; operator recovery required') from exc
+services.images.CleanupUncertain: Image cleanup unconfirmed; operator recovery required
+=============================== warnings summary ===============================
+../../home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_stop_failure_halts_admission_but_preserves_queries
+1 failed, 8 deselected, 1 warning in 0.46s

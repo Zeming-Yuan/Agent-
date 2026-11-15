@@ -1,0 +1,44 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_tb07_shutdown_during_cancel_waits_for_cleanup ______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-343/test_tb07_shutdown_during_canc0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xec121b6caca0>, wait_task=<function owner_env.<locals>.wait_task at 0xec121b6cad40>)
+
+    def test_tb07_shutdown_during_cancel_waits_for_cleanup(owner_env):
+        import asyncio
+        import json
+        import threading
+        import time
+
+        backend = owner_env.new_backend(hold=True, hold_stop=True)
+        stopping = threading.Event()
+        async def external(request):
+            if request.url.path == '/interrupt' and json.loads(request.content).get('prompt_id'):
+                stopping.set()
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert backend.started.wait(2)
+            c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+            assert stopping.wait(2)
+            try:
+                c.portal.call(c.app.state.image_worker.cancel)
+                # Give the cancellation a turn while the external stop remains blocked.
+                time.sleep(.05)
+                task = c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()
+>               assert task['status'] == 'running'
+E               AssertionError: assert 'cancelled' == 'running'
+E
+E                 - running
+E                 + cancelled
+
+tests/test_tb07_lifecycle.py:46: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_shutdown_during_cancel_waits_for_cleanup
+1 failed, 1 deselected, 1 warning in 0.42s

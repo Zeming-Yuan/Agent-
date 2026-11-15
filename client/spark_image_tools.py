@@ -9,6 +9,7 @@ import os
 import re
 import ssl
 import tempfile
+import time
 import uuid
 import warnings
 from pathlib import Path
@@ -42,6 +43,20 @@ def save_png_atomically(target, data):
         os.replace(name,target)
     finally:
         Path(name).unlink(missing_ok=True)
+
+
+def present_task(task):
+    """Render stage evidence, never the legacy whole-job progress placeholder."""
+    out=dict(task)
+    out.pop('progress',None)
+    labels={'queued':'排队中','waiting_resources':'等待资源','unloading':'请求释放旧模型',
+            'loading':'加载模型','generating':'生成图片','saving':'保存图片',
+            'cancelling':'取消清理中，等待后台停止','completed':'已完成','failed':'任务失败','cancelled':'已取消'}
+    out['stage_text']=labels.get(task.get('stage',task['status']),'处理中，等待可靠阶段')
+    started=task.get('stage_started_at')
+    out['stage_wait_seconds']=max(0,int(time.time()-started)) if isinstance(started,(int,float)) else None
+    if task.get('stage') != 'generating':out.update(step=None,steps=None)
+    return out
 
 
 class ImageBridge:
@@ -111,7 +126,7 @@ class ImageBridge:
         elif ids:submitted['foreground_file_id']=ids[0]
         result=(await self.request('POST','tasks',json={'kind':kind,'options':submitted},headers={'Idempotency-Key':request_id})).json()
         journal.accepted(request_id,result['id'])
-        return {**result,'request_id':request_id}
+        return {**present_task(result),'request_id':request_id}
 
     async def edit(self,prompt,image_paths,size,quality,seed,*,request_id=None):
         if not 1<=len(image_paths)<=3:raise ValueError('Use 1 to 3 local image paths')
@@ -123,7 +138,7 @@ class ImageBridge:
         if status is not None:params['status']=status
         if after is not None:params['after']=after
         listing=(await self.request('GET','tasks',params=params)).json()
-        return {**listing,'requests':journal.pending()}
+        return {**listing,'data':[present_task(task) for task in listing['data']],'requests':journal.pending()}
 
     async def task(self,task_id,wait_seconds):
         if not re.fullmatch(r'task-[a-f0-9]{32}',task_id):raise ValueError('Invalid task ID')
@@ -142,12 +157,12 @@ class ImageBridge:
                         ImageContent(type='image',mimeType='image/png',data=base64.b64encode(data).decode())]
             if state['status'] in ('failed','cancelled'):
                 raise RuntimeError('Image task '+state['status']+': '+str(state.get('error') or ''))
-            if asyncio.get_running_loop().time()>=deadline:return [TextContent(type='text',text=json.dumps(state,ensure_ascii=False))]
+            if asyncio.get_running_loop().time()>=deadline:return [TextContent(type='text',text=json.dumps(present_task(state),ensure_ascii=False))]
             await asyncio.sleep(1)
 
     async def cancel(self,task_id):
         if not re.fullmatch(r'task-[a-f0-9]{32}',task_id):raise ValueError('Invalid task ID')
-        return (await self.request('POST','tasks/'+task_id+'/cancel')).json()
+        return present_task((await self.request('POST','tasks/'+task_id+'/cancel')).json())
 
 
 def build_server(bridge):
@@ -170,12 +185,12 @@ def build_server(bridge):
 
     @server.tool(structured_output=False)
     async def get_image_task(task_id:str,wait_seconds:int=20)->list[TextContent|ImageContent]:
-        """查询生图/编辑进度，最多等20秒；完成时返回可展示的图片及本地保存路径。queued/running 时继续调用本工具，不要重新提交。"""
+        """查询真实阶段与等待时间，最多等20秒；step/steps仅表示生成采样。完成时返回图片与本地路径。queued/running继续查询，不重新提交。"""
         return await bridge.task(task_id,wait_seconds)
 
     @server.tool()
     async def cancel_image_task(task_id:str)->dict:
-        """取消排队或运行中的生图/编辑任务。"""
+        """显式取消自己的任务。running/cancelling表示后台仍在停止清理，继续查询直到cancelled。"""
         return await bridge.cancel(task_id)
     return server
 

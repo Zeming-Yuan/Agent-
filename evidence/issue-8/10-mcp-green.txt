@@ -1,0 +1,191 @@
+.......F.....                                                            [100%]
+=================================== FAILURES ===================================
+___ test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-374/test_tb07_real_websocket_subsc0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe0463d0c4720>, wait_task=<function owner_env.<locals>.wait_task at 0xe0463d0c4180>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe0463d9dd3d0>
+
+    def test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect(owner_env, monkeypatch):
+        import asyncio
+        import json
+        import threading
+        from websockets.asyncio.server import serve
+
+        backend = owner_env.new_backend(hold=True)
+        listening = threading.Event()
+        subscribed = threading.Event()
+        stopped = threading.Event()
+        address = {}
+        paths = []
+        async def handler(ws):
+            paths.append(ws.request.path)
+            subscribed.set()
+            while not backend.jobs:
+                await asyncio.sleep(.01)
+            pid = backend.jobs[0]['prompt_id']
+            await ws.send(b'preview-not-progress')
+            await ws.send('{malformed-json')
+            await ws.send(json.dumps({'type': 'executing', 'data': {'node': '7'}}))  # reconnect lacks owner
+            await ws.send(json.dumps({'type': 'progress', 'data': {'prompt_id': pid, 'value': 7, 'max': 8}}))
+            await ws.send(json.dumps({'type': 'executing', 'data': {'prompt_id': pid, 'node': '7'}}))
+            await ws.send(json.dumps({'type': 'progress', 'data': {'prompt_id': pid, 'node': '7', 'value': 3, 'max': 8}}))
+            await ws.wait_closed()
+        async def server():
+            async with serve(handler, '127.0.0.1', 0) as service:
+                address['port'] = service.sockets[0].getsockname()[1]
+                listening.set()
+                while not stopped.is_set():
+                    await asyncio.sleep(.01)
+        thread = threading.Thread(target=lambda: asyncio.run(server()), daemon=True)
+        thread.start()
+        assert listening.wait(2)
+        monkeypatch.setenv('IMAGE_URL', 'http://127.0.0.1:' + str(address['port']))
+        async def external(request):
+            if request.url.path == '/prompt':
+                assert subscribed.is_set(), 'HTTP submission preceded websocket subscription'
+            return await backend(request)
+        try:
+            with owner_env.client(backend=external, run_worker=True) as c:
+                tid = owner_env.submit(c).json()['id']
+                try:
+>                   sample = owner_env.wait_task(c, tid, 'A', lambda t: t.get('step') == 3)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb07_lifecycle.py:250:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xe0463d0694c0>
+tid = 'task-712ac73a3f284f8c930337a614bc4cd4', owner = 'A'
+predicate = <function test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect.<locals>.<lambda> at 0xe0463c0ee520>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-712ac73a3f284f8c930337a614bc4cd4', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'failed', 'progress': 0.0, 'result': None, 'error': 'Image submission outcome unknown; restart image backend and gateway', 'created': 1794722091, 'updated': 1794722091, 'stage': 'failed', 'stage_seq': 2, 'stage_started_at': 1794722091.4465272, 'stage_updated_at': 1794722091.4465272, 'blocked_reason': 'submission_unknown', 'cancel_requested': False, 'step': None, 'steps': None}
+
+tests/conftest.py:140: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-374/test_tb07_real_websocket_subsc0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe0463d0c4720>, wait_task=<function owner_env.<locals>.wait_task at 0xe0463d0c4180>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe0463d9dd3d0>
+
+    def test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect(owner_env, monkeypatch):
+        import asyncio
+        import json
+        import threading
+        from websockets.asyncio.server import serve
+
+        backend = owner_env.new_backend(hold=True)
+        listening = threading.Event()
+        subscribed = threading.Event()
+        stopped = threading.Event()
+        address = {}
+        paths = []
+        async def handler(ws):
+            paths.append(ws.request.path)
+            subscribed.set()
+            while not backend.jobs:
+                await asyncio.sleep(.01)
+            pid = backend.jobs[0]['prompt_id']
+            await ws.send(b'preview-not-progress')
+            await ws.send('{malformed-json')
+            await ws.send(json.dumps({'type': 'executing', 'data': {'node': '7'}}))  # reconnect lacks owner
+            await ws.send(json.dumps({'type': 'progress', 'data': {'prompt_id': pid, 'value': 7, 'max': 8}}))
+            await ws.send(json.dumps({'type': 'executing', 'data': {'prompt_id': pid, 'node': '7'}}))
+            await ws.send(json.dumps({'type': 'progress', 'data': {'prompt_id': pid, 'node': '7', 'value': 3, 'max': 8}}))
+            await ws.wait_closed()
+        async def server():
+            async with serve(handler, '127.0.0.1', 0) as service:
+                address['port'] = service.sockets[0].getsockname()[1]
+                listening.set()
+                while not stopped.is_set():
+                    await asyncio.sleep(.01)
+        thread = threading.Thread(target=lambda: asyncio.run(server()), daemon=True)
+        thread.start()
+        assert listening.wait(2)
+        monkeypatch.setenv('IMAGE_URL', 'http://127.0.0.1:' + str(address['port']))
+        async def external(request):
+            if request.url.path == '/prompt':
+                assert subscribed.is_set(), 'HTTP submission preceded websocket subscription'
+            return await backend(request)
+        try:
+            with owner_env.client(backend=external, run_worker=True) as c:
+                tid = owner_env.submit(c).json()['id']
+                try:
+                    sample = owner_env.wait_task(c, tid, 'A', lambda t: t.get('step') == 3)
+                    assert sample['steps'] == 8
+                    assert paths == ['/ws?clientId=' + tid]
+                finally:
+                    backend.finish.set()
+                owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+        finally:
+            stopped.set()
+            thread.join(3)
+>           assert not thread.is_alive()
+E           assert not True
+E            +  where True = is_alive()
+E            +    where is_alive = <Thread(Thread-15 (<lambda>), started daemon 246592285045120)>.is_alive
+
+tests/test_tb07_lifecycle.py:259: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:285 image backend outcome uncertain; admission stopped
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 113, in settled_post
+    return await asyncio.shield(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1859, in post
+    return await self.request(
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1540, in request
+    return await self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1629, in send
+    response = await self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1657, in _send_handling_auth
+    response = await self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1694, in _send_handling_redirects
+    response = await self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py", line 1730, in _send_single_request
+    response = await transport.handle_async_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_transports/mock.py", line 41, in handle_async_request
+    response = await response
+               ^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/tests/test_tb07_lifecycle.py", line 244, in external
+    assert subscribed.is_set(), 'HTTP submission preceded websocket subscription'
+AssertionError: HTTP submission preceded websocket subscription
+assert False
+ +  where False = is_set()
+ +    where is_set = <threading.Event at 0xe0463c240890: unset>.is_set
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 269, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 190, in process_image
+    r=await settled_post(client,url+'/prompt',json={'prompt':workflow(opts,'agent-mm/'+tid,names),'client_id':tid,'prompt_id':pid})
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 121, in settled_post
+    raise SubmissionUncertain('Backend submission outcome unknown; restart image backend and gateway') from exc
+services.images.SubmissionUncertain: Backend submission outcome unknown; restart image backend and gateway
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_real_websocket_subscribes_before_prompt_and_filters_reconnect
+1 failed, 12 passed, 1 warning in 11.87s

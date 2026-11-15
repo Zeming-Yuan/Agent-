@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________ test_tb07_cancel_waits_until_backend_stopped _________________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-337/test_tb07_cancel_waits_until_b0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xffe9a57927a0>, wait_task=<function owner_env.<locals>.wait_task at 0xffe9a5792840>)
+
+    def test_tb07_cancel_waits_until_backend_stopped(owner_env):
+        backend = owner_env.new_backend(hold=True, hold_stop=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c, 'A').json()['id']
+            assert backend.started.wait(2)
+            try:
+                response = c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+>               assert response.json()['status'] == 'running'
+E               AssertionError: assert 'cancelled' == 'running'
+E
+E                 - running
+E                 + cancelled
+
+tests/test_tb07_lifecycle.py:8: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancel_waits_until_backend_stopped
+1 failed, 1 warning in 0.34s
