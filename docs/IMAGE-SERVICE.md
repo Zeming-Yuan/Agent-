@@ -157,7 +157,7 @@ status 保留 queued/running/completed/failed/cancelled。stage、stage_seq、st
 
 T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。
 
-## T10 公平轮转（离线切片 A）
+## T10 公平轮转（离线实现，实机待验收）
 
 图片任务按 owner 稳定轮转，同 owner 按持久 enqueue_seq FIFO。SQLite 旁表保存轮转游标及唯一执行 claim；任务仍可在 T09 释放/资源等待时保持 queued，claim 覆盖清理与在途控制请求，终态可见不会提前放行下一单。取消不重置游标，重启清除已失效 claim 并保留轮转位置。
 
