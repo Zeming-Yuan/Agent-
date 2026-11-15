@@ -19,3 +19,5 @@ Reliable actual positive release producer and physical acceptance remain absent/
 ## Re-review and cancellation repair
 
 Fixed11ebbefe: Spec0, independently3passed (ACK deadline, pending cancellation settlement, queued restart). Standards1P2: cancel queued task during/free, then HTTP503 returned; cancelled settlement discarded HTTP result, health200/new202.23RED reproduced HTTP-error branch (disconnect already safe), GREEN2 validates the owned response inside the settlement coroutine, propagates release failure through a health latch and ReleaseUnconfirmed while preserving terminal cancelled. Full affected verification/re-review follow the next fixed commit. No deferred findings/rulings.
+
+Final independent re-review of code07a3d9db291c00ea517a06c90a2c6c9465eebc12: Standards0 / Spec0, all prior actionable findings repaired with RED→GREEN. Reviewers independently3/3focused passed; no full gates or edits. Root88ticket/417affected and final source hashes rechecked unchanged after return. Physical producer#26/real acceptance remains open, #10OPEN. Later metadata commits do not change reviewed source.
