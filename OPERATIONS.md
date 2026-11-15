@@ -158,7 +158,7 @@ expand_ownership(database, legacy_owner='legacy')
 print(preflight_ownership(database))
 ```
 
-预检字段为 unowned_files、unowned_tasks、unowned_idempotency_records（旧 tasks.idem 非 NULL 且任务无归属）、running_tasks。预检不运行恢复、不更改状态；运行任务应先保守处理，不能通过重复推理清零。expand 使用一个事务，失败全部回滚，重试不覆盖明确归属。旧版继续写入后，停写、再次预检/expand。
+预检字段为 unowned_files、unowned_tasks、unowned_idempotency_records（旧 tasks.idem 非 NULL 且任务无归属）、running_tasks。factory 在 expand 前将上述四项计数写入 ownership_preflight 诊断日志，不记录原始 Key、幂等键或对象内容。预检不运行恢复、不更改状态；运行任务应先保守处理，不能通过重复推理清零。expand 使用一个事务，失败全部回滚，重试不覆盖明确归属。旧版继续写入后，停写、再次预检/expand。
 
 回退路径：停接单并保存新增任务和素材，确认后台无运行推理，再切回已验证的单用户旧版应用；保留旁表，不 DROP 数据或恢复旧快照覆盖新增写入。仅限仍属于 legacy 的数据；已有多个 owner 时只能回退到具备相应 owner 校验的版本。备份恢复先在另一副本检查原任务、素材和结果，再由维护者决定生产切换。
 

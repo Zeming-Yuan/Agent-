@@ -16,7 +16,7 @@ from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from .store import Store
-from .ownership import expand_ownership
+from .ownership import expand_ownership, preflight_ownership
 from .image_options import ImageOptions
 
 LOG = logging.getLogger('agent-mm')
@@ -43,6 +43,10 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     if type(context_window) is not int or not 1 <= context_window <= 262144:
         raise ValueError('Context window must be within the model native limit')
     store = Store(root, max_pending)
+    ownership_report = preflight_ownership(store.db)
+    LOG.info('ownership_preflight unowned_files=%s unowned_tasks=%s unowned_idempotency_records=%s running_tasks=%s',
+             ownership_report['unowned_files'], ownership_report['unowned_tasks'],
+             ownership_report['unowned_idempotency_records'], ownership_report['running_tasks'])
     expand_ownership(store.db, 'legacy')
     active = {}
     main_slots = asyncio.Semaphore(2)

@@ -87,7 +87,7 @@ def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
     assert store.db.read_bytes() == before
 
 
-def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path):
+def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path, caplog):
     from fastapi.testclient import TestClient
     from services.gateway import create_app
     from services.ownership import preflight_ownership
@@ -97,6 +97,8 @@ def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path)
     store.save_generated(fid, b'old result', 'result.png')
     task = store.submit('image_generate', None, {}, 'old-request')
     store.update(task['id'], status='completed', result={'file_id': fid})
+    import logging
+    caplog.set_level(logging.INFO, logger='agent-mm')
     with TestClient(create_app(tmp_path, 'test-secret-token', run_worker=False)) as client:
         auth = {'Authorization': 'Bearer test-secret-token'}
         assert client.get('/v1/tasks/' + task['id'], headers=auth).json()['result'] == {'file_id': fid}
@@ -105,3 +107,7 @@ def test_tb01_legacy_expand_gateway_initializes_compatibility_metadata(tmp_path)
             'unowned_files': 0, 'unowned_tasks': 0,
             'unowned_idempotency_records': 0, 'running_tasks': 0,
         }
+
+    assert 'ownership_preflight unowned_files=1 unowned_tasks=1 unowned_idempotency_records=1 running_tasks=0' in caplog.text
+    assert 'old-request' not in caplog.text
+    assert 'test-secret-token' not in caplog.text

@@ -9,3 +9,5 @@ Tasks: A ownership expand and preflight; B identity, shared fixture, old/new com
 Ruling: keep original files/tasks columns and use a side table. New legacy writes may be unowned until explicit expand; preflight must expose this. Do not add triggers or migrate T02/T03 here.
 Ruling: strict must fail closed until owner-aware T02/T03/T04 land. Staging is explicitly isolated test configuration; production factory stays legacy.
 Gates: README pytest command and T01 focused commands; no configured type/lint/build gate. Hardware, production, Windows/macOS acceptance out of scope and unverified.
+
+Task A: Standards no findings; Spec factory-preflight gap fixed with numeric-only pre-expand startup report. a-review-red.txt → a-review-green.txt, 11 passed.
