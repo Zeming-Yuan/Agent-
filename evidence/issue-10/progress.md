@@ -15,3 +15,7 @@ Ruling: pending release requests keep tasks queued/waiting_resources; explicit q
 Slice A: policy, correlated continuous release proof, queued waits, same-task recovery and final pre-prompt recheck. Explicit synthetic resources are injected by existing integration fixtures, never production defaults. Slice B will add full envelope/config loading and fault/recovery matrix. No claim of full ticket acceptance at slice A.
 
 Slice A fresh affected selection65passed; no full gates run. Test capture Bearer values redacted and trailing whitespace normalized before commit. ADR0004 used to avoid confusing existing ADR0002 task lifecycle.
+
+A independent review: Standards1P1 / Spec2P2 (review-a.md). All three findings reproduced separately06/07/08 RED→GREEN. No rulings/deferred findings. Slow external setup now precedes admission; no internal state collaborator mocks used. Re-review required by user after fixed repair commit.
+
+A repair affected selector68passed, one existing warning; observer-open regression also repaired before commit. No full gates/hardware.

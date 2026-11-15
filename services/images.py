@@ -168,7 +168,7 @@ def reclaim_result(store, fid, *, owner):
 
 
 async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None, admission=None):
-    opts=item['options'];tid=item['id'];pid=None;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False
+    opts=item['options'];tid=item['id'];pid=None;submitted=False;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False;events_lost=False
     streams=contextlib.AsyncExitStack()
     owner=store.worker_task(tid)['owner']
     if memory_available()<20*1024**3:raise RuntimeError('Image admission: available memory below 20GiB')
@@ -184,7 +184,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             names[-1]=name
         if unload_models:
             r=await settled_post(client,url+'/free',json={'unload_models':True,'free_memory':True});r.raise_for_status()
-        task_event(store,tid,{'type':'stage','stage':'loading'})
+        if admission is None:task_event(store,tid,{'type':'stage','stage':'loading'})
         # ComfyUI requires a canonical UUID. Hold it before sending any bytes.
         pid=str(uuid.uuid4())
         record_current_task(store,tid,prompt_id=pid,event='submit_started')
@@ -193,10 +193,10 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             try:
                 stream=await streams.enter_async_context(event_stream_factory(url,tid))
             except Exception:
-                stream=None
+                stream=None;events_lost=True
                 task_event(store,tid,{'type':'observation_lost'})
             async def observe():
-                nonlocal backend_failed
+                nonlocal backend_failed,events_lost
                 active_node=None
                 try:
                     async for raw in stream.events():
@@ -208,11 +208,20 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                                 task=task_event(store,tid,event)
                                 if 'node' in event and task['stage']==event['stage']:
                                     active_node=event['node']
+                    events_lost=True
                     task_event(store,tid,{'type':'observation_lost'})
                 except Exception:
+                    events_lost=True
                     task_event(store,tid,{'type':'observation_lost'})
             if stream is not None:watcher=asyncio.create_task(observe())
-        if admission is not None:admission.recheck(item)
+        if admission is not None:
+            if not await admission.prepare(item,store,client,url):return None
+            current=store.worker_task(tid)
+            claimed=task_transition(store,tid,status='running',stage='loading',expected_seq=current['stage_seq'])
+            if claimed['status'] != 'running':return None
+            if events_lost:task_event(store,tid,{'type':'observation_lost'})
+            admission.recheck(item)
+        submitted=True
         r=await settled_post(client,url+'/prompt',json={'prompt':workflow(opts,'agent-mm/'+tid,names),'client_id':tid,'prompt_id':pid})
         r.raise_for_status();pid=r.json()['prompt_id']
         deadline=time.monotonic()+900
@@ -254,7 +263,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                     await streams.aclose()
                 except Exception:
                     task_event(store,tid,{'type':'observation_lost'})
-                if pid:
+                if submitted:
                     await clear_backend(client,url,pid)
                     response=await client.post(url+'/history',json={'delete':[pid]},timeout=10)
                     response.raise_for_status()
@@ -288,16 +297,8 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None,admis
             await asyncio.sleep(.2);continue
         tid=item['id']
         profile=(item['kind'],item['kind']=='image_edit' and item['options']['quality']=='fast')
-        async def run_image():
-            if not await admission.prepare(item,store,client,url):return None
-            current=store.worker_task(tid)
-            claimed=task_transition(store,tid,status='running',stage='loading',expected_seq=current['stage_seq'])
-            if claimed['status'] != 'running':return None
-            inference=asyncio.create_task(process_image(claimed,store,client,url,unload_models=False,
-                                       event_stream_factory=event_stream_factory,admission=admission))
-            active[tid]=inference
-            return await inference
-        job=asyncio.create_task(run_image());active[tid]=job
+        job=asyncio.create_task(process_image(item,store,client,url,unload_models=False,
+                                            event_stream_factory=event_stream_factory,admission=admission));active[tid]=job
         try:
             result=await job
             if result is None:continue

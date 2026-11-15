@@ -117,9 +117,20 @@ class ImageAdmission:
         tid = item['id']
         self.proof = []
         start = time.monotonic()
-        initial = self.sample(tid)
-        epoch = initial.release_epoch if initial is not None else None
-        identity = (initial.host_id, initial.runtime_hash, initial.session_id) if initial else None
+        pause = min(.1, self.settings['stable_window']/2, self.settings['max_age']/2)
+        while True:
+            initial = self.sample(tid)
+            if (initial is not None and type(initial.release_epoch) is int and initial.release_epoch >= 0
+                    and initial.runtime_hash == self.runtime_hash and initial.host_id and initial.session_id
+                    and finite(initial.observed_at) and 0 <= time.monotonic()-initial.observed_at <= self.settings['max_age']):
+                break
+            task_event(store,tid,{'type':'resource_wait','reason':'missing_evidence'})
+            if store.worker_task(tid)['status'] == 'cancelled':return False
+            if time.monotonic()-start >= self.settings['wait_timeout']:
+                raise ReleaseUnconfirmed('Initial resource evidence unavailable')
+            await asyncio.sleep(pause)
+        epoch = initial.release_epoch
+        identity = (initial.host_id, initial.runtime_hash, initial.session_id)
         task_event(store,tid,{'type':'resource_wait','reason':'release_unconfirmed'})
         # A single owned request. HTTP completion alone never authorizes loading.
         try:
@@ -164,8 +175,11 @@ class ImageAdmission:
         proven = (sample is not None and last is not None and sample.release_proven is True
             and (sample.host_id, sample.runtime_hash, sample.session_id, sample.release_task_id) ==
                 (last.host_id, last.runtime_hash, last.session_id, item['id'])
-            and sample.release_epoch >= last.release_epoch and sample.resident_profiles == frozenset())
+            and sample.release_epoch >= last.release_epoch and sample.resident_profiles == frozenset()
+            and finite(sample.observed_at) and 0 < sample.observed_at-last.observed_at <= min(.2,self.settings['max_age'])+1e-9)
         decision = admit(sample, self.budget(item), now=time.monotonic(), runtime_hash=self.runtime_hash,
                          released=proven, max_age=self.settings['max_age'])
         if not decision.allowed:
+            if not proven or decision.reason == 'release_unconfirmed':
+                raise ReleaseUnconfirmed('Image release evidence lost at recheck')
             raise ResourceWaitExpired('Image admission recheck: '+decision.reason)

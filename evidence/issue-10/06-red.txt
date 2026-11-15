@@ -1,0 +1,39 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb09_initial_sampler_outage_recovers_same_queued_task __________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-492/test_tb09_initial_sampler_outa0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf63e8e3bc220>, wait_task=<function owner_env.<locals>.wait_task at 0xf63e8e3bf4c0>)
+
+    def test_tb09_initial_sampler_outage_recovers_same_queued_task(owner_env):
+        import threading
+        ready = threading.Event(); attempted = threading.Event()
+        config = resources(wait_timeout=.5)
+        original = config['resource_sampler']
+        def sample(tid):
+            attempted.set()
+            return original(tid) if ready.is_set() else None
+        config['resource_sampler'] = sample
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **config) as c:
+            tid = owner_env.submit(c).json()['id']
+            assert attempted.wait(1)
+            assert backend.jobs == []
+            ready.set()
+            done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('failed','completed'))
+>           assert done['status'] == 'completed', done
+E           AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794728656, 'error': 'Model release unconfirmed; operator recovery required', ...}
+E           assert 'failed' == 'completed'
+E
+E             - completed
+E             + failed
+
+tests/test_tb09_safe_admission.py:156: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_initial_sampler_outage_recovers_same_queued_task
+1 failed, 35 deselected, 1 warning in 0.90s

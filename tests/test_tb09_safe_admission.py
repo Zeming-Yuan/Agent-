@@ -135,3 +135,81 @@ def test_tb09_unconfigured_production_is_degraded_and_replay_still_works(owner_e
         assert owner_env.submit(c, request_key='recoverable').json()['id'] == first['id']
         assert c.get(done['result']['content_url'], headers=owner_env.auth('A')).status_code == 200
         assert c.get('/v1/tasks/'+first['id'], headers=owner_env.auth('B')).status_code == 404
+
+
+def test_tb09_initial_sampler_outage_recovers_same_queued_task(owner_env):
+    import threading
+    ready = threading.Event(); attempted = threading.Event()
+    config = resources(wait_timeout=.5)
+    original = config['resource_sampler']
+    def sample(tid):
+        attempted.set()
+        return original(tid) if ready.is_set() else None
+    config['resource_sampler'] = sample
+    backend = owner_env.new_backend()
+    with client_with_resources(owner_env, backend, **config) as c:
+        tid = owner_env.submit(c).json()['id']
+        assert attempted.wait(1)
+        assert backend.jobs == []
+        ready.set()
+        done = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] in ('failed','completed'))
+        assert done['status'] == 'completed', done
+        assert len(backend.jobs) == 1
+
+
+def test_tb09_slow_external_setup_cannot_bridge_an_observation_gap(owner_env):
+    import asyncio
+    import time
+    config = resources()
+    reads = []
+    original = config['resource_sampler']
+    def sample(tid):
+        row = original(tid); reads.append(row.observed_at); return row
+    config['resource_sampler'] = sample
+    backend = owner_env.new_backend()
+    proof_at_submit = []
+    async def external(request):
+        if request.url.path == '/prompt':
+            recent = [t for t in reads if time.monotonic()-t < .15]
+            proof_at_submit.append(len(recent) >= 2 and recent[-1]-recent[0] >= .02)
+        return await backend(request)
+    class SlowEvents:
+        async def __aenter__(self):
+            await asyncio.sleep(.3)
+            return self
+        async def __aexit__(self, *exc):return False
+        async def events(self):
+            await asyncio.Event().wait()
+            yield
+    # Event connection is an external boundary, not a mocked internal controller.
+    import httpx
+    from fastapi.testclient import TestClient
+    from services.gateway import create_app
+    app = create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+        identity_mode='staging',transport=httpx.MockTransport(external),run_worker=True,
+        audio_enabled=False,images_enabled=True,event_stream_factory=lambda *_:SlowEvents(),**config)
+    with TestClient(app) as c:
+        tid = owner_env.submit(c).json()['id']
+        done = owner_env.wait_task(c, tid, 'A', lambda t:t['status'] in ('failed','completed'))
+        assert done['status'] == 'completed', done
+        assert proof_at_submit == [True]
+
+
+def test_tb09_lost_release_at_final_resource_read_stops_new_admission(owner_env):
+    config = resources(wait_timeout=.1)
+    config['resource_settings']['stable_window'] = .00001
+    original = config['resource_sampler']
+    reads = 0
+    def sample(tid):
+        nonlocal reads
+        reads += 1
+        row = original(tid)
+        return dataclasses.replace(row, release_proven=False) if reads >= 4 else row
+    config['resource_sampler'] = sample
+    backend = owner_env.new_backend()
+    with client_with_resources(owner_env, backend, **config) as c:
+        tid = owner_env.submit(c).json()['id']
+        owner_env.wait_task(c,tid,'A',lambda t:t['status']=='failed')
+        assert backend.jobs == []
+        assert c.get('/health',headers=owner_env.auth('A')).status_code == 503
+        assert owner_env.submit(c).status_code == 503

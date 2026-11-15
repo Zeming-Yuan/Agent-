@@ -1,0 +1,57 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb09_slow_external_setup_cannot_bridge_an_observation_gap ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-494/test_tb09_slow_external_setup_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf545150a0220>, wait_task=<function owner_env.<locals>.wait_task at 0xf545150a3600>)
+
+    def test_tb09_slow_external_setup_cannot_bridge_an_observation_gap(owner_env):
+        import asyncio
+        import time
+        config = resources()
+        reads = []
+        original = config['resource_sampler']
+        def sample(tid):
+            row = original(tid); reads.append(row.observed_at); return row
+        config['resource_sampler'] = sample
+        backend = owner_env.new_backend()
+        proof_at_submit = []
+        async def external(request):
+            if request.url.path == '/prompt':
+                recent = [t for t in reads if time.monotonic()-t < .15]
+                proof_at_submit.append(len(recent) >= 2 and recent[-1]-recent[0] >= .02)
+            return await backend(request)
+        class SlowEvents:
+            async def __aenter__(self):
+                await asyncio.sleep(.3)
+                return self
+            async def __aexit__(self, *exc):return False
+            async def events(self):
+                await asyncio.Event().wait()
+                yield
+        # Event connection is an external boundary, not a mocked internal controller.
+        import httpx
+        from fastapi.testclient import TestClient
+        from services.gateway import create_app
+        app = create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+            identity_mode='staging',transport=httpx.MockTransport(external),run_worker=True,
+            audio_enabled=False,images_enabled=True,event_stream_factory=lambda *_:SlowEvents(),**config)
+        with TestClient(app) as c:
+            tid = owner_env.submit(c).json()['id']
+            done = owner_env.wait_task(c, tid, 'A', lambda t:t['status'] in ('failed','completed'))
+            assert done['status'] == 'completed', done
+>           assert proof_at_submit == [True]
+E           assert [False] == [True]
+E
+E             At index 0 diff: False != True
+E             Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:195: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_slow_external_setup_cannot_bridge_an_observation_gap
+1 failed, 36 deselected, 1 warning in 0.75s
