@@ -4,7 +4,7 @@ from pathlib import Path
 import httpx
 import ssl
 
-BASE=Path(__file__).resolve().parents[1];E=BASE/'evidence/image-deploy-20261114';(E/'samples').mkdir(exist_ok=True)
+BASE=Path(__file__).resolve().parents[1];E=BASE/'evidence/image-deploy-20261114'
 PROMPTS=[
 '商业产品摄影，一只哑光白色保温杯放在米色石台上，暖白色简洁背景，柔和侧光，真实细腻材质，电商主图，无文字无水印',
 '电商护肤品场景，一只透明磨砂玻璃面霜罐，白色盖子，清晨窗光，浅米色亚麻与浅色大理石，画面整洁，高端商业摄影，无文字',
@@ -30,6 +30,7 @@ PROMPTS=[
 def mem():
  return int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemAvailable:')))*1024
 async def main():
+ (E/'samples').mkdir(parents=True,exist_ok=True)
  key=(BASE/'.private/agent-api.key').read_text().strip();ctx=ssl.create_default_context(cafile=str(BASE/'certificates/agent-root-ca.crt'))
  results=[];minimum=mem();running=True
  async def monitor():
@@ -57,4 +58,5 @@ async def main():
  values=sorted(x['seconds'] for x in results if x['status']=='completed')
  summary={'samples':results,'success':len(values),'total':len(results),'min_available_gib':round(minimum/1024**3,3),'p50_seconds':statistics.median(values) if values else None,'p95_seconds':values[max(0,__import__('math').ceil(.95*len(values))-1)] if values else None,'note':'Server-side synthetic image examples; not Mac UI or business quality acceptance. First sample includes cold loading.'}
  (E/'benchmark-generation.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({k:v for k,v in summary.items() if k!='samples'},ensure_ascii=False))
-asyncio.run(main())
+if __name__ == '__main__':
+ asyncio.run(main())

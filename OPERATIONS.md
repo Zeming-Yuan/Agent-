@@ -305,3 +305,7 @@ submission_unknown或cleanup_unconfirmed时worker退出，health和新图片工�
 回退保留旁表和新增数据，只能使用仍保护owner、终态与清理且显式列写入task_runtime的版本；不得回退到切片A七列VALUES或旧提前cancelled版本。可先停新增事件/展示而保留最终生命周期规则，无需DROP旁表。生产发布、恢复演练、Windows/macOS Harness与真实模型未验证。验证命令、逐AC证据和审查见evidence/issue-8/acceptance.md；仅受影响门禁，未跑全套。
 
 T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。
+
+## T08 measurement implementation (2026-11-15)
+
+`import scripts.benchmark_images` is side-effect free: it does not create output directories, read credentials or launch network work. Direct execution of the historical script remains historical-only until the observe CLI is delivered. Historical records do not establish a new memory baseline. T08 evidence is indexed in `evidence/issue-9/execution.md`; real hardware baseline is **not_run**.
