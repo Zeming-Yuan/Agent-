@@ -1,0 +1,42 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______ test_tb08_memory_evidence_timeout_covers_download_not_just_polling ______
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-449/test_tb08_memory_evidence_time0')
+
+    def test_tb08_memory_evidence_timeout_covers_download_not_just_polling(tmp_path):
+        import httpx
+        import io
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        class SlowPNG(httpx.AsyncByteStream):
+            async def __aiter__(self):
+                png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+                await asyncio.sleep(.08)
+                yield png.getvalue()
+        async def server(request):
+            if request.method == 'POST':
+                return httpx.Response(200,json={'id':'task-'+'a'*32,'status':'completed','result':{'file_id':'file-'+'b'*32}})
+            return httpx.Response(200,stream=SlowPNG())
+        key = tmp_path/'key'; key.write_text('fixture')
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'hash',
+            'timeout_seconds':.02,'baseline_seconds':.001,'baseline_tolerance_bytes':1, 'options':{'prompt':'fixture'}}
+        summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+>       assert summary['status'] == 'timeout' and summary['total_attempts'] == 1
+E       AssertionError: assert ('completed' == 'timeout'
+E
+E         - timeout
+E         + completed)
+
+tests/test_tb08_memory_evidence.py:413: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_timeout_covers_download_not_just_polling
+1 failed, 38 deselected, 1 warning in 0.19s

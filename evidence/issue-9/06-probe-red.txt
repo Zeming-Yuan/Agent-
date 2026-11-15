@@ -1,0 +1,37 @@
+.....F                                                                   [100%]
+=================================== FAILURES ===================================
+____ test_tb08_memory_evidence_probe_records_actual_execution_and_sampling _____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-426/test_tb08_memory_evidence_prob0')
+
+    def test_tb08_memory_evidence_probe_records_actual_execution_and_sampling(tmp_path):
+        import json
+        from types import SimpleNamespace
+        from deploy.comfy_lifecycle_probe import LifecycleProbe
+        class Queue:
+            def get_flags(self, reset=True): return {}
+            def get_current_queue_volatile(self): return [], []
+            def get(self, timeout=None):
+                return ((0, '5d2fdf20-90f7-48a7-b4b4-373aaeb96638', {'secret': 'PROMPT'},
+                         {'client_id': 'task-123'}, [], {'key': 'SECRET'}), 1)
+        class Executor:
+            def reset(self): pass
+        manager = SimpleNamespace(current_loaded_models=[], unload_all_models=lambda: None, soft_empty_cache=lambda: None)
+        probe = LifecycleProbe(Queue(), manager, Executor, SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False)),
+                               tmp_path/'obs', 'host', 'runtime')
+        probe.install()
+        probe.queue.get()
+>       probe.sample_once()
+        ^^^^^^^^^^^^^^^^^
+E       AttributeError: 'LifecycleProbe' object has no attribute 'sample_once'
+
+tests/test_tb08_memory_evidence.py:122: AttributeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_probe_records_actual_execution_and_sampling
+1 failed, 5 passed, 1 warning in 0.42s

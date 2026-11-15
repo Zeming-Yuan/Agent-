@@ -1,0 +1,40 @@
+{
+  "note": "Only trailing whitespace normalized; failure/pass outcomes and diagnostics unchanged. Original hashes retained.",
+  "files": [
+    {
+      "path": "evidence/issue-9/12-fixed-source-red.txt",
+      "original_sha256": "14f4f51a25d81342772b86bca88a910eb5b43fe5daa732e249b04ae9abbfa048",
+      "normalized_sha256": "22714ed26fcf09ac98417e9044d785d0b9db3889d46dd146c227cf79a3e412c0"
+    },
+    {
+      "path": "evidence/issue-9/16-cadence-red.txt",
+      "original_sha256": "50d53dd61d5a1ef17ed00d979d745811fbaed2682de1f5feb137b96463def8eb",
+      "normalized_sha256": "a6d3b6795f0a4f356ad10b5e3ff9abe8a26a58a5201a4c9dbb4198b9ada8e934"
+    },
+    {
+      "path": "evidence/issue-9/07-write-fault-red.txt",
+      "original_sha256": "cc46616e44794e7c7cc5864a1355f518f0ca58218e722e8cbec9b8fe028d08ca",
+      "normalized_sha256": "e2b89cf52071b5543b2857a26146182b3bf191798fc5595107c408b836b3ac58"
+    },
+    {
+      "path": "evidence/issue-9/19-deadline-red.txt",
+      "original_sha256": "e795e65bea14bb592ed2c22402305c630c50b0befc667097a8a94135db5829f1",
+      "normalized_sha256": "912e443e3c91b4814182701b7a4ff715c87b363a7d75d0c788da562d5ee0c468"
+    },
+    {
+      "path": "evidence/issue-9/10-cli-red.txt",
+      "original_sha256": "bc9c4e7d72cdfac71a08207f4228ed0498420baf6e8b36a912ff68dd09d22ef6",
+      "normalized_sha256": "331174fa3953974f42d061b9fc55a8849ad2ccc2e10039aac214439f7ad93fbd"
+    },
+    {
+      "path": "evidence/issue-9/05-task-trace-red.txt",
+      "original_sha256": "859f03f681227bc153120e7d42ae6a3d4cc5184955ca8ade5063a4bb648f0a40",
+      "normalized_sha256": "749c6d9796398fadedcacc27a6d3927df36400d13ec4d9df99a74817bc214841"
+    },
+    {
+      "path": "evidence/issue-9/21-cancel-phase-red.txt",
+      "original_sha256": "9bd63f7897b62c57bc18ab1aeb82553e997d6274eebd28a1ef1ce0a2b11b5983",
+      "normalized_sha256": "18b9dc90809b6b0266062746d1f1507ab1edfc15fdd243145df63005723563f5"
+    }
+  ]
+}

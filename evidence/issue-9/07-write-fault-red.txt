@@ -1,0 +1,53 @@
+......F                                                                  [100%]
+=================================== FAILURES ===================================
+__ test_tb08_memory_evidence_probe_write_fault_does_not_change_backend_return __
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-428/test_tb08_memory_evidence_prob1')
+
+    def test_tb08_memory_evidence_probe_write_fault_does_not_change_backend_return(tmp_path):
+        from types import SimpleNamespace
+        from deploy.comfy_lifecycle_probe import LifecycleProbe
+        class Queue:
+            def get_flags(self, reset=True): return {'unload_models': True, 'free_memory': True}
+            def get(self, timeout=None): return ((0, 'pid', {}, {'client_id': 'task'}, [], {}), 1)
+            def get_current_queue_volatile(self): return [], []
+        class Executor:
+            def reset(self): return 'reset'
+        directory = tmp_path/'not-a-directory'; directory.write_text('block')
+        manager = SimpleNamespace(current_loaded_models=[], unload_all_models=lambda: 'unload', soft_empty_cache=lambda: 'cache')
+        probe = LifecycleProbe(Queue(), manager, Executor, SimpleNamespace(), directory, 'host', 'hash')
+        probe.install()
+>       assert probe.queue.get()[1] == 1
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_tb08_memory_evidence.py:145:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+deploy/comfy_lifecycle_probe.py:60: in observed_get
+    self.emit('execution_started', prompt_id=item[1], task_id=item[3].get('client_id'))
+deploy/comfy_lifecycle_probe.py:24: in emit
+    write_private_jsonl(self.directory, 'lifecycle.jsonl', {
+services/image_telemetry.py:80: in write_private_jsonl
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-428/test_tb08_memory_evidence_prob1/not-a-directory')
+mode = 448, parents = True, exist_ok = True
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileExistsError: [Errno 17] File exists: '/tmp/pytest-of-clusteradmin/pytest-428/test_tb08_memory_evidence_prob1/not-a-directory'
+
+/usr/lib/python3.12/pathlib.py:1313: FileExistsError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_probe_write_fault_does_not_change_backend_return
+1 failed, 6 passed, 1 warning in 0.41s

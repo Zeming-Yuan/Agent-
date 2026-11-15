@@ -1,0 +1,286 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[429-rejected] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8ef38980>
+outcome = '429', expected = 'rejected'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[failed-failed] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8eb2ca70>
+outcome = 'failed', expected = 'failed'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[timeout-timeout] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8eb2ca40>
+outcome = 'timeout', expected = 'timeout'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[bad_png-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8eb2d310>
+outcome = 'bad_png', expected = 'error'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[download_500-http_error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_4')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8eb2da90>
+outcome = 'download_500', expected = 'http_error'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+_ test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[save_fault-error] _
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-441/test_tb08_memory_evidence_cli_5')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xfd8d8eb2e510>
+outcome = 'save_fault', expected = 'error'
+
+    @pytest.mark.parametrize('outcome,expected', [('429','rejected'), ('failed','failed'),
+        ('timeout','timeout'), ('bad_png','error'), ('download_500','http_error'), ('save_fault','error')])
+    def test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking(tmp_path, monkeypatch, outcome, expected):
+        import httpx
+        import io
+        import json
+        from PIL import Image
+        from scripts.benchmark_images import observe
+        key = tmp_path/'key'; key.write_text('PRIVATE-KEY-SENTINEL')
+        png = io.BytesIO(); Image.new('RGB',(1024,1024)).save(png,format='PNG')
+        requests = []
+        async def server(request):
+            requests.append(request)
+            if outcome == 'timeout': raise httpx.ReadTimeout('PRIVATE-KEY-SENTINEL', request=request)
+            if request.url.path == '/v1/tasks':
+                if outcome == '429': return httpx.Response(429, json={'detail':'SECRET'})
+                return httpx.Response(200, json={'id':'task-'+'a'*32,'status':'failed' if outcome == 'failed' else 'completed',
+                    'result':{'file_id':'file-'+'b'*32}})
+            if request.url.path.endswith('/content'):
+                return httpx.Response(500 if outcome == 'download_500' else 200,
+                    content=b'not a PNG' if outcome == 'bad_png' else png.getvalue())
+            return httpx.Response(404)
+        if outcome == 'save_fault':
+            import os
+            fsync = os.fsync
+            def fail_output(fd):
+                if Path('/proc/self/fd/'+str(fd)).resolve().name == 'output.png': raise OSError('PRIVATE-KEY-SENTINEL')
+                return fsync(fd)
+            monkeypatch.setattr(os,'fsync',fail_output)
+        config = {'base_url':'https://fixture.invalid','api_key_file':str(key),
+            'ca_file':str(Path(__file__).resolve().parents[1]/'certificates/agent-root-ca.crt'),
+            'telemetry_source':str(tmp_path/'obs'),'expected_host_id':'host','runtime_hash':'runtime',
+            'timeout_seconds':1,'baseline_seconds':.001,'baseline_tolerance_bytes':1,
+            'options':{'prompt':'PRIVATE-PROMPT-SENTINEL'}}
+>       summary = asyncio.run(observe(config,tmp_path/'reports',transport=httpx.MockTransport(server)))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: observe() got an unexpected keyword argument 'transport'
+
+tests/test_tb08_memory_evidence.py:357: TypeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[429-rejected]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[failed-failed]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[timeout-timeout]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[bad_png-error]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[download_500-http_error]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cli_counts_failed_attempts_without_leaking[save_fault-error]
+6 failed, 30 deselected, 1 warning in 0.13s

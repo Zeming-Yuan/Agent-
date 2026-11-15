@@ -1,0 +1,60 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_tb08_memory_evidence_launcher_observes_worker_without_custom_nodes ____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-437/test_tb08_memory_evidence_laun0')
+
+    def test_tb08_memory_evidence_launcher_observes_worker_without_custom_nodes(tmp_path):
+        import json
+        import threading
+        from types import SimpleNamespace
+        from deploy.comfy_lifecycle_probe import install_on_worker_start
+        class Queue:
+            def get_flags(self, reset=True): return {}
+            def get_current_queue_volatile(self): return [], []
+            def get(self, timeout=None): return None
+        class Executor:
+            def reset(self): pass
+        manager = SimpleNamespace(current_loaded_models=[], unload_all_models=lambda: None, soft_empty_cache=lambda: None)
+        manager.torch = SimpleNamespace(cuda=SimpleNamespace(is_available=lambda: False))
+        namespace = {'__file__': str(tmp_path/'main.py'), 'comfyui_version': SimpleNamespace(__version__='0.33.2'),
+                     'execution': SimpleNamespace(PromptExecutor=Executor),
+                     'comfy': SimpleNamespace(model_management=manager)}
+        exec('def prompt_worker(q, server):\n    q.get()\n', namespace)
+        restore = install_on_worker_start(tmp_path/'obs', host_id='host', runtime_hash='hash')
+        try:
+            worker = threading.Thread(target=namespace['prompt_worker'], args=(Queue(), None))
+>           worker.start(); worker.join(2)
+            ^^^^^^^^^^^^^^
+
+tests/test_tb08_memory_evidence.py:173:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+thread = <Thread(Thread-1 (prompt_worker), initial)>, args = (), kwargs = {}
+target = <function prompt_worker at 0xf3036bde7920>
+namespace = {'__builtins__': {'ArithmeticError': <class 'ArithmeticError'>, 'AssertionError': <class 'AssertionError'>, 'Attribute...without_custom_nodes.<locals>.<lambda> at 0xf3036bde77e0>)))), 'comfyui_version': namespace(__version__='0.33.2'), ...}
+
+    def start(thread, *args, **kwargs):
+        nonlocal sampler
+        target = getattr(thread, '_target', None)
+        if getattr(target, '__name__', '') == 'prompt_worker':
+            threading.Thread.start = original
+            namespace = target.__globals__
+            if namespace['comfyui_version'].__version__ != '0.33.2':
+                raise RuntimeError('Lifecycle observation supports ComfyUI 0.33.2 only')
+            probe = LifecycleProbe(thread._args[0], namespace['comfy'].model_management,
+>                                  namespace['execution'].PromptExecutor, namespace['torch'],
+                                                                          ^^^^^^^^^^^^^^^^^^
+                                   Path(directory), host_id, runtime_hash)
+E           KeyError: 'torch'
+
+deploy/comfy_lifecycle_probe.py:116: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_launcher_observes_worker_without_custom_nodes
+1 failed, 28 deselected, 1 warning in 0.04s

@@ -1,0 +1,36 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_tb08_memory_evidence_cancel_trace_records_cleanup_boundary ________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-453/test_tb08_memory_evidence_canc0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf938eea67420>, wait_task=<function owner_env.<locals>.wait_task at 0xf938eea67560>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xf938eea34500>
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-453/test_tb08_memory_evidence_canc0')
+
+    def test_tb08_memory_evidence_cancel_trace_records_cleanup_boundary(owner_env, monkeypatch, tmp_path):
+        import json
+        directory = tmp_path/'obs'; monkeypatch.setenv('IMAGE_TELEMETRY_DIR',str(directory))
+        backend = owner_env.new_backend(hold=True, hold_stop=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            tid = owner_env.submit(c).json()['id']; assert backend.started.wait(2)
+            try:
+                c.post('/v1/tasks/'+tid+'/cancel',headers=owner_env.auth('A'))
+            finally:
+                backend.release_stop.set(); backend.finish.set()
+            owner_env.wait_task(c,tid,'A',lambda t:t['status']=='cancelled')
+        rows = [json.loads(x) for x in (directory/'tasks.jsonl').read_text().splitlines()]
+>       assert {'cancelling','cancelled'} <= {r['stage'] for r in rows}
+E       AssertionError: assert {'cancelled', 'cancelling'} <= {'cancelled',..., 'unloading'}
+E
+E         Extra items in the left set:
+E         'cancelling'
+
+tests/test_tb08_memory_evidence.py:432: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_cancel_trace_records_cleanup_boundary
+1 failed, 39 deselected, 1 warning in 0.44s

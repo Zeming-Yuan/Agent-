@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb08_memory_evidence_sampler_deadlines_and_holes _____________
+
+    def test_tb08_memory_evidence_sampler_deadlines_and_holes():
+        from services.image_telemetry import collect_samples
+        clock = [0.0]; rows = []
+        def wait(seconds):
+            clock[0] += seconds
+            if len(rows) == 2: clock[0] += .35
+            return len(rows) >= 4
+        collect_samples(lambda: {'observed_at': clock[0]}, rows.append,
+                        wait=wait, clock=lambda: clock[0])
+>       assert [round(r['observed_at'], 2) for r in rows] == [0, .1, .55, .6]
+E       assert [0.0, 0.2, 0.75, 0.8] == [0, 0.1, 0.55, 0.6]
+E
+E         At index 1 diff: 0.2 != 0.1
+E         Use -v to get more diff
+
+tests/test_tb08_memory_evidence.py:45: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_sampler_deadlines_and_holes
+1 failed, 36 deselected, 1 warning in 0.04s

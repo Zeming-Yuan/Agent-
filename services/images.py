@@ -10,6 +10,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import HTTPException
 
+from .image_telemetry import record_current_task, task_event, task_transition
+
 LOG=logging.getLogger('agent-mm.images')
 Image.MAX_IMAGE_PIXELS=16_000_000
 
@@ -181,16 +183,17 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             names[-1]=name
         if unload_models:
             r=await settled_post(client,url+'/free',json={'unload_models':True,'free_memory':True});r.raise_for_status()
-        store.event(tid,{'type':'stage','stage':'loading'})
+        task_event(store,tid,{'type':'stage','stage':'loading'})
         # ComfyUI requires a canonical UUID. Hold it before sending any bytes.
         pid=str(uuid.uuid4())
+        record_current_task(store,tid,prompt_id=pid,event='submit_started')
         if event_stream_factory is not None:
             from .comfy_events import normalize_event
             try:
                 stream=await streams.enter_async_context(event_stream_factory(url,tid))
             except Exception:
                 stream=None
-                store.event(tid,{'type':'observation_lost'})
+                task_event(store,tid,{'type':'observation_lost'})
             async def observe():
                 nonlocal backend_failed
                 active_node=None
@@ -200,12 +203,12 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                         if event is not None:
                             if event['type']=='backend_error':backend_failed=True
                             else:
-                                task=store.event(tid,event)
+                                task=task_event(store,tid,event)
                                 if 'node' in event and task['stage']==event['stage']:
                                     active_node=event['node']
-                    store.event(tid,{'type':'observation_lost'})
+                    task_event(store,tid,{'type':'observation_lost'})
                 except Exception:
-                    store.event(tid,{'type':'observation_lost'})
+                    task_event(store,tid,{'type':'observation_lost'})
             if stream is not None:watcher=asyncio.create_task(observe())
         r=await settled_post(client,url+'/prompt',json={'prompt':workflow(opts,'agent-mm/'+tid,names),'client_id':tid,'prompt_id':pid})
         r.raise_for_status();pid=r.json()['prompt_id']
@@ -217,7 +220,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                 status=history.get('status',{})
                 if status.get('status_str')=='error': raise RuntimeError('Image inference failed')
                 if status.get('completed'):
-                    store.event(tid,{'type':'stage','stage':'saving'})
+                    task_event(store,tid,{'type':'stage','stage':'saving'})
                     output=history['outputs']['9']['images'][0]
                     if output.get('type')!='output' or Path(output['filename']).name!=output['filename']:
                         raise RuntimeError('Invalid image output reference')
@@ -235,6 +238,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             await asyncio.sleep(.5)
         raise TimeoutError('Image inference timeout')
     finally:
+        record_current_task(store,tid)
         def discard_result():
             if saved_fid:
                 reclaim_result(store,saved_fid,owner=owner)
@@ -246,7 +250,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                 try:
                     await streams.aclose()
                 except Exception:
-                    store.event(tid,{'type':'observation_lost'})
+                    task_event(store,tid,{'type':'observation_lost'})
                 if pid:
                     await clear_backend(client,url,pid)
                     response=await client.post(url+'/history',json={'delete':[pid]},timeout=10)
@@ -281,7 +285,7 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             await asyncio.sleep(.2);continue
         tid=item['id']
         profile=(item['kind'],item['kind']=='image_edit' and item['options']['quality']=='fast')
-        item=store.transition(tid,status='running',stage='unloading' if last_kind!=profile else 'loading',expected_seq=item['stage_seq'])
+        item=task_transition(store,tid,status='running',stage='unloading' if last_kind!=profile else 'loading',expected_seq=item['stage_seq'])
         if item['status'] != 'running':continue
         job=asyncio.create_task(process_image(item,store,client,url,unload_models=last_kind!=profile,
                                             event_stream_factory=event_stream_factory));active[tid]=job
@@ -290,35 +294,37 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             task=store.worker_task(tid)
             if task['cancel_requested']:
                 reclaim_result(store,result['file_id'],owner=task['owner'])
-                store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
+                task_transition(store,tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
             else:
-                store.transition(tid,status='completed',stage='completed',expected_seq=task['stage_seq'],result=result)
+                task_transition(store,tid,status='completed',stage='completed',expected_seq=task['stage_seq'],result=result)
             last_kind=profile
         except asyncio.CancelledError:
             task=store.worker_task(tid)
             if task['cancel_requested']:
-                store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
+                task_transition(store,tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
                 last_kind=None
                 if asyncio.current_task().cancelling():raise
             else:
-                store.update(tid,status='failed',error='Image worker interrupted');raise
+                store.update(tid,status='failed',error='Image worker interrupted')
+                record_current_task(store,tid)
+                raise
         except BackendExecutionFailed:
-            store.event(tid,{'type':'failed','error':'Image backend execution failed',
+            task_event(store,tid,{'type':'failed','error':'Image backend execution failed',
                              'blocked_reason':'backend_execution_error'})
             initialized=False
         except SubmissionUncertain:
             LOG.exception('image backend outcome uncertain; admission stopped')
-            store.event(tid,{'type':'failed','error':'Image submission outcome unknown; restart image backend and gateway',
+            task_event(store,tid,{'type':'failed','error':'Image submission outcome unknown; restart image backend and gateway',
                              'blocked_reason':'submission_unknown'})
             return
         except CleanupUncertain:
             LOG.exception('image cleanup unconfirmed; admission stopped')
-            store.event(tid,{'type':'failed','error':'Image cleanup unconfirmed; restart image backend and gateway',
+            task_event(store,tid,{'type':'failed','error':'Image cleanup unconfirmed; restart image backend and gateway',
                              'blocked_reason':'cleanup_unconfirmed'})
             return
         except Exception as exc:
             LOG.exception('image task %s failed (%s)',tid,type(exc).__name__)
-            store.event(tid,{'type':'failed','error':'Image processing failed; see service log'})
+            task_event(store,tid,{'type':'failed','error':'Image processing failed; see service log'})
             initialized=False
         finally:
             active.pop(tid,None)

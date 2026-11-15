@@ -1,0 +1,20 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________ test_tb08_memory_evidence_unknown_comfy_source_is_not_observed ________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-439/test_tb08_memory_evidence_unkn0')
+
+    def test_tb08_memory_evidence_unknown_comfy_source_is_not_observed(tmp_path):
+>       from deploy.comfy_lifecycle_probe import runtime_identity
+E       ImportError: cannot import name 'runtime_identity' from 'deploy.comfy_lifecycle_probe' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/deploy/comfy_lifecycle_probe.py)
+
+tests/test_tb08_memory_evidence.py:317: ImportError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_unknown_comfy_source_is_not_observed
+1 failed, 29 deselected, 1 warning in 0.04s

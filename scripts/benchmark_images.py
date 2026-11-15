@@ -1,62 +1,178 @@
-"""Authenticated end-to-end image smoke samples with memory/latency evidence."""
-import asyncio,json,statistics,time
+"""One explicit image attempt with private, correlated resource evidence.
+
+Import is inert. No built-in credential, endpoint, workload or output directory.
+"""
+import argparse
+import asyncio
+import hashlib
+import io
+import json
+import math
+import os
 from pathlib import Path
-import httpx
+import re
 import ssl
+import time
+import uuid
 
-BASE=Path(__file__).resolve().parents[1];E=BASE/'evidence/image-deploy-20261114'
-PROMPTS=[
-'商业产品摄影，一只哑光白色保温杯放在米色石台上，暖白色简洁背景，柔和侧光，真实细腻材质，电商主图，无文字无水印',
-'电商护肤品场景，一只透明磨砂玻璃面霜罐，白色盖子，清晨窗光，浅米色亚麻与浅色大理石，画面整洁，高端商业摄影，无文字',
-'日常公众号配图，阳光下的木质书桌，一本打开的书、一杯咖啡和绿植，温暖自然光，真实摄影，右上留白，无文字',
-'极简电商场景背景，浅灰色摄影棚，中央白色圆柱展示台，柔和自然阴影，干净构图，没有商品、人物或文字',
-'商业美食摄影，一碗热气腾腾的牛肉面，青菜与细葱花，暖色餐桌，自然窗边光，食材真实，细节清楚，无文字',
-'日常商务文章配图，现代简洁办公室，木质桌面和笔记本电脑，窗外城市，午后自然光，干净克制，无人物无文字',
-'蓝色运动鞋电商产品摄影，纯白背景，一双鞋的三分之四角度，清晰鞋带、网布和橡胶鞋底，柔和接触阴影，无文字无水印',
-'日常旅行配图，江南小镇雨后石板路，白墙黛瓦，薄雾与柔和晨光，真实摄影，自然色彩，无文字无水印',
-'自然风电商背景，浅米色沙地和远处柔和的绿植虚化，前景中央留出展示商品的位置，清晨侧光，无商品无文字',
-'简洁写实的家庭厨房场景，白色台面、浅木色橱柜，窗边明亮自然光，中央台面留白，用于小家电电商背景，无文字',
-'玻璃香水瓶商业摄影，透明方瓶和黑色瓶盖，深灰石板与柔和轮廓光，真实折射、精致材质，无品牌无文字',
-'极简中文主题配图，浅蓝色背景，白色展示台，一束自然窗光，留出上方标题空间，无文字无水印',
-'日常科技文章配图，简洁现代数据中心机房，整齐服务器机柜，白色与蓝灰色灯光，真实摄影，清晰自然，无文字',
-'电商食品摄影，一盘新鲜草莓，浅色陶瓷盘、木质桌面和柔和窗光，真实果实纹理，自然红色，无文字',
-'商业摄影，一只精致白色陶瓷花瓶和单枝白色郁金香，米色背景，柔和阴影，居家装饰产品配图，无文字',
-'简洁夏季活动背景，淡黄色背景，少量柠檬切片和绿色叶片放在画面边缘，中央留白，清新明亮，无文字',
-'电商包袋摄影，一只无品牌棕色皮质手提包，浅米色摄影棚背景，三分之四角度，真实皮革纹理和清晰缝线，无文字',
-'柔和自然光下的现代客厅，米色沙发、浅木色茶几、绿色植物，简洁生活方式商业摄影，无人物无文字',
-'电商耳机产品摄影，一副黑色头戴耳机，浅灰背景，侧面三分之四角度，材质真实、细节清楚，柔和阴影，无文字',
-'蓝白色简洁商务背景，磨砂玻璃与白色几何台面，清晨自然光，右侧留白，用于文章配图，无文字无水印']
+import httpx
+from PIL import Image
+from scripts.image_measurement import summarize_run, validate_run, write_curve, baseline_summary
 
-def mem():
- return int(next(x.split()[1] for x in Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemAvailable:')))*1024
-async def main():
- (E/'samples').mkdir(parents=True,exist_ok=True)
- key=(BASE/'.private/agent-api.key').read_text().strip();ctx=ssl.create_default_context(cafile=str(BASE/'certificates/agent-root-ca.crt'))
- results=[];minimum=mem();running=True
- async def monitor():
-  nonlocal minimum
-  while running:minimum=min(minimum,mem());await asyncio.sleep(.2)
- async with httpx.AsyncClient(base_url='https://192.168.10.77:18443',verify=ctx,headers={'Authorization':'Bearer '+key},timeout=60,trust_env=False) as client:
-  watch=asyncio.create_task(monitor())
-  try:
-   for i,prompt in enumerate(PROMPTS):
-    started=time.monotonic()
-    r=await client.post('/v1/tasks',json={'kind':'image_generate','options':{'prompt':prompt,'seed':417+i,'title':'品质生活' if i==11 else ''}},headers={'Idempotency-Key':'image-bench-final-20261114-'+str(i)})
-    r.raise_for_status();tid=r.json()['id']
-    while True:
-     state=(await client.get('/v1/tasks/'+tid)).json()
-     if state['status'] in ('completed','failed','cancelled'):break
-     await asyncio.sleep(.5)
-    item={'index':i,'task_id':tid,'status':state['status'],'seconds':round(time.monotonic()-started,3),'prompt':prompt}
-    if state['status']=='completed':
-     fid=state['result']['file_id'];image=await client.get('/v1/files/'+fid+'/content');image.raise_for_status()
-     target=E/'samples'/f'{i:02d}.png';target.write_bytes(image.content);item.update(file_id=fid,path=str(target))
-    else:item['error']=state.get('error')
-    results.append(item);(E/'benchmark-generation-progress.json').write_text(json.dumps(results,ensure_ascii=False,indent=2));print(i,state['status'],item['seconds'],flush=True)
-  finally:
-   running=False;await watch
- values=sorted(x['seconds'] for x in results if x['status']=='completed')
- summary={'samples':results,'success':len(values),'total':len(results),'min_available_gib':round(minimum/1024**3,3),'p50_seconds':statistics.median(values) if values else None,'p95_seconds':values[max(0,__import__('math').ceil(.95*len(values))-1)] if values else None,'note':'Server-side synthetic image examples; not Mac UI or business quality acceptance. First sample includes cold loading.'}
- (E/'benchmark-generation.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2));print(json.dumps({k:v for k,v in summary.items() if k!='samples'},ensure_ascii=False))
+
+def read_rows(directory, name):
+    try:
+        lines = (directory/name).read_text().splitlines()
+    except FileNotFoundError:
+        return []
+    return [json.loads(line) for line in lines if line.strip()]
+
+
+def save_private(path, data):
+    with path.open('xb') as stream:
+        os.chmod(path, 0o600)
+        stream.write(data); stream.flush(); os.fsync(stream.fileno())
+    fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
+
+
+def write_json(path, value):
+    save_private(path, (json.dumps(value, indent=2, sort_keys=True, allow_nan=False)+'\n').encode())
+
+
+async def observe(config, report_root, *, transport=None):
+    run_id = uuid.uuid4().hex
+    directory = Path(report_root)/run_id
+    directory.mkdir(mode=0o700, parents=True)
+    source = Path(config['telemetry_source'])
+    timeout = float(config['timeout_seconds'])
+    baseline_seconds = float(config['baseline_seconds'])
+    tolerance = int(config['baseline_tolerance_bytes'])
+    if not math.isfinite(timeout) or not math.isfinite(baseline_seconds) or timeout <= 0 or baseline_seconds <= 0 or tolerance < 0: raise ValueError('Invalid observation bounds')
+    if not config['base_url'].startswith('https://'): raise ValueError('HTTPS is required')
+    context = ssl.create_default_context(cafile=config['ca_file'])
+    key = Path(config['api_key_file']).read_text().strip()
+    options = config.get('options', {})
+    profile = options.get('quality', 'standard') if config.get('kind') == 'image_edit' else 'generate'
+    row = {'evidence_version': 1, 'expected_host_id': config['expected_host_id'], 'run_id': run_id, 'request_id': run_id+'-0', 'task_id': None, 'profile': profile,
+           'runtime_hash': config['runtime_hash'], 'host_match': False, 'backend_executions': 0,
+           'status': 'not_started', 'output_verified': False, 'memory_samples': [], 'guard_events': [],
+           'total_attempts': 1, 'retries': 0, 'capture_start_utc_ns': time.time_ns()}
+    capture_start = row['capture_start_utc_ns']
+    await asyncio.sleep(baseline_seconds)
+    row['submitted_utc_ns'] = time.time_ns()
+    row['submitted_ns'] = time.monotonic_ns()
+    deadline = time.monotonic()+timeout
+    try:
+        async with asyncio.timeout(timeout), httpx.AsyncClient(base_url=config['base_url'].rstrip('/'), verify=context,
+                headers={'Authorization': 'Bearer '+key}, timeout=min(timeout, 30), trust_env=False, transport=transport) as client:
+            reply = await client.post('/v1/tasks', json={'kind': config.get('kind','image_generate'), 'options': options},
+                                      headers={'Idempotency-Key': row['request_id']})
+            row['http_status'] = reply.status_code
+            reply.raise_for_status()
+            state = reply.json(); row['task_id'] = state['id']
+            if not re.fullmatch(r'task-[0-9a-f]{32}', row['task_id']): raise ValueError('Invalid task identity')
+            while state['status'] not in ('completed','failed','cancelled'):
+                if time.monotonic() >= deadline: raise TimeoutError('Observation deadline')
+                await asyncio.sleep(.05)
+                reply = await client.get('/v1/tasks/'+row['task_id']); reply.raise_for_status(); state = reply.json()
+            row['status'] = state['status']; row['completed_ns'] = time.monotonic_ns()
+            if row['status'] == 'completed':
+                fid = state['result']['file_id']
+                if not re.fullmatch(r'file-[0-9a-f]{32}', fid): raise ValueError('Invalid result identity')
+                chunks = []; size = 0
+                async with client.stream('GET', '/v1/files/'+fid+'/content') as image:
+                    image.raise_for_status()
+                    async for chunk in image.aiter_bytes():
+                        size += len(chunk)
+                        if size > 32*1024**2: raise ValueError('Oversized PNG')
+                        chunks.append(chunk)
+                data = b''.join(chunks); row['downloaded_ns'] = time.monotonic_ns()
+                expected = tuple(map(int, options.get('size','1024x1024').split('x')))
+                with Image.open(io.BytesIO(data)) as png:
+                    if png.format != 'PNG' or png.size != expected: raise ValueError('Invalid PNG size/format')
+                    png.verify()
+                with Image.open(io.BytesIO(data)) as png: png.load()
+                save_private(directory/'output.png', data)
+                row['saved_ns'] = time.monotonic_ns()
+                row['output_verified'] = True
+                row['output_sha256'] = hashlib.sha256(data).hexdigest()
+    except httpx.HTTPStatusError as exc:
+        row.update(status='rejected' if exc.response.status_code == 429 else 'http_error',
+                   http_status=exc.response.status_code, failure='HTTPStatusError')
+    except (httpx.HTTPError, TimeoutError, OSError, ValueError, KeyError) as exc:
+        row.update(status='timeout' if isinstance(exc,(TimeoutError,httpx.TimeoutException)) else 'error',
+                   failure=type(exc).__name__)
+    row['work_end_utc_ns'] = time.time_ns()
+    await asyncio.sleep(baseline_seconds)
+    capture_end = time.time_ns(); row['capture_end_utc_ns'] = capture_end
+    source_errors = []
+    def captured(name):
+        try:
+            return [r for r in read_rows(source, name) if capture_start <= r['utc_ns'] <= capture_end]
+        except (OSError, ValueError, KeyError, TypeError):
+            source_errors.append(name+'_unavailable'); return []
+    memory = captured('memory.jsonl')
+    events = captured('lifecycle.jsonl')
+    tasks = [r for r in captured('tasks.jsonl') if r.get('task_id') == row['task_id']]
+    executions = [r for r in events if r.get('event') == 'execution_started' and r.get('task_id') == row['task_id']]
+    lifecycle = [r for r in events if r.get('task_id') == row['task_id'] or r.get('event','').startswith('release_')]
+    expected_host = config['expected_host_id']
+    row.update(memory_samples=memory, backend_executions=len(executions), source_errors=source_errors,
+               host_match=bool(memory and tasks and executions and expected_host and
+                   all(r.get('host_id') == expected_host for r in memory+tasks+executions)),
+               task_events=tasks, execution_events=executions,
+               guard_events=[r for r in memory if r.get('available_bytes') is not None and r['available_bytes'] < 20*1024**3])
+    row['baseline'] = baseline_summary(memory, capture_start, row['submitted_utc_ns'],
+                                      row['work_end_utc_ns'], capture_end, tolerance)
+    try:
+        environment = next(r for r in reversed(read_rows(source, 'environment.jsonl'))
+            if r.get('host_id') == expected_host and r.get('runtime_hash') == config['runtime_hash'])
+    except (OSError, ValueError, StopIteration):
+        environment = None; source_errors.append('environment_unavailable')
+    errors = validate_run(row)
+    summary = {'run_id': run_id, 'task_id': row['task_id'], 'profile': profile, 'total_attempts': 1,
+               'valid_samples': 0 if errors else 1, 'status': row['status'], 'errors': errors,
+               'baseline': row['baseline'], 'release_proven': None, 'baseline_status': 'not_calibrated'}
+    values = [r['available_bytes'] for r in memory if r.get('available_bytes') is not None]
+    summary['min_available_bytes'] = min(values) if values else None
+    for field in ('cgroup_current_bytes','cgroup_peak_bytes','gpu_allocated_bytes','gpu_reserved_bytes'):
+        values = [r[field] for r in memory if r.get(field) is not None]
+        summary['max_'+field] = max(values) if values else None
+    summary['timings'] = summarize_run(row) if not errors else None
+    summary['release_operations_seconds'] = [e['duration_seconds'] for e in lifecycle
+        if e.get('event') == 'release_operations_returned']
+    summary['stage_durations_seconds'] = {}
+    ordered = sorted(tasks, key=lambda t:t['utc_ns'])
+    for current, following in zip(ordered, ordered[1:]):
+        stage = current['stage']
+        summary['stage_durations_seconds'][stage] = summary['stage_durations_seconds'].get(stage,0)+(following['utc_ns']-current['utc_ns'])/1e9
+    write_json(directory/'environment.json', {'host_id': expected_host, 'runtime_hash': config['runtime_hash'],
+        'capture_start_utc_ns': capture_start, 'capture_end_utc_ns': capture_end, 'clock': 'client monotonic_ns; backend UTC+host',
+        'concurrency': 1, 'backend': environment, 'input_size': {'size': options.get('size','1024x1024'), 'reference_count': len(options.get('image_ids',[]))}})
+    for name, records in [('attempts.jsonl',[row]),('memory.jsonl',memory),('lifecycle.jsonl',tasks+lifecycle)]:
+        save_private(directory/name, ''.join(json.dumps(r,sort_keys=True)+'\n' for r in records).encode())
+    write_json(directory/'summary.json', summary)
+    write_json(directory/'profile-report.json', {'profile': profile, 'runtime_hash': config['runtime_hash'],
+        'baseline_status': 'not_calibrated', 'enabled': False, 'raw_runs': [run_id], 'release_proof': None})
+    save_private(directory/'memory.svg', write_curve(memory, tasks, capture_start, capture_end).encode())
+    return summary
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--scenario', choices=['observe'], required=True)
+    parser.add_argument('--config', type=Path, required=True)
+    parser.add_argument('--report-dir', type=Path, required=True)
+    args = parser.parse_args()
+    try:
+        summary = asyncio.run(observe(json.loads(args.config.read_text()), args.report_dir))
+    except (OSError, ValueError, KeyError) as exc:
+        print(json.dumps({'status': 'configuration_error', 'error_type': type(exc).__name__})); return 2
+    print(json.dumps(summary, sort_keys=True))
+    return 0 if summary['valid_samples'] == 1 else 1
+
+
 if __name__ == '__main__':
- asyncio.run(main())
+    raise SystemExit(main())

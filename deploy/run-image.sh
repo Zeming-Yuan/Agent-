@@ -6,7 +6,18 @@ mkdir -p .private/runtime/comfy/{input,output,temp,user}
 chmod 700 .private/runtime/comfy
 # Files are admitted only after download SHA256 verification has completed.
 test -f /data/models/agent-mm-z-image-turbo/.verified.json
-docker run --name agent-mm-image --gpus all --network host --ipc private --shm-size 2g \
+observation_args=()
+if [[ -n "${IMAGE_TELEMETRY_DIR:-}" ]]; then
+  mkdir -p "$IMAGE_TELEMETRY_DIR"
+  chmod 700 "$IMAGE_TELEMETRY_DIR"
+  observation_args+=(--mount "type=bind,src=$IMAGE_TELEMETRY_DIR,dst=/observations")
+  observation_args+=(--mount "type=bind,src=/etc/machine-id,dst=/host-machine-id,readonly")
+  observation_args+=(--mount "type=bind,src=$PWD/deploy/comfy_lifecycle_probe.py,dst=/opt/comfy_lifecycle_probe.py,readonly")
+  observation_args+=(--mount "type=bind,src=$PWD/services,dst=/opt/agent-mm/services,readonly")
+  observation_args+=(--env "IMAGE_RUNTIME_ID=$image")
+  observation_args+=(--env IMAGE_TELEMETRY_DIR=/observations --env IMAGE_HOST_ID_FILE=/host-machine-id)
+fi
+docker run "${observation_args[@]}" --name agent-mm-image --gpus all --network host --ipc private --shm-size 2g \
   --user "$(id -u):$(id -g)" --read-only --tmpfs /tmp:rw,nosuid,nodev,size=1g \
   --cap-drop ALL --security-opt no-new-privileges --memory 75g --memory-swap 75g --pids-limit 256 \
   --mount type=bind,src=/data/models/agent-mm-z-image-turbo,dst=/opt/ComfyUI/models,readonly \

@@ -1,0 +1,109 @@
+........FFFFFFFF                                                         [100%]
+=================================== FAILURES ===================================
+_ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[backend_executions-0] _
+
+field = 'backend_executions', value = 0
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+_ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[host_match-False] _
+
+field = 'host_match', value = False
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+__ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[status-failed] __
+
+field = 'status', value = 'failed'
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+_ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[output_verified-False] _
+
+field = 'output_verified', value = False
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+_ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[memory_samples-value4] _
+
+field = 'memory_samples', value = []
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+_ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[guard_events-value5] _
+
+field = 'guard_events', value = ['guard_stop']
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+___ test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[saved_ns--1] ___
+
+field = 'saved_ns', value = -1
+
+    @pytest.mark.parametrize('field,value', [('backend_executions', 0), ('host_match', False),
+        ('status', 'failed'), ('output_verified', False), ('memory_samples', []),
+        ('guard_events', ['guard_stop']), ('saved_ns', -1)])
+    def test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample(field, value):
+>       from scripts.image_measurement import validate_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:197: ModuleNotFoundError
+___________ test_tb08_memory_evidence_e2e_includes_download_and_save ___________
+
+    def test_tb08_memory_evidence_e2e_includes_download_and_save():
+>       from scripts.image_measurement import validate_run, summarize_run
+E       ModuleNotFoundError: No module named 'scripts.image_measurement'
+
+tests/test_tb08_memory_evidence.py:203: ModuleNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[backend_executions-0]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[host_match-False]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[status-failed]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[output_verified-False]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[memory_samples-value4]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[guard_events-value5]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_invalid_work_is_not_a_perf_sample[saved_ns--1]
+FAILED tests/test_tb08_memory_evidence.py::test_tb08_memory_evidence_e2e_includes_download_and_save
+8 failed, 8 passed, 1 warning in 0.43s

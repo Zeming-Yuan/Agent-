@@ -309,3 +309,43 @@ T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，�
 ## T08 measurement implementation (2026-11-15)
 
 `import scripts.benchmark_images` is side-effect free: it does not create output directories, read credentials or launch network work. Direct execution of the historical script remains historical-only until the observe CLI is delivered. Historical records do not establish a new memory baseline. T08 evidence is indexed in `evidence/issue-9/execution.md`; real hardware baseline is **not_run**.
+
+### T08 observe collector (offline implementation; hardware not_run)
+
+Use the supported Python virtualenv and one explicit task:
+
+```bash
+.venv/bin/python -m scripts.benchmark_images --scenario observe --config "<private-config.json>" --report-dir "<private-report-parent>"
+```
+
+The former implicit historical 20-task workload is removed. No arguments now prints argparse usage; importing does no work. Each invocation creates a UUID run directory and a UUID-derived idempotency key, submits exactly one task through the normal authenticated API, polls its terminal state, downloads via the normal owner-protected file route, verifies PNG format/dimensions/full decode, and fsyncs image and directory before stopping the end-to-end timer. There are no automatic submit retries; response loss stays an invalid attempt, not new inference. HTTP rejection, failure, timeout, bad output and save failure all remain in the denominator. Exit0 requires valid raw evidence; invalid attempt exits1, configuration failure exits2. Configuration failures occur before a task attempt and are not included as submitted work.
+
+Private config schema (replace placeholders; keep config/key/report private):
+
+```json
+{
+  "base_url": "https://<gateway-host>:18443",
+  "api_key_file": "/private/personal.key",
+  "ca_file": "/private/agent-root-ca.crt",
+  "telemetry_source": "/private/observations",
+  "expected_host_id": "<host_id from private environment.jsonl>",
+  "runtime_hash": "<runtime_hash from private environment.jsonl>",
+  "timeout_seconds": 900,
+  "baseline_seconds": 3,
+  "baseline_tolerance_bytes": 104857600,
+  "kind": "image_generate",
+  "options": {"prompt": "<private synthetic fixture>", "size": "1024x1024", "seed": 17}
+}
+```
+
+The baseline window/tolerance above are example *observation settings*, not resource budgets, release proof, a signed calibration or permission to start a model. Select and record them for the controlled environment. For one edit task use kind=image_edit, a supported quality and owner-uploaded image_ids; do not run switches merely to obtain samples. No model-switch scenario is delivered by T08.
+
+Sampling installation is opt-in and requires a controlled service restart after normal maintenance checks. Set `IMAGE_TELEMETRY_DIR` to the same absolute private host directory in both existing launchers' service environments. The launchers mount that directory as /observations and host /etc/machine-id read-only; image launcher additionally mounts the read-only probe and services. They retain all existing GPU/memory/cache/disabled-node flags and the 75GiB container limit. Existing deployed launchers/services were **not** changed or restarted this round. The observer does not start/stop guards or other services. Before hardware use prove image memory guard active, resource headroom and backend idle; current LTX-active preflight does not meet this condition. Never stop other workloads or disable the 20GiB guard for a measurement.
+
+ComfyUI0.33.2's four lifecycle source files are SHA256-pinned. Unknown source refuses opt-in observer startup and needs adapter revalidation. Private environment.jsonl records immutable image ID, source/model-manifest/probe/sampler hashes and launch flags; runtime_hash changes with these inputs. Use its current host_id/runtime_hash in collector config. Capture happens *inside the image cgroup*, not the gateway or benchmark client's cgroup. There is no public telemetry route, custom node or extra network listener. Observation files are0700 directory/0600 files; gateway telemetry contains only salted owner_tag, task/profile/input-size/stage and canonical prompt ID. No original credential, prompt, filename or asset bytes are emitted. The sample PNG is a separate private acceptance artifact; do not publish it or the private configuration.
+
+The sampler targets fixed100ms deadlines (10Hz) to leave scheduling room for the required minimum5Hz. `sampling_gap_seconds` records gaps above200ms, and report validation rejects raw UTC gaps/coverage holes above200ms as well as source errors. Hardware cadence remains unverified until a real-task capture validates these intervals. Never fill missing signals with0. Host MemAvailable, cgroup current/lifetime-peak/limit/headroom, CUDA allocated/reserved and model/cache counts stay distinct; GB10 unified memory must not sum them. GPU/model/cache values may be unavailable. `resident_profiles` and `release_proven` remain null because graph/CPU weight ownership is unproven. `release_epoch` only counts consumed free flags followed by real worker unload/reset and post-GC soft-cache return, not /free HTTP acceptance. An advanced epoch is **not safe release proof** and must not enable a later resource admission.
+
+Run products: environment.json, attempts.jsonl, memory.jsonl, lifecycle.jsonl, summary.json, profile-report.json, memory.svg and private output.png when saved. Summary includes minimum system margin, separate container/GPU maxima, observed stage intervals, release-operation duration and pre/post baseline stability. Loading duration inferred from stage timestamps includes observed loading/wait, not a precise hardware weight-load timer. A container memory.peak is lifetime-wide and may predate the task. profile-report.enabled is always false and baseline_status=not_calibrated. No performance improvement or profile safety claim follows from one task.
+
+Rollback: unset IMAGE_TELEMETRY_DIR in service environments and restart under the existing maintenance procedure; preserve evidence. Code rollback is additive/observer-only; retain owner-aware task semantics, database/files and20GiB guard. No DB migration, seed or destructive recovery is introduced. Actual deployment/physical restart/production rollback, GPU envelope and Windows/macOS Harness are **未验证**.
