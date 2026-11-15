@@ -1,0 +1,30 @@
+........F                                                                [100%]
+=================================== FAILURES ===================================
+___________ test_tb02_sync_foreign_foreground_checked_before_backend ___________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-129/test_tb02_sync_foreign_foregro0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf6719f9e1d00>, wait_task=<function owner_env.<locals>.wait_task at 0xf6719f9e04a0>)
+
+    def test_tb02_sync_foreign_foreground_checked_before_backend(owner_env):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend) as c:
+            fid = owner_env.upload(c, 'A')
+            backend.offline.set()
+            responses = [c.post('/v1/images/generations', headers=owner_env.auth('B'),
+                                json={'prompt': 'fixture', 'foreground_file_id': ref})
+                         for ref in (fid, 'file-' + 'f' * 32)]
+>           assert [r.status_code for r in responses] == [404, 404]
+E           assert [503, 503] == [404, 404]
+E             
+E             At index 0 diff: 503 != 404
+E             Use -v to get more diff
+
+tests/test_tb02_owner_files.py:114: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb02_owner_files.py::test_tb02_sync_foreign_foreground_checked_before_backend
+1 failed, 8 passed, 1 warning in 2.49s

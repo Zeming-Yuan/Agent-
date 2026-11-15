@@ -25,7 +25,7 @@ async def command(*args, timeout=120):
 
 
 async def process_task(item, store, client, main, whisper, omni, headers, slots, *, audio_enabled=True):
-    source = store.path(item['file_id'])
+    source = store.path(item['file_id'], owner=store.worker_task(item['id'])['owner'])
     options = item['options']
     tid = item['id']
     def progress(value):

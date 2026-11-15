@@ -1,0 +1,51 @@
+................F                                                        [100%]
+=================================== FAILURES ===================================
+____________ test_tb02_own_transparent_foreground_result_is_private ____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-131/test_tb02_own_transparent_fore0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf300bc133600>, wait_task=<function owner_env.<locals>.wait_task at 0xf300bc133ce0>)
+
+    def test_tb02_own_transparent_foreground_result_is_private(owner_env):
+        import io
+        from PIL import Image
+        backend = owner_env.new_backend()
+        buf = io.BytesIO()
+        Image.new('RGBA', (8, 8), (255, 0, 0, 255)).save(buf, format='PNG')
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            uploaded = c.post('/v1/files', headers=owner_env.auth('A'),
+                              files={'file': ('foreground.png', buf.getvalue(), 'image/png')})
+            response = c.post('/v1/images/generations', headers=owner_env.auth('A'),
+                              json={'prompt': 'fixture', 'foreground_file_id': uploaded.json()['id']})
+>           assert response.status_code == 200, response.text
+E           AssertionError: {"detail":"Image processing failed; see service log"}
+E           assert 503 == 200
+E            +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_tb02_owner_files.py:184: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    agent-mm.images:images.py:215 image task task-b59941db81354f1ea216954febd81609 failed (ValueError)
+Traceback (most recent call last):
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 204, in image_worker
+    result=await job
+           ^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 167, in process_image
+    data=await asyncio.to_thread(compose_image,r.content,fg,opts['title'])
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/asyncio/threads.py", line 25, in to_thread
+    return await loop.run_in_executor(None, func_call)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115/services/images.py", line 34, in compose_image
+    if low==255 or high==0: raise ValueError('Product foreground must be a visible transparent PNG')
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: Product foreground must be a visible transparent PNG
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb02_owner_files.py::test_tb02_own_transparent_foreground_result_is_private
+1 failed, 16 passed, 1 warning in 4.74s

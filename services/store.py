@@ -1,4 +1,4 @@
-"""Private file and durable job state. One configured Agent identity owns this store."""
+"""Owner-scoped files and durable job state; task access migration remains staged."""
 from contextlib import contextmanager
 import hashlib
 import json
@@ -22,6 +22,8 @@ class Store:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
                 owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
+            CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
+                file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
             CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
             CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
               options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
@@ -61,25 +63,45 @@ class Store:
         return self.file(fid, owner=owner)
 
     def save_generated(self, fid, data, name, *, owner="legacy"):
-        path=self.files/fid
-        with self.connect() as db:
-            db.execute('BEGIN IMMEDIATE')
-            existing=db.execute('SELECT bytes FROM files WHERE id=?',(fid,)).fetchone()
-            if existing:
-                require_owner(db, 'file', fid, owner)
-                if existing['bytes']==len(data) and path.is_file() and path.read_bytes()==data:
-                    return self.file(fid, owner=owner)
-                raise HTTPException(409,'File ID conflicts with different content')
-            used=db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
-            if used+len(data)>2*1024**3: raise HTTPException(413,'File/storage limit exceeded')
-            try:
-                with path.open('xb') as out: out.write(data)
-                db.execute('INSERT INTO files VALUES(?,?,?,?)',(fid,name,len(data),int(time.time())))
+        return self._save_generated(fid, data, name, owner=owner)[0]
+
+    def save_reference(self, data, *, owner):
+        """Return (file, created); reuse content only within this owner."""
+        return self._save_generated('file-' + uuid.uuid4().hex, data, 'reference.png',
+                                    owner=owner, digest=hashlib.sha256(data).hexdigest())
+
+    def _save_generated(self, fid, data, name, *, owner, digest=None):
+        path = self.files / fid
+        created = False
+        try:
+            with self.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                if digest is not None:
+                    reference = db.execute('SELECT file_id FROM file_digests WHERE owner=? AND digest=?',
+                                           (owner, digest)).fetchone()
+                    if reference:
+                        return self.file(reference['file_id'], owner=owner), False
+                existing = db.execute('SELECT bytes FROM files WHERE id=?', (fid,)).fetchone()
+                if existing:
+                    require_owner(db, 'file', fid, owner)
+                    if existing['bytes'] == len(data) and path.is_file() and path.read_bytes() == data:
+                        return self.file(fid, owner=owner), False
+                    raise HTTPException(409, 'File ID conflicts with different content')
+                used = db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
+                if used + len(data) > 2*1024**3:
+                    raise HTTPException(413, 'File/storage limit exceeded')
+                with path.open('xb') as out:
+                    created = True
+                    out.write(data)
+                db.execute('INSERT INTO files VALUES(?,?,?,?)', (fid, name, len(data), int(time.time())))
                 db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('file', fid, owner))
-            except BaseException:
+                if digest is not None:
+                    db.execute('INSERT INTO file_digests VALUES(?,?,?)', (owner, digest, fid))
+        except BaseException:
+            if created:
                 path.unlink(missing_ok=True)
-                raise
-        return self.file(fid, owner=owner)
+            raise
+        return self.file(fid, owner=owner), True
 
     def delete_file(self, fid, *, owner="legacy"):
         with self.connect() as db:
@@ -91,6 +113,7 @@ class Store:
                           (fid,fid,fid)).fetchone():
                 raise HTTPException(409, 'File has pending tasks')
             (self.files / fid).unlink(missing_ok=True)
+            db.execute('DELETE FROM file_digests WHERE file_id=?', (fid,))
             db.execute('DELETE FROM files WHERE id=?', (fid,))
             db.execute("DELETE FROM object_owners WHERE kind='file' AND object_id=?", (fid,))
 
@@ -106,14 +129,17 @@ class Store:
             item.pop(key)
         return item
 
-    def submit(self, kind, fid, options, idem):
-        if fid is not None:
-            self.file(fid)
+    def submit(self, kind, fid, options, idem, *, owner="legacy"):
         fingerprint = hashlib.sha256(json.dumps([kind, fid, options], sort_keys=True).encode()).hexdigest()
         tid = 'task-' + uuid.uuid4().hex
         now = int(time.time())
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
+            refs = ([fid] if fid else []) + options.get('image_ids', [])
+            if options.get('foreground_file_id'):
+                refs.append(options['foreground_file_id'])
+            for reference in refs:
+                require_owner(db, 'file', reference, owner)
             if idem:
                 row = db.execute('SELECT id,fingerprint FROM tasks WHERE idem=?', (idem,)).fetchone()
                 if row:
@@ -125,7 +151,18 @@ class Store:
                 raise HTTPException(429, 'Media queue full', headers={'Retry-After':'10'})
             db.execute('INSERT INTO tasks VALUES(?,?,?,?,?,?,?,?,?,?,?,?)',
                        (tid, kind, fid, json.dumps(options), 'queued', 0, None, None, idem, fingerprint, now, now))
+            db.execute('INSERT INTO object_owners VALUES(?,?,?)', ('task', tid, owner))
         return self.task(tid)
+
+    def worker_task(self, tid):
+        """Internal identity lookup; never exposed as an HTTP access method."""
+        item = self.task(tid)
+        with self.connect() as db:
+            row = db.execute("SELECT owner FROM object_owners WHERE kind='task' AND object_id=?", (tid,)).fetchone()
+        if row is None:
+            raise RuntimeError('Task ownership missing')
+        item['owner'] = row['owner']
+        return item
 
     def update(self, tid, **fields):
         assert fields.keys() <= {'status', 'progress', 'result', 'error'}

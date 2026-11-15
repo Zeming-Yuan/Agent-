@@ -17,9 +17,9 @@ owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-117/tes
 >           assert c.delete(f'/v1/files/{b}', headers=owner_env.auth('B')).status_code == 200
 E           AssertionError: assert 404 == 200
 E            +  where 404 = <Response [404 Not Found]>.status_code
-E            +    where <Response [404 Not Found]> = delete('/v1/files/file-2f1351a2855a432c8dd5e37454a86d9f', headers={'Authorization': 'Bearer 8jhaobXb4m0AUL3oZjZGnsTKeTkEc9lhM_5YQ8HMO7s'})
+E            +    where <Response [404 Not Found]> = delete('/v1/files/file-2f1351a2855a432c8dd5e37454a86d9f', headers={'Authorization': 'Bearer <test-key-redacted>'})
 E            +      where delete = <starlette.testclient.TestClient object at 0xfb692acc6ab0>.delete
-E            +      and   {'Authorization': 'Bearer 8jhaobXb4m0AUL3oZjZGnsTKeTkEc9lhM_5YQ8HMO7s'} = <function owner_env.<locals>.<lambda> at 0xfb692ac43740>('B')
+E            +      and   {'Authorization': 'Bearer <test-key-redacted>'} = <function owner_env.<locals>.<lambda> at 0xfb692ac43740>('B')
 E            +        where <function owner_env.<locals>.<lambda> at 0xfb692ac43740> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-117/test_tb02_same_bytes_are_indep0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfb692ac42160>, wait_task=<function owner_env.<locals>.wait_task at 0xfb692ac42480>).auth
 
 tests/test_tb02_owner_files.py:24: AssertionError

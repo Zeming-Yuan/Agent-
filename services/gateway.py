@@ -270,11 +270,13 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
             fid = 'file-' + uuid.uuid4().hex
             path = store.files / fid
             size = 0
+            created = False
             # Total storage bound across uploads; private directory is not an unbounded cache.
             with store.connect() as db:
                 used = db.execute('SELECT coalesce(sum(bytes),0) FROM files').fetchone()[0]
             try:
                 with path.open('xb') as out:
+                    created = True
                     while chunk := await file.read(1024*1024):
                         size += len(chunk)
                         if size > max_upload_bytes or used+size > 2*1024**3:
@@ -285,7 +287,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 item = store.add_file(fid,file.filename or 'upload',size,owner=request.state.principal.owner)
                 return {'id':fid,'object':'file','bytes':size,'created_at':item['created'],'filename':item['name'],'purpose':purpose}
             except BaseException:
-                path.unlink(missing_ok=True)
+                if created:
+                    path.unlink(missing_ok=True)
                 raise
             finally:
                 await file.close()
@@ -311,21 +314,21 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         try:
             if body.kind in ('image_generate','image_edit'):
                 if not images_enabled: raise HTTPException(410,'Image generation is disabled')
-                await ensure_image_available()
                 opts=ImageOptions.model_validate(body.options)
                 if body.kind=='image_edit' and not opts.image_ids:
                     raise HTTPException(422,'Image editing requires image_ids')
                 if body.kind=='image_generate' and opts.image_ids:
                     raise HTTPException(422,'Use image_edit for reference images')
-                for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid)
-                return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem)
+                for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid,owner=request.state.principal.owner)
+                await ensure_image_available()
+                return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
             if body.kind in ('transcribe','audio_understand') and not audio_enabled:
                 raise HTTPException(410,'Audio capabilities have been retired')
             if not body.file_id: raise HTTPException(422,'file_id is required')
             opts=Options.model_validate(body.options)
         except ValidationError as exc:
             raise HTTPException(422,str(exc))
-        return store.submit(body.kind,body.file_id,opts.model_dump(),idem)
+        return store.submit(body.kind,body.file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
 
     @app.get('/v1/tasks/{tid}')
     async def status(tid: str):

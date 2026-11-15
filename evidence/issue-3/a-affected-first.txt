@@ -50,7 +50,7 @@ caplog = <_pytest.logging.LogCaptureFixture object at 0xfccc46df0980>
         import logging
         caplog.set_level(logging.INFO, logger='agent-mm')
         with TestClient(create_app(tmp_path, 'test-secret-token', run_worker=False)) as client:
-            auth = {'Authorization': 'Bearer test-secret-token'}
+            auth = {'Authorization': 'Bearer <test-key-redacted>'}
             assert client.get('/v1/tasks/' + task['id'], headers=auth).json()['result'] == {'file_id': fid}
             assert client.get('/v1/files/' + fid + '/content', headers=auth).content == b'old result'
             assert preflight_ownership(store.db) == {

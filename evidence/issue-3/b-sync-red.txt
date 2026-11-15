@@ -1,0 +1,41 @@
+.......F                                                                 [100%]
+=================================== FAILURES ===================================
+______________ test_tb02_sync_edit_deduplicates_only_within_owner ______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-127/test_tb02_sync_edit_deduplicat0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xff5170160040>, wait_task=<function owner_env.<locals>.wait_task at 0xff5170210180>)
+
+    def test_tb02_sync_edit_deduplicates_only_within_owner(owner_env):
+        backend = owner_env.new_backend()
+        data = backend.png
+        def edit(c, owner, key):
+            return c.post('/v1/images/edits', headers={**owner_env.auth(owner), 'Idempotency-Key': key},
+                          data={'prompt': 'edit'}, files={'image': ('private-name.png', data, 'image/png')})
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            references = {}
+            for owner, key in [('A', 'a-edit'), ('A', 'a-edit'), ('B', 'b-edit')]:
+                response = edit(c, owner, key)
+                assert response.status_code == 200, response.text
+                task = c.get('/v1/tasks/' + response.json()['task_id'], headers=owner_env.auth(owner)).json()
+                source_id = task['options']['image_ids'][0]
+                if owner in references:
+                    assert references[owner] == source_id
+                references[owner] = source_id
+                result_id = response.json()['data'][0]['file_id']
+>               assert c.get(f'/v1/files/{result_id}/content', headers=owner_env.auth(owner)).status_code == 200
+E               AssertionError: assert 404 == 200
+E                +  where 404 = <Response [404 Not Found]>.status_code
+E                +    where <Response [404 Not Found]> = get('/v1/files/file-cd6422d891e74c28ab5f09268f4d348a/content', headers={'Authorization': 'Bearer <test-key-redacted>'})
+E                +      where get = <starlette.testclient.TestClient object at 0xff51701c0230>.get
+E                +      and   {'Authorization': 'Bearer <test-key-redacted>'} = <function owner_env.<locals>.<lambda> at 0xff51701607c0>('A')
+E                +        where <function owner_env.<locals>.<lambda> at 0xff51701607c0> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-127/test_tb02_sync_edit_deduplicat0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xff5170160040>, wait_task=<function owner_env.<locals>.wait_task at 0xff5170210180>).auth
+
+tests/test_tb02_owner_files.py:94: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb02_owner_files.py::test_tb02_sync_edit_deduplicates_only_within_owner
+1 failed, 7 passed, 1 warning in 2.24s

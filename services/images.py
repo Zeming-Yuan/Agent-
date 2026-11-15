@@ -132,10 +132,11 @@ def cleanup_scratch(store,tid=None,names=()):
 
 async def process_image(item,store,client,url,*,unload_models=True):
     opts=item['options'];tid=item['id'];pid=None;names=[]
+    owner=store.worker_task(tid)['owner']
     if memory_available()<20*1024**3:raise RuntimeError('Image admission: available memory below 20GiB')
     try:
         for fid in opts['image_ids']:
-            data=await asyncio.to_thread(store.path(fid).read_bytes)
+            data=await asyncio.to_thread(store.path(fid,owner=owner).read_bytes)
             await asyncio.to_thread(validate_image,data)
             expected=fid+'.png';names.append(expected)
             r=await settled_post(client,url+'/upload/image',files={'image':(expected,data,'image/png')},data={'type':'input','overwrite':'true'})
@@ -162,10 +163,10 @@ async def process_image(item,store,client,url,*,unload_models=True):
                     r=await client.get(url+'/view',params={k:output[k] for k in ('filename','subfolder','type')})
                     r.raise_for_status()
                     if len(r.content)>32*1024*1024:raise RuntimeError('Generated image too large')
-                    fg=await asyncio.to_thread(store.path(opts['foreground_file_id']).read_bytes) if opts['foreground_file_id'] else None
+                    fg=await asyncio.to_thread(store.path(opts['foreground_file_id'],owner=owner).read_bytes) if opts['foreground_file_id'] else None
                     data=await asyncio.to_thread(compose_image,r.content,fg,opts['title'])
                     fid='file-'+uuid.uuid4().hex
-                    store.save_generated(fid,data,'generated.png')
+                    store.save_generated(fid,data,'generated.png',owner=owner)
                     return {'file_id':fid,'content_url':'/v1/files/'+fid+'/content','mime_type':'image/png',
                             'model':'spark-image-edit' if opts['image_ids'] else 'spark-image','seed':opts['seed'],'quality':opts['quality'],
                             'note':'编辑结果需核对商品标识、外形与文字。' if opts['image_ids'] else '透明前景合成保留商品外观。' if fg else 'AI生成图片。'}
