@@ -13,10 +13,10 @@ from pathlib import Path
 from typing import Literal
 import httpx
 import anyio
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
-from .store import Store
+from .store import Store, task_fingerprint
 from .identity import KeyRegistry
 from .ownership import preflight_ownership, inspect_contract, require_scoped_requests
 from .image_options import ImageOptions
@@ -336,8 +336,14 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 if body.kind=='image_generate' and opts.image_ids:
                     raise HTTPException(422,'Use image_edit for reference images')
                 for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid,owner=request.state.principal.owner)
+                source = opts.image_ids[0] if opts.image_ids else opts.foreground_file_id
+                if idem:
+                    fingerprint = task_fingerprint(store.files, body.kind, source, opts.model_dump())
+                    existing = store.lookup_request(request.state.principal.owner, idem, fingerprint)
+                    if existing is not None:
+                        return existing
                 await ensure_image_available()
-                return store.submit(body.kind,opts.image_ids[0] if opts.image_ids else opts.foreground_file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
+                return store.submit(body.kind,source,opts.model_dump(),idem,owner=request.state.principal.owner)
             if body.kind in ('transcribe','audio_understand') and not audio_enabled:
                 raise HTTPException(410,'Audio capabilities have been retired')
             if not body.file_id: raise HTTPException(422,'file_id is required')
@@ -345,6 +351,11 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
         except ValidationError as exc:
             raise HTTPException(422,str(exc))
         return store.submit(body.kind,body.file_id,opts.model_dump(),idem,owner=request.state.principal.owner)
+
+    @app.get('/v1/tasks')
+    async def tasks(request: Request, status: str | None = None, after: str | None = None,
+                    limit: int = Query(20, ge=1, le=100)):
+        return store.list_tasks(request.state.principal.owner, status=status, after=after, limit=limit)
 
     @app.get('/v1/tasks/{tid}')
     async def status(tid: str, request: Request):
