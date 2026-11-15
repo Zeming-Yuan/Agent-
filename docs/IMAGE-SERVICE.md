@@ -92,6 +92,6 @@ T03 凭证交付的组合故障：即使注册表撤销失败，也独立清理�
 
 受控源码的异步图片提交先按本人业务指纹读取 Idempotency-Key：命中直接返回原任务，输入冲突409。后端离线不阻止已有任务查询、本人列表、幂等重放或鉴权下载已保存结果；真正的新工作仍须后端就绪并经过事务内幂等/全局容量复查。
 
-`GET /v1/tasks?status=completed&limit=20&after=<本人任务ID>` 返回 `data` 和 `next_after`（末页为 null）。按接纳顺序升序，时间相同仍稳定排序；默认20条，limit为1..100。status可为queued/running/completed/failed/cancelled，非法筛选422。游标先检查本人归属，跨人/未知/空游标一致404；可用不同当前状态的本人任务作为游标。列表不依赖后端，不公开owner或内部幂等指纹。
+`GET /v1/tasks?status=completed&limit=20&after=<本人任务ID>` 返回 `object: "list"`、`data`、`has_more` 和 `next_cursor`（末页为 null）。按接纳顺序升序，时间相同仍稳定排序；默认20条，limit为1..100。status可为queued/running/completed/failed/cancelled，非法筛选422。游标先检查本人归属，跨人/未知/空游标一致404；可用不同当前状态的本人任务作为游标。列表不依赖后端，不公开owner或内部幂等指纹。
 
 本切片8项HTTP测试与red/green记录在 evidence/issue-6；同步生成/编辑离线重放、断线与完整恢复由切片B接续，当前尚未完成。仅使用临时身份/数据库及外部图片后端替身，未部署或实机验收。

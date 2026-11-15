@@ -16,7 +16,7 @@ import anyio
 from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
-from .store import Store, task_fingerprint
+from .store import Store
 from .identity import KeyRegistry
 from .ownership import preflight_ownership, inspect_contract, require_scoped_requests
 from .image_options import ImageOptions
@@ -338,7 +338,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 for fid in opts.image_ids + ([opts.foreground_file_id] if opts.foreground_file_id else []): store.file(fid,owner=request.state.principal.owner)
                 source = opts.image_ids[0] if opts.image_ids else opts.foreground_file_id
                 if idem:
-                    fingerprint = task_fingerprint(store.files, body.kind, source, opts.model_dump())
+                    fingerprint = store.request_fingerprint(body.kind, source, opts.model_dump(),
+                                                            owner=request.state.principal.owner)
                     existing = store.lookup_request(request.state.principal.owner, idem, fingerprint)
                     if existing is not None:
                         return existing

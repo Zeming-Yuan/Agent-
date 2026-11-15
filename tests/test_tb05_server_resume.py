@@ -38,12 +38,15 @@ def test_tb05_owner_pagination_and_status_filter_keep_admission_order(owner_env)
         assert c.post('/v1/tasks/' + ids[0] + '/cancel', headers=owner_env.auth('A')).status_code == 200
         first = c.get('/v1/tasks', params={'limit': 2}, headers=owner_env.auth('A'))
         assert first.status_code == 200
+        assert first.json()['object'] == 'list'
+        assert first.json()['has_more'] is True
         assert [t['id'] for t in first.json()['data']] == [ids[0], ids[2]]
-        assert first.json()['next_after'] == ids[2]
-        second = c.get('/v1/tasks', params={'limit': 2, 'after': first.json()['next_after']},
+        assert first.json()['next_cursor'] == ids[2]
+        second = c.get('/v1/tasks', params={'limit': 2, 'after': first.json()['next_cursor']},
                        headers=owner_env.auth('A')).json()
         assert [t['id'] for t in second['data']] == [ids[3]]
-        assert second['next_after'] is None
+        assert second['next_cursor'] is None
+        assert second['object'] == 'list' and second['has_more'] is False
         queued = c.get('/v1/tasks', params={'status': 'queued'}, headers=owner_env.auth('A')).json()
         assert [t['id'] for t in queued['data']] == [ids[2], ids[3]]
         cancelled = c.get('/v1/tasks', params={'status': 'cancelled'}, headers=owner_env.auth('A')).json()
@@ -72,3 +75,48 @@ def test_tb05_other_owner_cursor_is_not_visible(owner_env):
             assert response.json() == {'detail': 'Object not found'}
         for headers in [{}, {'Authorization': 'Bearer unknown'}]:
             assert c.get('/v1/tasks', headers=headers).status_code == 401
+
+
+def test_tb05_delete_racing_request_fingerprint_never_returns_server_error(owner_env, monkeypatch):
+    # Pause only the filesystem boundary; both deletion and submission use HTTP.
+    from concurrent.futures import ThreadPoolExecutor
+    from pathlib import Path
+    import threading
+
+    with owner_env.client() as a, owner_env.client() as b:
+        fid = owner_env.upload(a, 'A')
+        source = owner_env.root / 'files' / fid
+        opening = threading.Event()
+        deleting = threading.Event()
+        deleted = threading.Event()
+        original_open = Path.open
+
+        def controlled_open(path, *args, **kwargs):
+            if path == source and args and args[0] == 'rb':
+                opening.set()
+                assert deleting.wait(2)
+                # Without the read transaction, deletion completes before open.
+                # With it, deletion waits for hashing to release the SQLite lock.
+                deleted.wait(.2)
+            return original_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(Path, 'open', controlled_open)
+
+        def remove():
+            assert opening.wait(2)
+            deleting.set()
+            response = b.delete('/v1/files/' + fid, headers=owner_env.auth('A'))
+            deleted.set()
+            return response
+
+        # TestClient surfaces unhandled500 as an exception; either is a failure.
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            deletion = pool.submit(remove)
+            submission = pool.submit(owner_env.submit, a, 'A', kind='image_edit',
+                                     request_key='race-delete', image_ids=[fid])
+            response = submission.result(timeout=5)
+            removed = deletion.result(timeout=5)
+        assert response.status_code in (202, 404), response.text
+        assert removed.status_code in (200, 409)
+        if response.status_code == 202:
+            assert removed.status_code == 409

@@ -11,3 +11,5 @@ Ruling: affected-only checks per explicit user instruction override generic full
 Ruling: T05 seams/design already approved in ticket plan and explicitly reconfirmed in chat; no duplicate design interview.
 
 Task 1: red 01 (503 replay), green; red 02 (pagination ignored), green; red03 (unknown/empty filter200), green8. Existing cursor/auth/limit guards passed as regressions. No type checker configuration exists (N/A).
+
+A review initial: Standards2P2 (list schema, fingerprint/delete race); Spec1P2 (list schema). Both independently verified. Contract red→green8. Race red FileNotFoundError through HTTP, green9 with only filesystem scheduling boundary substituted. Shared fingerprint extraction keeps online submit revalidation and deletion exclusion; no schema change.

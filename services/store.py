@@ -181,8 +181,9 @@ class Store:
                 ON o.kind='task' AND o.object_id=t.id WHERE """ + ' AND '.join(clauses) +
                 ' ORDER BY t.created,t.rowid LIMIT ?', (*params, limit + 1)).fetchall()
             page = rows[:limit]
-            return {'data': [self._task(db, row['id']) for row in page],
-                    'next_after': page[-1]['id'] if len(rows) > limit else None}
+            return {'object': 'list', 'data': [self._task(db, row['id']) for row in page],
+                    'has_more': len(rows) > limit,
+                    'next_cursor': page[-1]['id'] if len(rows) > limit else None}
 
     def _task(self, db, tid):
         row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
@@ -195,17 +196,26 @@ class Store:
             item.pop(key)
         return item
 
+    def request_fingerprint(self, kind, fid, options, *, owner):
+        """Validate and hash materials while excluding concurrent file deletion."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            return self._request_fingerprint(db, kind, fid, options, owner)
+
+    def _request_fingerprint(self, db, kind, fid, options, owner):
+        refs = ([fid] if fid else []) + options.get('image_ids', [])
+        if options.get('foreground_file_id'):
+            refs.append(options['foreground_file_id'])
+        for reference in refs:
+            require_owner(db, 'file', reference, owner)
+        return task_fingerprint(self.files, kind, fid, options)
+
     def submit(self, kind, fid, options, idem, *, owner):
         tid = 'task-' + uuid.uuid4().hex
         now = int(time.time())
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            refs = ([fid] if fid else []) + options.get('image_ids', [])
-            if options.get('foreground_file_id'):
-                refs.append(options['foreground_file_id'])
-            for reference in refs:
-                require_owner(db, 'file', reference, owner)
-            fingerprint = task_fingerprint(self.files, kind, fid, options)
+            fingerprint = self._request_fingerprint(db, kind, fid, options, owner)
             if idem:
                 row = db.execute('SELECT task_id AS id,fingerprint FROM task_requests WHERE owner=? AND request_key=?', (owner, idem)).fetchone()
                 if row:

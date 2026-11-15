@@ -1,0 +1,184 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb05_delete_racing_request_fingerprint_never_returns_server_error ____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-258/test_tb05_delete_racing_reques0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe55c162723e0>, wait_task=<function owner_env.<locals>.wait_task at 0xe55c16272480>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe55c16286570>
+
+    def test_tb05_delete_racing_request_fingerprint_never_returns_server_error(owner_env, monkeypatch):
+        # Pause only the filesystem boundary; both deletion and submission use HTTP.
+        from concurrent.futures import ThreadPoolExecutor
+        from pathlib import Path
+        import threading
+    
+        with owner_env.client() as a, owner_env.client() as b:
+            fid = owner_env.upload(a, 'A')
+            source = owner_env.root / 'files' / fid
+            opening = threading.Event()
+            deleting = threading.Event()
+            deleted = threading.Event()
+            original_open = Path.open
+    
+            def controlled_open(path, *args, **kwargs):
+                if path == source and args and args[0] == 'rb':
+                    opening.set()
+                    assert deleting.wait(2)
+                    # Without the read transaction, deletion completes before open.
+                    # With it, deletion waits for hashing to release the SQLite lock.
+                    deleted.wait(.2)
+                return original_open(path, *args, **kwargs)
+    
+            monkeypatch.setattr(Path, 'open', controlled_open)
+    
+            def remove():
+                assert opening.wait(2)
+                deleting.set()
+                response = b.delete('/v1/files/' + fid, headers=owner_env.auth('A'))
+                deleted.set()
+                return response
+    
+            # TestClient surfaces unhandled500 as an exception; either is a failure.
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                deletion = pool.submit(remove)
+                submission = pool.submit(owner_env.submit, a, 'A', kind='image_edit',
+                                         request_key='race-delete', image_ids=[fid])
+>               response = submission.result(timeout=5)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb05_server_resume.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+/usr/lib/python3.12/concurrent/futures/thread.py:58: in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/conftest.py:88: in submit
+    return c.post("/v1/tasks",headers=headers,json={"kind":kind,"options":{"prompt":"fixture",**options}})
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:546: in post
+    return super().post(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:1144: in post
+    return self.request(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:445: in request
+    return super().request(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:825: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:914: in send
+    response = self._send_handling_auth(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:942: in _send_handling_auth
+    response = self._send_handling_redirects(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:979: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_client.py:1014: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:348: in handle_request
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:345: in handle_request
+    portal.call(self.app, scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:347: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/anyio/from_thread.py:272: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/applications.py:1159: in __call__
+    await super().__call__(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/applications.py:107: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:191: in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+/usr/lib/python3.12/contextlib.py:158: in __exit__
+    self.gen.throw(value)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_utils.py:87: in collapse_excgroups
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:193: in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/gateway.py:160: in guard
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:168: in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/base.py:144: in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py:63: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py:18: in __call__
+    await self.app(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:716: in __call__
+    await self.middleware_stack(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:736: in app
+    await route.handle(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/routing.py:290: in handle
+    await self.app(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:134: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    raise exc
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py:42: in wrapped_app
+    await app(scope, receive, sender)
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:120: in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:674: in app
+    raw_response = await run_endpoint_function(
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/fastapi/routing.py:328: in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/gateway.py:341: in submit
+    fingerprint = task_fingerprint(store.files, body.kind, source, opts.model_dump())
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services/store.py:24: in task_fingerprint
+    with (files / reference).open('rb') as stream:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_tb05_server_resume.py:101: in controlled_open
+    return original_open(path, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/tmp/pytest-of-clusteradmin/pytest-258/test_tb05_delete_racing_reques0/runtime/files/file-2def3c9296cd4e5e8dc392afc4cf8333')
+mode = 'rb', buffering = -1, encoding = None, errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/tmp/pytest-of-clusteradmin/pytest-258/test_tb05_delete_racing_reques0/runtime/files/file-2def3c9296cd4e5e8dc392afc4cf8333'
+
+/usr/lib/python3.12/pathlib.py:1015: FileNotFoundError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_delete_racing_request_fingerprint_never_returns_server_error
+1 failed, 8 deselected, 1 warning in 0.30s
+
+Exit code: 1
