@@ -55,9 +55,12 @@ class KeyRegistry:
 
 class KeyDeliveryError(RuntimeError):
     """Delivery rollback needs operator recovery, identified without the credential."""
-    def __init__(self, key_id: str):
+    def __init__(self, key_id: str, *, cleanup_pending: bool):
         self.key_id = key_id
-        super().__init__(f'Key delivery rollback incomplete; revoke key ID {key_id} and remove failed output')
+        self.cleanup_pending = cleanup_pending
+        guidance = ('cleanup pending for newly created output' if cleanup_pending
+                    else 'no owned output remains; preserve existing files')
+        super().__init__(f'Key delivery rollback incomplete; revoke key ID {key_id}; {guidance}')
 
 
 def issue_to_file(registry: KeyRegistry, owner: str, target: Path) -> str:
@@ -77,6 +80,7 @@ def issue_to_file(registry: KeyRegistry, owner: str, target: Path) -> str:
             stream.write(raw + '\n')
     except BaseException:
         incomplete = False
+        cleanup_pending = False
         if fd is not None:
             try:
                 os.close(fd)
@@ -92,8 +96,9 @@ def issue_to_file(registry: KeyRegistry, owner: str, target: Path) -> str:
                 target.unlink(missing_ok=True)
             except OSError:
                 incomplete = True
+                cleanup_pending = True
         if incomplete:
-            raise KeyDeliveryError(principal.key_id) from None
+            raise KeyDeliveryError(principal.key_id, cleanup_pending=cleanup_pending) from None
         raise
     return principal.key_id
 

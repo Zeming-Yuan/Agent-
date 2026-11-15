@@ -1,0 +1,182 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+______ test_tb03_cli_recovery_message_respects_output_ownership[existing] ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe856c1279940>, wait_task=<function owner_env.<locals>.wait_task at 0xe856c12799e0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe856c1264920>
+capsys = <_pytest.capture.CaptureFixture object at 0xe856c1264560>
+output = 'existing'
+
+    @pytest.mark.parametrize('output', ['existing', 'removed', 'cleanup_pending'])
+    def test_tb03_cli_recovery_message_respects_output_ownership(owner_env, tmp_path, monkeypatch, capsys, output):
+        import os
+        import secrets
+        import sqlite3
+        import sys
+        from pathlib import Path
+        from services.identity import main
+        raw = '[REDACTED_SYNTHETIC_TEST_KEY]'
+        target = tmp_path / 'output.key'
+        if output == 'existing':
+            target.write_text('previous credential must survive')
+        connect, unlink = sqlite3.connect, Path.unlink
+        def rejecting_connection(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_authorizer(lambda action, table, *rest:
+                              sqlite3.SQLITE_DENY if action == sqlite3.SQLITE_UPDATE and table == 'api_keys'
+                              else sqlite3.SQLITE_OK)
+            return db
+        def fail_stream(*args, **kwargs):
+            raise OSError('synthetic stream failure')
+        def fail_owned_unlink(path, *args, **kwargs):
+            if path == target:
+                raise PermissionError('synthetic cleanup failure')
+            return unlink(path, *args, **kwargs)
+        with monkeypatch.context() as patch:
+            patch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+            patch.setattr(sqlite3, 'connect', rejecting_connection)
+            patch.setattr(os, 'fdopen', fail_stream)
+            patch.setattr(sys, 'argv', ['identity', '--db', str(owner_env.registry.db_path),
+                                      'issue', '--owner', 'A', '--out', str(target)])
+            if output == 'cleanup_pending':
+                patch.setattr(Path, 'unlink', fail_owned_unlink)
+            with pytest.raises(SystemExit) as failure:
+                main()
+            assert failure.value.code == 1
+            captured = capsys.readouterr()
+            principal = owner_env.registry.resolve(raw)
+            assert captured.out == '' and principal.key_id in captured.err
+            assert raw not in captured.err
+            if output == 'cleanup_pending':
+                assert target.exists()
+                assert 'cleanup pending for newly created output' in captured.err
+            else:
+>               assert 'preserve existing files' in captured.err
+E               AssertionError: assert 'preserve existing files' in 'Key delivery rollback incomplete; revoke key ID 6362a90621574d959bdfd288c6645a43 and remove failed output\n'
+E                +  where 'Key delivery rollback incomplete; revoke key ID 6362a90621574d959bdfd288c6645a43 and remove failed output\n' = CaptureResult(out='', err='Key delivery rollback incomplete; revoke key ID 6362a90621574d959bdfd288c6645a43 and remove failed output\n').err
+
+tests/test_tb03_owner_tasks.py:526: AssertionError
+______ test_tb03_cli_recovery_message_respects_output_ownership[removed] _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe856c127b880>, wait_task=<function owner_env.<locals>.wait_task at 0xe856c127b9c0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe856c1248bc0>
+capsys = <_pytest.capture.CaptureFixture object at 0xe856c1249010>
+output = 'removed'
+
+    @pytest.mark.parametrize('output', ['existing', 'removed', 'cleanup_pending'])
+    def test_tb03_cli_recovery_message_respects_output_ownership(owner_env, tmp_path, monkeypatch, capsys, output):
+        import os
+        import secrets
+        import sqlite3
+        import sys
+        from pathlib import Path
+        from services.identity import main
+        raw = '[REDACTED_SYNTHETIC_TEST_KEY]'
+        target = tmp_path / 'output.key'
+        if output == 'existing':
+            target.write_text('previous credential must survive')
+        connect, unlink = sqlite3.connect, Path.unlink
+        def rejecting_connection(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_authorizer(lambda action, table, *rest:
+                              sqlite3.SQLITE_DENY if action == sqlite3.SQLITE_UPDATE and table == 'api_keys'
+                              else sqlite3.SQLITE_OK)
+            return db
+        def fail_stream(*args, **kwargs):
+            raise OSError('synthetic stream failure')
+        def fail_owned_unlink(path, *args, **kwargs):
+            if path == target:
+                raise PermissionError('synthetic cleanup failure')
+            return unlink(path, *args, **kwargs)
+        with monkeypatch.context() as patch:
+            patch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+            patch.setattr(sqlite3, 'connect', rejecting_connection)
+            patch.setattr(os, 'fdopen', fail_stream)
+            patch.setattr(sys, 'argv', ['identity', '--db', str(owner_env.registry.db_path),
+                                      'issue', '--owner', 'A', '--out', str(target)])
+            if output == 'cleanup_pending':
+                patch.setattr(Path, 'unlink', fail_owned_unlink)
+            with pytest.raises(SystemExit) as failure:
+                main()
+            assert failure.value.code == 1
+            captured = capsys.readouterr()
+            principal = owner_env.registry.resolve(raw)
+            assert captured.out == '' and principal.key_id in captured.err
+            assert raw not in captured.err
+            if output == 'cleanup_pending':
+                assert target.exists()
+                assert 'cleanup pending for newly created output' in captured.err
+            else:
+>               assert 'preserve existing files' in captured.err
+E               AssertionError: assert 'preserve existing files' in 'Key delivery rollback incomplete; revoke key ID c9940c413e7746c383d4f40fb39b25cf and remove failed output\n'
+E                +  where 'Key delivery rollback incomplete; revoke key ID c9940c413e7746c383d4f40fb39b25cf and remove failed output\n' = CaptureResult(out='', err='Key delivery rollback incomplete; revoke key ID c9940c413e7746c383d4f40fb39b25cf and remove failed output\n').err
+
+tests/test_tb03_owner_tasks.py:526: AssertionError
+__ test_tb03_cli_recovery_message_respects_output_ownership[cleanup_pending] ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message2/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe856c0a64540>, wait_task=<function owner_env.<locals>.wait_task at 0xe856c0a645e0>)
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-181/test_tb03_cli_recovery_message2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0xe856c1248cb0>
+capsys = <_pytest.capture.CaptureFixture object at 0xe856c1248d70>
+output = 'cleanup_pending'
+
+    @pytest.mark.parametrize('output', ['existing', 'removed', 'cleanup_pending'])
+    def test_tb03_cli_recovery_message_respects_output_ownership(owner_env, tmp_path, monkeypatch, capsys, output):
+        import os
+        import secrets
+        import sqlite3
+        import sys
+        from pathlib import Path
+        from services.identity import main
+        raw = '[REDACTED_SYNTHETIC_TEST_KEY]'
+        target = tmp_path / 'output.key'
+        if output == 'existing':
+            target.write_text('previous credential must survive')
+        connect, unlink = sqlite3.connect, Path.unlink
+        def rejecting_connection(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_authorizer(lambda action, table, *rest:
+                              sqlite3.SQLITE_DENY if action == sqlite3.SQLITE_UPDATE and table == 'api_keys'
+                              else sqlite3.SQLITE_OK)
+            return db
+        def fail_stream(*args, **kwargs):
+            raise OSError('synthetic stream failure')
+        def fail_owned_unlink(path, *args, **kwargs):
+            if path == target:
+                raise PermissionError('synthetic cleanup failure')
+            return unlink(path, *args, **kwargs)
+        with monkeypatch.context() as patch:
+            patch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+            patch.setattr(sqlite3, 'connect', rejecting_connection)
+            patch.setattr(os, 'fdopen', fail_stream)
+            patch.setattr(sys, 'argv', ['identity', '--db', str(owner_env.registry.db_path),
+                                      'issue', '--owner', 'A', '--out', str(target)])
+            if output == 'cleanup_pending':
+                patch.setattr(Path, 'unlink', fail_owned_unlink)
+            with pytest.raises(SystemExit) as failure:
+                main()
+            assert failure.value.code == 1
+            captured = capsys.readouterr()
+            principal = owner_env.registry.resolve(raw)
+            assert captured.out == '' and principal.key_id in captured.err
+            assert raw not in captured.err
+            if output == 'cleanup_pending':
+                assert target.exists()
+>               assert 'cleanup pending for newly created output' in captured.err
+E               AssertionError: assert 'cleanup pending for newly created output' in 'Key delivery rollback incomplete; revoke key ID 1777783f405f46728ed44756cfb230fd and remove failed output\n'
+E                +  where 'Key delivery rollback incomplete; revoke key ID 1777783f405f46728ed44756cfb230fd and remove failed output\n' = CaptureResult(out='', err='Key delivery rollback incomplete; revoke key ID 1777783f405f46728ed44756cfb230fd and remove failed output\n').err
+
+tests/test_tb03_owner_tasks.py:524: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[existing]
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[removed]
+FAILED tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[cleanup_pending]
+3 failed, 30 deselected, 1 warning in 0.18s

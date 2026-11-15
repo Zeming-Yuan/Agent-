@@ -32,3 +32,7 @@ Slice B verification: collected28/128; issue selector28 passed; plan-regression3
 Slice B initial review: Standards1/Spec1, same P2: revoke failure skipped own-output cleanup. Added real SQLite authorizer failure injection at DB boundary (no mocked KeyRegistry) plus file-write failure. Red: leftover file / missing recovery ID. Green: independent cleanup + safe KeyDeliveryError.key_id, then successful revoke after authorizer removed; existing file unchanged.
 
 组合故障修复后重新采集30/130（collect-final.txt），受影响12文件126 passed（b-review-green.txt），1条既有弃用警告；先前28/124为修复前历史记录。未运行完整门禁。
+
+B guidance followup: Standards re-review found unconditional removal advice for existing target (P2), Spec re-review0. Added CLI3-case red→green; KeyDeliveryError cleanup_pending is true only when unlink of this invocation's newlycreated output actually failed. No removal advice for pre-existing/alreadyremoved output.
+
+最终自动验证：T03采集33/133（collect-latest.txt），计划回归36 passed（plan-regression-latest.txt），受影响12文件129 passed（final-affected.txt）；1条既有弃用警告。旧记录28/124与30/126为审查修复前历史输出，不作为最终版本证据。

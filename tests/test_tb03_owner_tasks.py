@@ -477,3 +477,58 @@ def test_tb03_delivery_cleanup_and_recovery_id_survive_registry_revoke_failure(o
     # Recovery is possible using only the safe ID after registry writes recover.
     owner_env.registry.revoke(failure.value.key_id)
     assert owner_env.registry.resolve(raw) is None
+
+
+@pytest.mark.parametrize('output', ['existing', 'removed', 'cleanup_pending'])
+def test_tb03_cli_recovery_message_respects_output_ownership(owner_env, tmp_path, monkeypatch, capsys, output):
+    import os
+    import secrets
+    import sqlite3
+    import sys
+    from pathlib import Path
+    from services.identity import main
+    raw = 'ephemeral-test-cli-recovery-credential'
+    target = tmp_path / 'output.key'
+    if output == 'existing':
+        target.write_text('previous credential must survive')
+    connect, unlink = sqlite3.connect, Path.unlink
+    def rejecting_connection(*args, **kwargs):
+        db = connect(*args, **kwargs)
+        db.set_authorizer(lambda action, table, *rest:
+                          sqlite3.SQLITE_DENY if action == sqlite3.SQLITE_UPDATE and table == 'api_keys'
+                          else sqlite3.SQLITE_OK)
+        return db
+    def fail_stream(*args, **kwargs):
+        raise OSError('synthetic stream failure')
+    def fail_owned_unlink(path, *args, **kwargs):
+        if path == target:
+            raise PermissionError('synthetic cleanup failure')
+        return unlink(path, *args, **kwargs)
+    with monkeypatch.context() as patch:
+        patch.setattr(secrets, 'token_urlsafe', lambda _: raw)
+        patch.setattr(sqlite3, 'connect', rejecting_connection)
+        patch.setattr(os, 'fdopen', fail_stream)
+        patch.setattr(sys, 'argv', ['identity', '--db', str(owner_env.registry.db_path),
+                                  'issue', '--owner', 'A', '--out', str(target)])
+        if output == 'cleanup_pending':
+            patch.setattr(Path, 'unlink', fail_owned_unlink)
+        with pytest.raises(SystemExit) as failure:
+            main()
+        assert failure.value.code == 1
+        captured = capsys.readouterr()
+        principal = owner_env.registry.resolve(raw)
+        assert captured.out == '' and principal.key_id in captured.err
+        assert raw not in captured.err
+        if output == 'cleanup_pending':
+            assert target.exists()
+            assert 'cleanup pending for newly created output' in captured.err
+        else:
+            assert 'preserve existing files' in captured.err
+            assert 'cleanup pending' not in captured.err
+            if output == 'existing':
+                assert target.read_text() == 'previous credential must survive'
+            else:
+                assert not target.exists()
+    owner_env.registry.revoke(principal.key_id)
+    if output == 'cleanup_pending':
+        target.unlink()

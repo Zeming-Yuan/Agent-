@@ -15,3 +15,7 @@ Initial summary: Standards1 (worstP2), Spec1 (worstP2).
 ## Fix and evidence
 
 Public issue_to_file boundary test uses real SQLite authorizer to reject UPDATE (permits issuance and reads), combines write failure or existing-output collision, and verifies safe key_id-based recovery. Initially fails on leftover output and absent recovery ID (b-review-red.txt). Fix independently attempts descriptor close, revoke, owned-file cleanup; incomplete rollback raises credential-free KeyDeliveryError with key_id and CLI recovery guidance. Test restores DB writes and successfully revokes using that ID. Existing targets are never removed. Docs explicitly state revocation is unconfirmed until retry succeeds; no unsupported atomic DB/filesystem guarantee.
+
+## Re-review f56cf69...f772b6c
+
+Spec0 (7 focused tests); original combined-failure P2 resolved. Standards1 remainingP2: recovery error unconditionally advised removing output even for an O_EXCL pre-existing collision. Fix must distinguish owned/pending cleanup. CLI reproducer b-guidance-red.txt verifies existing/removed/pending cases first fail; corrected error includes cleanup_pending and only identifies newly-created output when removal is still pending. Existing output explicitly preserved.

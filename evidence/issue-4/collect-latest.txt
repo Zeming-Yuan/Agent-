@@ -1,0 +1,41 @@
+tests/test_tb03_owner_tasks.py::test_tb03_same_request_key_does_not_cross_owners
+tests/test_tb03_owner_tasks.py::test_tb03_different_upload_ids_same_material_replay
+tests/test_tb03_owner_tasks.py::test_tb03_expand_preserves_legacy_request_replay
+tests/test_tb03_owner_tasks.py::test_tb03_changed_payload_conflicts_and_queue_replay_does_not_take_slot
+tests/test_tb03_owner_tasks.py::test_tb03_worker_result_stays_private[image_generate-A]
+tests/test_tb03_owner_tasks.py::test_tb03_worker_result_stays_private[image_generate-B]
+tests/test_tb03_owner_tasks.py::test_tb03_worker_result_stays_private[image_edit-A]
+tests/test_tb03_owner_tasks.py::test_tb03_worker_result_stays_private[image_edit-B]
+tests/test_tb03_owner_tasks.py::test_tb03_running_task_foreign_cancel_cannot_interrupt
+tests/test_tb03_owner_tasks.py::test_tb03_client_cannot_forge_owner[owner]
+tests/test_tb03_owner_tasks.py::test_tb03_client_cannot_forge_owner[key_id]
+tests/test_tb03_owner_tasks.py::test_tb03_concurrent_same_owner_replays_and_cross_owner_keys_are_atomic
+tests/test_tb03_owner_tasks.py::test_tb03_existing_media_task_access_is_scoped[transcribe]
+tests/test_tb03_owner_tasks.py::test_tb03_existing_media_task_access_is_scoped[audio_understand]
+tests/test_tb03_owner_tasks.py::test_tb03_existing_media_task_access_is_scoped[pdf]
+tests/test_tb03_owner_tasks.py::test_tb03_existing_media_task_access_is_scoped[video]
+tests/test_tb03_owner_tasks.py::test_tb03_material_content_and_reference_order_are_business_input
+tests/test_tb03_owner_tasks.py::test_tb03_media_worker_reads_owner_source_and_keeps_result_private
+tests/test_tb03_owner_tasks.py::test_tb03_legacy_missing_material_conflicts_with_recoverable_task
+tests/test_tb03_owner_tasks.py::test_tb03_new_request_replays_after_original_material_deleted
+tests/test_tb03_owner_tasks.py::test_tb03_me_and_rotated_key_retain_owner_and_existing_result
+tests/test_tb03_owner_tasks.py::test_tb03_issue_to_private_file_persists_only_digest_and_owner
+tests/test_tb03_owner_tasks.py::test_tb03_failed_key_delivery_revokes_and_preserves_existing_files[open]
+tests/test_tb03_owner_tasks.py::test_tb03_failed_key_delivery_revokes_and_preserves_existing_files[write]
+tests/test_tb03_owner_tasks.py::test_tb03_key_cli_issue_rotate_revoke_and_http_access
+tests/test_tb03_owner_tasks.py::test_tb03_sync_and_async_share_owner_request_identity[image_generate]
+tests/test_tb03_owner_tasks.py::test_tb03_sync_and_async_share_owner_request_identity[image_edit]
+tests/test_tb03_owner_tasks.py::test_tb03_restart_and_restored_copy_keep_task_identity_and_revocation
+tests/test_tb03_owner_tasks.py::test_tb03_delivery_cleanup_and_recovery_id_survive_registry_revoke_failure[False]
+tests/test_tb03_owner_tasks.py::test_tb03_delivery_cleanup_and_recovery_id_survive_registry_revoke_failure[True]
+tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[existing]
+tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[removed]
+tests/test_tb03_owner_tasks.py::test_tb03_cli_recovery_message_respects_output_ownership[cleanup_pending]
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+33/133 tests collected (100 deselected) in 0.05s

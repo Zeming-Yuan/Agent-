@@ -282,3 +282,5 @@ git commit -m "test(image): t03 boundaries and recovery"
 - 完整AC逐条映射、red/green输出、回滚边界与选择性同步清单：evidence/issue-4/acceptance.md、execution.md、sync-manifest.json。
 
 组合故障修复后重新采集30/130（collect-final.txt），受影响12文件126 passed（b-review-green.txt），1条既有弃用警告；先前28/124为修复前历史记录。未运行完整门禁。
+
+最终自动验证：T03采集33/133（collect-latest.txt），计划回归36 passed（plan-regression-latest.txt），受影响12文件129 passed（final-affected.txt）；1条既有弃用警告。旧记录28/124与30/126为审查修复前历史输出，不作为最终版本证据。

@@ -1,5 +1,7 @@
 # Issue #4 / T03 implementation and verification
 
+最终自动验证：T03采集33/133（collect-latest.txt），计划回归36 passed（plan-regression-latest.txt），受影响12文件129 passed（final-affected.txt）；1条既有弃用警告。旧记录28/124与30/126为审查修复前历史输出，不作为最终版本证据。
+
 User-confirmed base: `ee26c31eb74d891b33b26ab428514e1c84dcb636`. Serial single-ticket implement + TDD; controlled source checkout `/home/clusteradmin/.codex/workspaces/agent-mm-issue-2-20261115`, branch `feat/issue-4-owner-tasks`. Product directory remains non-Git. No source push, production deployment, service start or real Key issuance.
 
 ## Acceptance mapping
