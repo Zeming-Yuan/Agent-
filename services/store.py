@@ -143,6 +143,48 @@ class Store:
             require_owner(db, 'task', tid, owner)
             return self._task(db, tid)
 
+    def lookup_request(self, owner, request_key, fingerprint):
+        """Read an existing owner request without requiring backend readiness."""
+        if not request_key:
+            return None
+        with self.connect() as db:
+            db.execute('BEGIN')
+            row = db.execute('SELECT task_id,fingerprint FROM task_requests WHERE owner=? AND request_key=?',
+                             (owner, request_key)).fetchone()
+            if row is None:
+                return None
+            if row['fingerprint'] != fingerprint:
+                raise HTTPException(409, 'Idempotency key reused with different request')
+            require_owner(db, 'task', row['task_id'], owner)
+            return self._task(db, row['task_id'])
+
+    def list_tasks(self, owner, *, status=None, after=None, limit=20):
+        if status is not None and status not in ('queued', 'running', 'completed', 'failed', 'cancelled'):
+            raise HTTPException(422, 'Invalid task status')
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise HTTPException(422, 'limit must be between 1 and 100')
+        with self.connect() as db:
+            db.execute('BEGIN')
+            clauses = ['o.owner=?']
+            params = [owner]
+            if after is not None:
+                require_owner(db, 'task', after, owner)
+                cursor = db.execute('SELECT created,rowid FROM tasks WHERE id=?', (after,)).fetchone()
+                if cursor is None:
+                    raise HTTPException(404, 'Object not found')
+                clauses.append('(t.created,t.rowid) > (?,?)')
+                params.extend((cursor['created'], cursor['rowid']))
+            if status is not None:
+                clauses.append('t.status=?')
+                params.append(status)
+            rows = db.execute("""SELECT t.id FROM tasks t JOIN object_owners o
+                ON o.kind='task' AND o.object_id=t.id WHERE """ + ' AND '.join(clauses) +
+                ' ORDER BY t.created,t.rowid LIMIT ?', (*params, limit + 1)).fetchall()
+            page = rows[:limit]
+            return {'object': 'list', 'data': [self._task(db, row['id']) for row in page],
+                    'has_more': len(rows) > limit,
+                    'next_cursor': page[-1]['id'] if len(rows) > limit else None}
+
     def _task(self, db, tid):
         row = db.execute('SELECT * FROM tasks WHERE id=?', (tid,)).fetchone()
         if row is None:
@@ -154,17 +196,26 @@ class Store:
             item.pop(key)
         return item
 
+    def request_fingerprint(self, kind, fid, options, *, owner):
+        """Validate and hash materials while excluding concurrent file deletion."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            return self._request_fingerprint(db, kind, fid, options, owner)
+
+    def _request_fingerprint(self, db, kind, fid, options, owner):
+        refs = ([fid] if fid else []) + options.get('image_ids', [])
+        if options.get('foreground_file_id'):
+            refs.append(options['foreground_file_id'])
+        for reference in refs:
+            require_owner(db, 'file', reference, owner)
+        return task_fingerprint(self.files, kind, fid, options)
+
     def submit(self, kind, fid, options, idem, *, owner):
         tid = 'task-' + uuid.uuid4().hex
         now = int(time.time())
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            refs = ([fid] if fid else []) + options.get('image_ids', [])
-            if options.get('foreground_file_id'):
-                refs.append(options['foreground_file_id'])
-            for reference in refs:
-                require_owner(db, 'file', reference, owner)
-            fingerprint = task_fingerprint(self.files, kind, fid, options)
+            fingerprint = self._request_fingerprint(db, kind, fid, options, owner)
             if idem:
                 row = db.execute('SELECT task_id AS id,fingerprint FROM task_requests WHERE owner=? AND request_key=?', (owner, idem)).fetchone()
                 if row:

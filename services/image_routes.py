@@ -8,35 +8,24 @@ from pydantic import ValidationError
 from .image_options import ImageGenerationBody, ImageOptions
 
 
-def register_image_routes(app, store, active, upload_lock, ensure_image_available):
+def register_image_routes(app, store, upload_lock, submit_image, ensure_image_available):
     async def wait_result(task, request):
         tid=task['id']
         deadline=time.monotonic()+570
-        try:
-            while True:
-                state=store.task(tid,owner=request.state.principal.owner)
-                if state['status']=='completed':
-                    fid=state['result']['file_id']
-                    return {'created':state['updated'],'data':[{'b64_json':base64.b64encode(store.path(fid,owner=request.state.principal.owner).read_bytes()).decode(),
-                            'file_id':fid}],'task_id':tid}
-                if state['status'] in ('failed','cancelled'):
-                    raise HTTPException(503 if state['status']=='failed' else 409,state['error'] or 'Image task cancelled')
-                if await request.is_disconnected():
-                    raise asyncio.CancelledError()
-                if time.monotonic()>deadline:
-                    # Work persists; return the ID so a timeout never causes a blind duplicate.
-                    raise HTTPException(504,{'message':'Image task still pending; poll task_id','task_id':tid})
-                await asyncio.sleep(.15)
-        except asyncio.CancelledError:
-            store.update(tid,status='cancelled')
-            if tid in active: active[tid].cancel()
-            raise
-
-    def submit(options, kind, idem, owner):
-        if idem and len(idem)>128: raise HTTPException(422,'Idempotency key too long')
-        refs=options.image_ids+([options.foreground_file_id] if options.foreground_file_id else [])
-        for fid in refs: store.file(fid,owner=owner)
-        return store.submit(kind,refs[0] if refs else None,options.model_dump(),idem,owner=owner)
+        while True:
+            state=store.task(tid,owner=request.state.principal.owner)
+            if state['status']=='completed':
+                fid=state['result']['file_id']
+                return {'created':state['updated'],'data':[{'b64_json':base64.b64encode(store.path(fid,owner=request.state.principal.owner).read_bytes()).decode(),
+                        'file_id':fid}],'task_id':tid}
+            if state['status'] in ('failed','cancelled'):
+                raise HTTPException(503 if state['status']=='failed' else 409,state['error'] or 'Image task cancelled')
+            if await request.is_disconnected():
+                raise asyncio.CancelledError()
+            if time.monotonic()>deadline:
+                # Work persists; return the ID so a timeout never causes a blind duplicate.
+                raise HTTPException(504,{'message':'Image task still pending; poll task_id','task_id':tid})
+            await asyncio.sleep(.15)
 
     @app.post('/v1/images/generations')
     async def generate(body: ImageGenerationBody, request: Request):
@@ -44,8 +33,7 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
         options=ImageOptions.model_validate(body.model_dump(exclude={'model','n','response_format'}))
         if options.foreground_file_id:
             store.file(options.foreground_file_id,owner=request.state.principal.owner)
-        await ensure_image_available()
-        task=submit(options,'image_generate',request.headers.get('idempotency-key'),request.state.principal.owner)
+        task=await submit_image('image_generate',options,request.headers.get('idempotency-key'),request.state.principal.owner)
         return await wait_result(task,request)
 
     @app.post('/v1/images/edits')
@@ -54,7 +42,10 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
                    prompt: str = Form(...), model: str = Form('spark-image-edit'),
                    size: str = Form('1024x1024'), quality: str = Form('standard'),
                    n: int = Form(1), response_format: str = Form('b64_json'), seed: int = Form(0)):
-        await ensure_image_available()
+        # Without a replay key there is no existing request to recover. Preserve
+        # early offline rejection before writing multipart reference files.
+        if not request.headers.get('idempotency-key'):
+            await ensure_image_available()
         image=(image or [])+(image_array or [])
         fields=await request.form()
         unsupported=set(fields)-{'image','image[]','prompt','model','size','quality','n','response_format','seed'}
@@ -82,7 +73,7 @@ def register_image_routes(app, store, active, upload_lock, ensure_image_availabl
                         if is_new: created.append(fid)
                         ids.append(fid)
                     options.image_ids=ids
-                    task=submit(options,'image_edit',request.headers.get('idempotency-key'),request.state.principal.owner)
+                    task=await submit_image('image_edit',options,request.headers.get('idempotency-key'),request.state.principal.owner)
                 except BaseException:
                     for fid in created:
                         try:store.delete_file(fid,owner=request.state.principal.owner)

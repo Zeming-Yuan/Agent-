@@ -12,7 +12,9 @@
 
 **Ticket:** T05；Blocked by：T04。本人任务恢复列表和离线幂等重放必须建立在已收敛的 owner/幂等契约上。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 2026-11-15按用户确认执行离线单票实现，分支feat/issue-6-server-resume，固定基线ea6092f；证据见[evidence/issue-6/acceptance.md](../../../evidence/issue-6/acceptance.md)（仓库根路径为evidence/issue-6/acceptance.md）。下方原计划的“未实施”是历史计划阶段，不代表当前交付状态。真实后端/生产/Harness未验证。
+
+执行差异：列表严格采用共享契约object/data/has_more/next_cursor；增加Store事务保护的预读指纹。strict运行时允许已contract的中断running先归属预检再recover失败，迁移预检仍拒绝running；同步更新ADR及T04损坏矩阵。只运行受影响验证，不运行全量套件/完整门禁，依据用户明确范围。
 
 ## Global Constraints
 

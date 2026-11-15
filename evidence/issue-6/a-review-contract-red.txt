@@ -1,0 +1,32 @@
+.F......                                                                 [100%]
+=================================== FAILURES ===================================
+______ test_tb05_owner_pagination_and_status_filter_keep_admission_order _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-253/test_tb05_owner_pagination_and0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe10df397afc0>, wait_task=<function owner_env.<locals>.wait_task at 0xe10df397ade0>)
+
+    def test_tb05_owner_pagination_and_status_filter_keep_admission_order(owner_env):
+        with owner_env.client() as c:
+            ids = []
+            for owner in ['A', 'B', 'A', 'A']:
+                response = owner_env.submit(c, owner)
+                assert response.status_code == 202
+                ids.append(response.json()['id'])
+            assert c.post('/v1/tasks/' + ids[0] + '/cancel', headers=owner_env.auth('A')).status_code == 200
+            first = c.get('/v1/tasks', params={'limit': 2}, headers=owner_env.auth('A'))
+            assert first.status_code == 200
+>           assert first.json()['object'] == 'list'
+                   ^^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'object'
+
+tests/test_tb05_server_resume.py:41: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_owner_pagination_and_status_filter_keep_admission_order
+1 failed, 7 passed, 1 warning in 0.98s
+
+Exit code: 1

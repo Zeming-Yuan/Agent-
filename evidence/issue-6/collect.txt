@@ -1,0 +1,41 @@
+tests/test_tb05_server_resume.py::test_tb05_replay_works_when_image_backend_offline
+tests/test_tb05_server_resume.py::test_tb05_owner_pagination_and_status_filter_keep_admission_order
+tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params0]
+tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params1]
+tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params2]
+tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params3]
+tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params4]
+tests/test_tb05_server_resume.py::test_tb05_other_owner_cursor_is_not_visible
+tests/test_tb05_server_resume.py::test_tb05_delete_racing_request_fingerprint_never_returns_server_error
+tests/test_tb05_server_resume.py::test_tb05_sync_disconnect_does_not_cancel_work[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_sync_disconnect_does_not_cancel_work[image_edit]
+tests/test_tb05_server_resume.py::test_tb05_sync_replay_works_when_image_backend_offline[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_sync_replay_works_when_image_backend_offline[image_edit]
+tests/test_tb05_server_resume.py::test_tb05_sync_wait_timeout_keeps_task_id_and_can_resume[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_sync_wait_timeout_keeps_task_id_and_can_resume[image_edit]
+tests/test_tb05_server_resume.py::test_tb05_async_lost_response_and_query_timeout_recover_original_work[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_async_lost_response_and_query_timeout_recover_original_work[image_edit]
+tests/test_tb05_server_resume.py::test_tb05_strict_restart_after_process_crash_preserves_queue_and_results
+tests/test_tb05_server_resume.py::test_tb05_offline_replay_conflict_and_owner_scope[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_offline_replay_conflict_and_owner_scope[image_edit]
+tests/test_tb05_server_resume.py::test_tb05_new_work_offline_is_rejected_without_new_task[async_generate]
+tests/test_tb05_server_resume.py::test_tb05_new_work_offline_is_rejected_without_new_task[async_edit]
+tests/test_tb05_server_resume.py::test_tb05_new_work_offline_is_rejected_without_new_task[sync_generate]
+tests/test_tb05_server_resume.py::test_tb05_new_work_offline_is_rejected_without_new_task[sync_edit]
+tests/test_tb05_server_resume.py::test_tb05_deleted_result_is_unavailable_without_rerun[async]
+tests/test_tb05_server_resume.py::test_tb05_deleted_result_is_unavailable_without_rerun[sync_generate]
+tests/test_tb05_server_resume.py::test_tb05_deleted_result_is_unavailable_without_rerun[sync_edit]
+tests/test_tb05_server_resume.py::test_tb05_default_and_maximum_page_boundaries_with_equal_timestamps
+tests/test_tb05_server_resume.py::test_tb05_unowned_task_is_absent_from_list_and_cursor
+tests/test_tb05_server_resume.py::test_tb05_concurrent_new_request_rechecks_mapping_after_readiness[image_generate]
+tests/test_tb05_server_resume.py::test_tb05_concurrent_new_request_rechecks_mapping_after_readiness[image_edit]
+
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+31/232 tests collected (201 deselected) in 0.16s
+
+Exit code: 0

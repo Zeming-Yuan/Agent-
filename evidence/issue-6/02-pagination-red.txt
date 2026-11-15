@@ -1,0 +1,32 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+______ test_tb05_owner_pagination_and_status_filter_keep_admission_order _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-247/test_tb05_owner_pagination_and0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf2f978f74cc0>, wait_task=<function owner_env.<locals>.wait_task at 0xf2f978f75080>)
+
+    def test_tb05_owner_pagination_and_status_filter_keep_admission_order(owner_env):
+        with owner_env.client() as c:
+            ids = []
+            for owner in ['A', 'B', 'A', 'A']:
+                response = owner_env.submit(c, owner)
+                assert response.status_code == 202
+                ids.append(response.json()['id'])
+            assert c.post('/v1/tasks/' + ids[0] + '/cancel', headers=owner_env.auth('A')).status_code == 200
+            first = c.get('/v1/tasks', params={'limit': 2}, headers=owner_env.auth('A'))
+            assert first.status_code == 200
+>           assert [t['id'] for t in first.json()['data']] == [ids[0], ids[2]]
+E           AssertionError: assert ['task-56826a...efdd596947c1'] == ['task-56826a...d9eab07951c9']
+E
+E             Left contains one more item: 'task-9532309cdbee4a3ba9d4efdd596947c1'
+E             Use -v to get more diff
+
+tests/test_tb05_server_resume.py:40: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_owner_pagination_and_status_filter_keep_admission_order
+1 failed, 1 passed, 1 warning in 0.49s

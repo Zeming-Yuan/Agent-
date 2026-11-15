@@ -1,0 +1,30 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_tb05_replay_works_when_image_backend_offline _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-244/test_tb05_replay_works_when_im0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe9b0dce21620>, wait_task=<function owner_env.<locals>.wait_task at 0xe9b0dce216c0>)
+
+    def test_tb05_replay_works_when_image_backend_offline(owner_env):
+        backend = owner_env.new_backend()
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            first = owner_env.submit(c, 'A', request_key='keep')
+            assert first.status_code == 202
+            tid = first.json()['id']
+            owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'completed')
+            backend.offline.set()
+            replay = owner_env.submit(c, 'A', request_key='keep')
+>           assert replay.status_code == 202, replay.text
+E           AssertionError: {"detail":"Image backend unavailable; do not repeatedly submit new tasks"}
+E           assert 503 == 202
+E            +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_tb05_server_resume.py:16: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_replay_works_when_image_backend_offline
+1 failed, 1 warning in 0.38s

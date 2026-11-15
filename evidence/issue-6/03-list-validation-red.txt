@@ -1,0 +1,48 @@
+..FF....                                                                 [100%]
+=================================== FAILURES ===================================
+___________ test_tb05_invalid_listing_options_are_rejected[params0] ____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-249/test_tb05_invalid_listing_opti0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe9f391cf62a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe9f391cf6660>)
+params = {'status': 'unknown'}
+
+    @pytest.mark.parametrize('params', [{'status': 'unknown'}, {'status': ''}, {'limit': 0},
+                                       {'limit': 101}, {'limit': 'bad'}])
+    def test_tb05_invalid_listing_options_are_rejected(owner_env, params):
+        with owner_env.client() as c:
+>           assert c.get('/v1/tasks', params=params, headers=owner_env.auth('A')).status_code == 422
+E           AssertionError: assert 200 == 422
+E            +  where 200 = <Response [200 OK]>.status_code
+E            +    where <Response [200 OK]> = get('/v1/tasks', params={'status': 'unknown'}, headers={'Authorization': 'Bearer [EPHEMERAL_TEST_KEY_REDACTED]'})
+E            +      where get = <starlette.testclient.TestClient object at 0xe9f391cd7ec0>.get
+E            +      and   {'Authorization': 'Bearer [EPHEMERAL_TEST_KEY_REDACTED]'} = <function owner_env.<locals>.<lambda> at 0xe9f392afe2a0>('A')
+E            +        where <function owner_env.<locals>.<lambda> at 0xe9f392afe2a0> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-249/test_tb05_invalid_listing_opti0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe9f391cf62a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe9f391cf6660>).auth
+
+tests/test_tb05_server_resume.py:63: AssertionError
+___________ test_tb05_invalid_listing_options_are_rejected[params1] ____________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-249/test_tb05_invalid_listing_opti1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe9f391d3cfe0>, wait_task=<function owner_env.<locals>.wait_task at 0xe9f391d3d080>)
+params = {'status': ''}
+
+    @pytest.mark.parametrize('params', [{'status': 'unknown'}, {'status': ''}, {'limit': 0},
+                                       {'limit': 101}, {'limit': 'bad'}])
+    def test_tb05_invalid_listing_options_are_rejected(owner_env, params):
+        with owner_env.client() as c:
+>           assert c.get('/v1/tasks', params=params, headers=owner_env.auth('A')).status_code == 422
+E           AssertionError: assert 200 == 422
+E            +  where 200 = <Response [200 OK]>.status_code
+E            +    where <Response [200 OK]> = get('/v1/tasks', params={'status': ''}, headers={'Authorization': 'Bearer [EPHEMERAL_TEST_KEY_REDACTED]'})
+E            +      where get = <starlette.testclient.TestClient object at 0xe9f391d54710>.get
+E            +      and   {'Authorization': 'Bearer [EPHEMERAL_TEST_KEY_REDACTED]'} = <function owner_env.<locals>.<lambda> at 0xe9f391d3cf40>('A')
+E            +        where <function owner_env.<locals>.<lambda> at 0xe9f391d3cf40> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-249/test_tb05_invalid_listing_opti1/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe9f391d3cfe0>, wait_task=<function owner_env.<locals>.wait_task at 0xe9f391d3d080>).auth
+
+tests/test_tb05_server_resume.py:63: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params0]
+FAILED tests/test_tb05_server_resume.py::test_tb05_invalid_listing_options_are_rejected[params1]
+2 failed, 6 passed, 1 warning in 1.00s
