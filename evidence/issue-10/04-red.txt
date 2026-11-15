@@ -1,0 +1,47 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_tb09_low_memory_remains_queued_until_resources_recover __________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-485/test_tb09_low_memory_remains_q0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe3e80d9d3740>, wait_task=<function owner_env.<locals>.wait_task at 0xe3e80d9d37e0>)
+
+    def test_tb09_low_memory_remains_queued_until_resources_recover(owner_env):
+        import dataclasses
+        backend = owner_env.new_backend()
+        config = resources(available=25*1024**3)
+        original = config['resource_sampler']
+        import threading
+        recovered = threading.Event()
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+>       with client_with_resources(owner_env, backend, **config) as c:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:124:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-485/test_tb09_low_memory_remains_q0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe3e80d9d3740>, wait_task=<function owner_env.<locals>.wait_task at 0xe3e80d9d37e0>)
+backend = <conftest.ImageBackend object at 0xe3e80d9ff200>
+config = {'image_runtime_hash': 'runtime', 'memory_budgets': {'fast': MemoryBudget(peak_increment_bytes=10737418240, margin_byt...x_reference_pixels': 16000000, 'max_references': 3, ...}}, 'max_age': 1.0, 'stable_window': 0.02, 'wait_timeout': 2.0}}
+httpx = <module 'httpx' from '/home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/__init__.py'>
+TestClient = <class 'starlette.testclient.TestClient'>
+create_app = <function create_app at 0xe3e80d93f9c0>
+
+    def client_with_resources(env, backend, **config):
+        import httpx
+        from fastapi.testclient import TestClient
+        from services.gateway import create_app
+>       return TestClient(create_app(env.root, env.keys['legacy'], key_registry=env.registry,
+            identity_mode='staging', transport=httpx.MockTransport(backend), run_worker=True,
+            audio_enabled=False, images_enabled=True, event_stream_factory=backend.event_stream, **config))
+E       TypeError: create_app() got an unexpected keyword argument 'resource_sampler'
+
+tests/test_tb09_safe_admission.py:110: TypeError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_low_memory_remains_queued_until_resources_recover
+1 failed, 33 deselected, 1 warning in 0.06s

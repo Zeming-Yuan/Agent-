@@ -289,7 +289,7 @@ sys.path.insert(0,str(Path.cwd()/'tests'))
 from conftest import ImageBackend
 from fastapi.testclient import TestClient
 import httpx
-from services.gateway import create_app
+from image_test_harness import image_app as create_app
 from services.identity import KeyRegistry
 cfg=json.load(sys.stdin)
 backend=ImageBackend(hold=True)

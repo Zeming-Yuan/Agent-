@@ -1,0 +1,35 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_tb09_unconfigured_production_is_degraded_and_replay_still_works _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-489/test_tb09_unconfigured_product0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf579422a0220>, wait_task=<function owner_env.<locals>.wait_task at 0xf579422a3380>)
+
+    def test_tb09_unconfigured_production_is_degraded_and_replay_still_works(owner_env):
+        from fastapi.testclient import TestClient
+        from services.gateway import create_app
+        import httpx
+        backend = owner_env.new_backend()
+        with client_with_resources(owner_env, backend, **resources()) as c:
+            first = owner_env.submit(c, request_key='recoverable').json()
+            done = owner_env.wait_task(c, first['id'], 'A', lambda t: t['status'] == 'completed')
+        with TestClient(create_app(owner_env.root, owner_env.keys['legacy'], key_registry=owner_env.registry,
+            identity_mode='staging', transport=httpx.MockTransport(backend), run_worker=False,
+            audio_enabled=False, images_enabled=True)) as c:
+>           assert c.get('/health', headers=owner_env.auth('A')).status_code == 503
+E           AssertionError: assert 200 == 503
+E            +  where 200 = <Response [200 OK]>.status_code
+E            +    where <Response [200 OK]> = get('/health', headers={'Authorization': 'Bearer REDACTED'})
+E            +      where get = <starlette.testclient.TestClient object at 0xf57942080290>.get
+E            +      and   {'Authorization': 'Bearer REDACTED'} = <function owner_env.<locals>.<lambda> at 0xf579422a27a0>('A')
+E            +        where <function owner_env.<locals>.<lambda> at 0xf579422a27a0> = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-489/test_tb09_unconfigured_product0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf579422a0220>, wait_task=<function owner_env.<locals>.wait_task at 0xf579422a3380>).auth
+
+tests/test_tb09_safe_admission.py:133: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_unconfigured_production_is_degraded_and_replay_still_works
+1 failed, 34 deselected, 1 warning in 0.45s

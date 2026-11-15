@@ -262,7 +262,7 @@ def test_tb04_owner_contract_user_store_methods_require_explicit_owner(tmp_path,
 
 def test_tb04_owner_contract_strict_accepts_only_contracted_explicit_registry(owner_env):
     from scripts.migrate_image_owners import contract_ownership
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     store = Store(owner_env.root)
     with pytest.raises(ValueError, match='owner migration'):
         owner_env.client(identity_mode='strict')
@@ -323,7 +323,7 @@ def test_tb04_owner_contract_strict_preflight_rejects_corruption_without_mutatin
 @pytest.mark.parametrize('mode', ['legacy', 'staging'])
 @pytest.mark.parametrize('state', ['unowned', 'owned-unmapped'])
 def test_tb04_owner_contract_startup_never_silently_claims_unowned_data(tmp_path, legacy_services, mode, state):
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     store = legacy_services.Store(tmp_path)
     store.save_generated('file-' + 'd' * 32, b'old', 'old.png')
     store.submit('image_generate', None, {'prompt': 'x'}, 'historical-key')
@@ -367,7 +367,7 @@ def test_tb04_owner_contract_real_legacy_worker_cutover_and_restore_preserves_ne
     import shutil
     from pathlib import Path
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.identity import KeyRegistry
     from scripts.migrate_image_owners import contract_ownership, backup_state
     root = owner_env.root

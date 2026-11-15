@@ -1,7 +1,7 @@
 import time
 import httpx
 from fastapi.testclient import TestClient
-from services.gateway import create_app
+from image_test_harness import image_app as create_app
 AUTH={'Authorization':'Bearer test-secret-token'}
 
 

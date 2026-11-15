@@ -16,6 +16,12 @@ class ResourceSample:
     cgroup_peak_bytes: int | None = None
     cgroup_limit_bytes: int | None = None
     errors: tuple[str, ...] = ()
+    # Unknown until a backend can attest actual old-profile reference release.
+    release_proven: bool | None = None
+    release_task_id: str | None = None
+    host_id: str | None = None
+    runtime_hash: str | None = None
+    session_id: str | None = None
 
 
 def sample_resources(*, meminfo=Path('/proc/meminfo'), cgroup=Path('/sys/fs/cgroup'), now=time.monotonic):

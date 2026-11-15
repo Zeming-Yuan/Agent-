@@ -89,7 +89,7 @@ def test_tb01_legacy_expand_requires_explicit_owner(tmp_path, owner):
 
 def test_tb01_legacy_expand_explicit_contract_precedes_modern_gateway(tmp_path, caplog, legacy_services):
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.ownership import preflight_ownership
 
     store = legacy_services.Store(tmp_path)
@@ -178,7 +178,7 @@ def test_tb01_legacy_expand_legacy_mode_blocks_other_owners(owner_env, caplog):
 
 @pytest.mark.parametrize('mode', ['typo', '', 'strict'])
 def test_tb01_legacy_expand_modes_fail_closed_before_migration(tmp_path, mode):
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
 
     with pytest.raises(ValueError, match='identity_mode|owner migration'):
         create_app(tmp_path, 'test-secret-token', identity_mode=mode, run_worker=False)
@@ -204,7 +204,7 @@ def test_tb01_legacy_expand_staging_resolves_principal_without_token_fallback(ow
         assert client.get('/test-principal', headers=owner_env.auth('A')).status_code == 401
     # With an explicit registry, the positional token has no independent fallback authority.
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     with TestClient(create_app(owner_env.root, 'unregistered-fallback-token',
                                key_registry=owner_env.registry, run_worker=False)) as other:
         assert other.get('/v1/models', headers={'Authorization': 'Bearer unregistered-fallback-token'}).status_code == 401
@@ -321,7 +321,7 @@ def test_tb01_legacy_expand_frozen_old_workers_keep_positional_compatibility(own
 def test_tb01_legacy_expand_original_cases_on_expanded_copy(tmp_path, legacy_services, case, version):
     import runpy
     from pathlib import Path
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.ownership import expand_ownership
 
     store = legacy_services.Store(tmp_path)
@@ -386,7 +386,7 @@ def test_tb01_legacy_expand_backup_restores_image_and_task_identity(owner_env, t
     import shutil
     import sqlite3
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.ownership import expand_ownership, preflight_ownership
 
     backend = owner_env.new_backend()
@@ -426,7 +426,7 @@ def test_tb01_legacy_expand_backup_restores_image_and_task_identity(owner_env, t
 def test_tb01_legacy_expand_default_key_revocation_survives_app_restart(tmp_path):
     import secrets
     from fastapi.testclient import TestClient
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.identity import KeyRegistry
 
     token = secrets.token_urlsafe(32)

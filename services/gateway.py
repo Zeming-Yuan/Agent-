@@ -41,7 +41,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                max_upload_bytes=64*1024*1024, max_pending=4, context_window=32768,
                audio_enabled=True, images_enabled=False,
                key_registry: KeyRegistry | None = None, identity_mode: str = 'legacy',
-               event_stream_factory=None):
+               event_stream_factory=None, resource_sampler=None, memory_budgets=None,
+               resource_settings=None, image_runtime_hash=None):
     if identity_mode not in ('legacy', 'staging', 'strict'):
         raise ValueError('identity_mode must be legacy, staging or strict')
     if identity_mode == 'strict':
@@ -73,6 +74,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
     LOG.info('ownership_preflight unowned_files=%s unowned_tasks=%s unowned_idempotency_records=%s running_tasks=%s',
              ownership_report['unowned_files'], ownership_report['unowned_tasks'],
              ownership_report['unowned_idempotency_records'], ownership_report['running_tasks'])
+    from .image_resources import ImageAdmission
+    admission = ImageAdmission(resource_sampler, memory_budgets, resource_settings, image_runtime_hash)
     active = {}
     main_slots = asyncio.Semaphore(2)
     audio_slots = asyncio.Semaphore(1)
@@ -121,7 +124,7 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
             from .images import image_worker
             from .comfy_events import ComfyEventStream
             image_task = asyncio.create_task(image_worker(store, client, image_url, active,
-                                                         event_stream_factory=event_stream_factory or ComfyEventStream))
+                                                         event_stream_factory=event_stream_factory or ComfyEventStream, admission=admission))
             app.state.image_worker=image_task
         yield
         if image_task:
@@ -191,6 +194,8 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
                 backends['image']={'status':'ready' if r.is_success and 'system' in r.json() else 'unavailable'}
             except (httpx.HTTPError,ValueError):
                 backends['image']={'status':'unavailable'}
+        if images_enabled and not admission.configured():
+            backends['image']={'status':'unavailable','reason':'No valid image resource configuration'}
         if images_enabled and app.state.image_worker is not None and app.state.image_worker.done():
             backends['image']={'status':'unavailable','reason':'Image worker stopped; restart backend and gateway'}
         ready=(backends['main']=={} or backends['main'].get('status') in ('ready','ok')) and all(s.get('status')=='ready' for name,s in backends.items() if name!='main')
@@ -230,6 +235,9 @@ def create_app(root: Path, token: str, *, transport=None, run_worker=True,
             if existing is not None:
                 return existing
         await ensure_image_available()
+        candidate = {'kind': kind, 'options': payload}
+        if not admission.configured(candidate):
+            raise HTTPException(503, 'Image profile unavailable: no valid resource evidence/configuration')
         return store.submit(kind, source, payload, idem, owner=owner)
 
     @app.post('/v1/chat/completions')

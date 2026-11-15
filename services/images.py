@@ -10,6 +10,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from fastapi import HTTPException
 
+from .image_resources import ReleaseUnconfirmed, ResourceWaitExpired
 from .image_telemetry import record_cached_nodes, record_current_task, task_event, task_transition
 
 LOG=logging.getLogger('agent-mm.images')
@@ -166,7 +167,7 @@ def reclaim_result(store, fid, *, owner):
         raise CleanupUncertain('Image result reclamation unconfirmed; operator recovery required') from exc
 
 
-async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None):
+async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None, admission=None):
     opts=item['options'];tid=item['id'];pid=None;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False
     streams=contextlib.AsyncExitStack()
     owner=store.worker_task(tid)['owner']
@@ -211,6 +212,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
                 except Exception:
                     task_event(store,tid,{'type':'observation_lost'})
             if stream is not None:watcher=asyncio.create_task(observe())
+        if admission is not None:admission.recheck(item)
         r=await settled_post(client,url+'/prompt',json={'prompt':workflow(opts,'agent-mm/'+tid,names),'client_id':tid,'prompt_id':pid})
         r.raise_for_status();pid=r.json()['prompt_id']
         deadline=time.monotonic()+900
@@ -270,7 +272,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
 
 
 
-async def image_worker(store,client,url,active,*,event_stream_factory=None):
+async def image_worker(store,client,url,active,*,event_stream_factory=None,admission=None):
     initialized=False;last_kind=None
     while True:
         if not initialized:
@@ -286,12 +288,19 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             await asyncio.sleep(.2);continue
         tid=item['id']
         profile=(item['kind'],item['kind']=='image_edit' and item['options']['quality']=='fast')
-        item=task_transition(store,tid,status='running',stage='unloading' if last_kind!=profile else 'loading',expected_seq=item['stage_seq'])
-        if item['status'] != 'running':continue
-        job=asyncio.create_task(process_image(item,store,client,url,unload_models=last_kind!=profile,
-                                            event_stream_factory=event_stream_factory));active[tid]=job
+        async def run_image():
+            if not await admission.prepare(item,store,client,url):return None
+            current=store.worker_task(tid)
+            claimed=task_transition(store,tid,status='running',stage='loading',expected_seq=current['stage_seq'])
+            if claimed['status'] != 'running':return None
+            inference=asyncio.create_task(process_image(claimed,store,client,url,unload_models=False,
+                                       event_stream_factory=event_stream_factory,admission=admission))
+            active[tid]=inference
+            return await inference
+        job=asyncio.create_task(run_image());active[tid]=job
         try:
             result=await job
+            if result is None:continue
             task=store.worker_task(tid)
             if task['cancel_requested']:
                 reclaim_result(store,result['file_id'],owner=task['owner'])
@@ -313,6 +322,12 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             task_event(store,tid,{'type':'failed','error':'Image backend execution failed',
                              'blocked_reason':'backend_execution_error'})
             initialized=False
+        except ReleaseUnconfirmed:
+            task_event(store,tid,{'type':'failed','error':'Model release unconfirmed; operator recovery required',
+                                  'blocked_reason':'release_unconfirmed'})
+            return
+        except ResourceWaitExpired as exc:
+            task_event(store,tid,{'type':'failed','error':str(exc),'blocked_reason':'resource_wait_expired'})
         except SubmissionUncertain:
             LOG.exception('image backend outcome uncertain; admission stopped')
             task_event(store,tid,{'type':'failed','error':'Image submission outcome unknown; restart image backend and gateway',

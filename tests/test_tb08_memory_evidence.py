@@ -216,7 +216,7 @@ def test_tb08_memory_evidence_observe_cli_downloads_decodes_saves_and_keeps_raw_
     import time
     import httpx
     from PIL import Image
-    from services.gateway import create_app
+    from image_test_harness import image_app as create_app
     from services.image_telemetry import host_identity, write_private_jsonl
     from image_test_harness import https_server
     directory = tmp_path/'obs'

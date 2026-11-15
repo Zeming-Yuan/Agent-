@@ -1,0 +1,166 @@
+FFFFFFFFFFFFF                                                            [100%]
+=================================== FAILURES ===================================
+________ test_tb09_release_requires_correlated_continuous_proof[valid] _________
+
+fault = 'valid'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+______ test_tb09_release_requires_correlated_continuous_proof[epoch_only] ______
+
+fault = 'epoch_only'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+_______ test_tb09_release_requires_correlated_continuous_proof[resident] _______
+
+fault = 'resident'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+_______ test_tb09_release_requires_correlated_continuous_proof[running] ________
+
+fault = 'running'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+________ test_tb09_release_requires_correlated_continuous_proof[sparse] ________
+
+fault = 'sparse'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+______ test_tb09_release_requires_correlated_continuous_proof[duplicate] _______
+
+fault = 'duplicate'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+__ test_tb09_release_requires_correlated_continuous_proof[different_session] ___
+
+fault = 'different_session'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+____ test_tb09_release_requires_correlated_continuous_proof[different_task] ____
+
+fault = 'different_task'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+____ test_tb09_release_requires_correlated_continuous_proof[different_host] ____
+
+fault = 'different_host'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+__ test_tb09_release_requires_correlated_continuous_proof[different_runtime] ___
+
+fault = 'different_runtime'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+______ test_tb09_release_requires_correlated_continuous_proof[old_epoch] _______
+
+fault = 'old_epoch'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+________ test_tb09_release_requires_correlated_continuous_proof[errors] ________
+
+fault = 'errors'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+________ test_tb09_release_requires_correlated_continuous_proof[short] _________
+
+fault = 'short'
+
+    @pytest.mark.parametrize('fault', ['valid','epoch_only','resident','running','sparse','duplicate',
+        'different_session','different_task','different_host','different_runtime','old_epoch','errors','short'])
+    def test_tb09_release_requires_correlated_continuous_proof(fault):
+>       from services.image_resources import released
+E       ImportError: cannot import name 'released' from 'services.image_resources' (/home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115/services/image_resources.py)
+
+tests/test_tb09_safe_admission.py:74: ImportError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[valid]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[epoch_only]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[resident]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[running]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[sparse]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[duplicate]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[different_session]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[different_task]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[different_host]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[different_runtime]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[old_epoch]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[errors]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_release_requires_correlated_continuous_proof[short]
+13 failed, 20 deselected, 1 warning in 0.04s

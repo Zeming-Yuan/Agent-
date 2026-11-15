@@ -284,3 +284,7 @@ git commit -m "test(image): t09 boundaries and recovery"
 ## 预算有效期的时钟约定
 
 部署配置持久化 UTC expires_at；加载时换算为本次启动的 monotonic 截止：valid_until = monotonic_now + max(0, expires_at - utc_now)。MemoryBudget.valid_until 仅为内存对象，不将单调时钟值写回持久配置；重启后重新换算，过期配置保持禁用。测试中的 now/valid_until 是同一单调时钟域。
+
+## T09 execution 2026-11-15 — slice A
+
+User approved offline implementation with #9/#24 open and the three public seams; fixed source base da2acfb62b8abd478f18b4cc84b448e87003ed66. Policy/release-proof/queued-wait/recovery/pre-prompt recheck implemented by vertical RED→GREEN cycles. Focused35 and affected selector65 passed, one existing AnyIO warning. Existing fixtures explicitly inject synthetic resources. Public evidence is credential-redacted/whitespace-normalized; these are test credentials, never production data. See evidence/issue-10/progress.md for rulings. Full configuration/input-envelope/fault matrix remains slice B. Hardware baseline not_run; no enabled production profile or performance claim. ADR0004 is used because ADR0002 already records task lifecycle.

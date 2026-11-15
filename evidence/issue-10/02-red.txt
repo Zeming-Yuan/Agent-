@@ -1,0 +1,861 @@
+.FFFFFFFFFFFFFFFFFF.                                                     [100%]
+=================================== FAILURES ===================================
+___ test_tb09_invalid_evidence_never_admits[missing_sample-missing_evidence] ___
+
+fault = 'missing_sample', reason = 'missing_evidence'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+>       decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:52:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+sample = None
+budget = MemoryBudget(peak_increment_bytes=10737418240, margin_bytes=2147483648, reserve_bytes=21474836480, valid_until=100.0, runtime_hash='runtime')
+
+    def admit(sample, budget, *, now, runtime_hash, released, max_age):
+        need = budget.peak_increment_bytes + budget.margin_bytes
+>       if sample.available_bytes < need + budget.reserve_bytes:
+           ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'available_bytes'
+
+services/image_resources.py:22: AttributeError
+___ test_tb09_invalid_evidence_never_admits[missing_budget-missing_evidence] ___
+
+fault = 'missing_budget', reason = 'missing_evidence'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+>       decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:52:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+sample = ResourceSample(available_bytes=64424509440, cgroup_headroom_bytes=53687091200, observed_at=10.0, resident_profiles=fro...ing_prompts=(), release_epoch=2, cgroup_current_bytes=None, cgroup_peak_bytes=None, cgroup_limit_bytes=None, errors=())
+budget = None
+
+    def admit(sample, budget, *, now, runtime_hash, released, max_age):
+>       need = budget.peak_increment_bytes + budget.margin_bytes
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'NoneType' object has no attribute 'peak_increment_bytes'
+
+services/image_resources.py:21: AttributeError
+_____ test_tb09_invalid_evidence_never_admits[release-release_unconfirmed] _____
+
+fault = 'release', reason = 'release_unconfirmed'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'release_unconfirmed')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_________ test_tb09_invalid_evidence_never_admits[stale-stale_sample] __________
+
+fault = 'stale', reason = 'stale_sample'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'stale_sample')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_________ test_tb09_invalid_evidence_never_admits[future-stale_sample] _________
+
+fault = 'future', reason = 'stale_sample'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'stale_sample')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_____ test_tb09_invalid_evidence_never_admits[container-container_memory] ______
+
+fault = 'container', reason = 'container_memory'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'container_memory')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_______ test_tb09_invalid_evidence_never_admits[runtime-invalid_budget] ________
+
+fault = 'runtime', reason = 'invalid_budget'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'invalid_budget')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_______ test_tb09_invalid_evidence_never_admits[expired-invalid_budget] ________
+
+fault = 'expired', reason = 'invalid_budget'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'invalid_budget')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_______ test_tb09_invalid_evidence_never_admits[reserve-invalid_budget] ________
+
+fault = 'reserve', reason = 'invalid_budget'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'invalid_budget')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_______ test_tb09_invalid_evidence_never_admits[negative-invalid_budget] _______
+
+fault = 'negative', reason = 'invalid_budget'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'invalid_budget')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+______ test_tb09_invalid_evidence_never_admits[nan_budget-invalid_budget] ______
+
+fault = 'nan_budget', reason = 'invalid_budget'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'invalid_budget')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_______ test_tb09_invalid_evidence_never_admits[nan_clock-stale_sample] ________
+
+fault = 'nan_clock', reason = 'stale_sample'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'stale_sample')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+________ test_tb09_invalid_evidence_never_admits[nan_age-stale_sample] _________
+
+fault = 'nan_age', reason = 'stale_sample'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'stale_sample')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+________ test_tb09_invalid_evidence_never_admits[zero_age-stale_sample] ________
+
+fault = 'zero_age', reason = 'stale_sample'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'stale_sample')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+___ test_tb09_invalid_evidence_never_admits[missing_memory-missing_evidence] ___
+
+fault = 'missing_memory', reason = 'missing_evidence'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+>       decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:52:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+sample = ResourceSample(available_bytes=None, cgroup_headroom_bytes=53687091200, observed_at=10.0, resident_profiles=frozenset(...ing_prompts=(), release_epoch=2, cgroup_current_bytes=None, cgroup_peak_bytes=None, cgroup_limit_bytes=None, errors=())
+budget = MemoryBudget(peak_increment_bytes=10737418240, margin_bytes=2147483648, reserve_bytes=21474836480, valid_until=100.0, runtime_hash='runtime')
+
+    def admit(sample, budget, *, now, runtime_hash, released, max_age):
+        need = budget.peak_increment_bytes + budget.margin_bytes
+>       if sample.available_bytes < need + budget.reserve_bytes:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       TypeError: '<' not supported between instances of 'NoneType' and 'int'
+
+services/image_resources.py:22: TypeError
+_______ test_tb09_invalid_evidence_never_admits[errors-missing_evidence] _______
+
+fault = 'errors', reason = 'missing_evidence'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'missing_evidence')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_____ test_tb09_invalid_evidence_never_admits[running-release_unconfirmed] _____
+
+fault = 'running', reason = 'release_unconfirmed'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'release_unconfirmed')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+_ test_tb09_invalid_evidence_never_admits[unknown_residents-release_unconfirmed] _
+
+fault = 'unknown_residents', reason = 'release_unconfirmed'
+
+    @pytest.mark.parametrize('fault, reason', [
+        ('missing_sample','missing_evidence'), ('missing_budget','missing_evidence'),
+        ('release','release_unconfirmed'), ('stale','stale_sample'), ('future','stale_sample'),
+        ('container','container_memory'), ('runtime','invalid_budget'), ('expired','invalid_budget'),
+        ('reserve','invalid_budget'), ('negative','invalid_budget'), ('nan_budget','invalid_budget'),
+        ('nan_clock','stale_sample'), ('nan_age','stale_sample'), ('zero_age','stale_sample'),
+        ('missing_memory','missing_evidence'), ('errors','missing_evidence'),
+        ('running','release_unconfirmed'), ('unknown_residents','release_unconfirmed'),
+    ])
+    def test_tb09_invalid_evidence_never_admits(fault, reason):
+        from services.image_resources import MemoryBudget, admit
+        gib = 1024**3
+        sample = ResourceSample(60*gib, 50*gib, 10.0, frozenset(), (), 2)
+        budget = MemoryBudget(10*gib, 2*gib, 20*gib, 100.0, 'runtime')
+        now, age, released = 10., 1., True
+        if fault == 'missing_sample': sample = None
+        if fault == 'missing_budget': budget = None
+        if fault == 'release': released = False
+        if fault == 'stale': now = 20.
+        if fault == 'future': now = 9.
+        if fault == 'container': sample = dataclasses.replace(sample, cgroup_headroom_bytes=gib)
+        if fault == 'runtime': budget = dataclasses.replace(budget, runtime_hash='different')
+        if fault == 'expired': budget = dataclasses.replace(budget, valid_until=10.)
+        if fault == 'reserve': budget = dataclasses.replace(budget, reserve_bytes=19*gib)
+        if fault == 'negative': budget = dataclasses.replace(budget, peak_increment_bytes=-1)
+        if fault == 'nan_budget': budget = dataclasses.replace(budget, valid_until=float('nan'))
+        if fault == 'nan_clock': now = float('nan')
+        if fault == 'nan_age': age = float('nan')
+        if fault == 'zero_age': age = 0.
+        if fault == 'missing_memory': sample = dataclasses.replace(sample, available_bytes=None)
+        if fault == 'errors': sample = dataclasses.replace(sample, errors=('sampler_failed',))
+        if fault == 'running': sample = dataclasses.replace(sample, running_prompts=('old-prompt',))
+        if fault == 'unknown_residents': sample = dataclasses.replace(sample, resident_profiles=None)
+        decision = admit(sample, budget, now=now, runtime_hash='runtime', released=released, max_age=age)
+>       assert (decision.allowed, decision.reason) == (False, reason)
+E       AssertionError: assert (True, 'ready') == (False, 'release_unconfirmed')
+E
+E         At index 0 diff: True != False
+E         Use -v to get more diff
+
+tests/test_tb09_safe_admission.py:53: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[missing_sample-missing_evidence]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[missing_budget-missing_evidence]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[release-release_unconfirmed]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[stale-stale_sample]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[future-stale_sample]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[container-container_memory]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[runtime-invalid_budget]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[expired-invalid_budget]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[reserve-invalid_budget]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[negative-invalid_budget]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[nan_budget-invalid_budget]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[nan_clock-stale_sample]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[nan_age-stale_sample]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[zero_age-stale_sample]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[missing_memory-missing_evidence]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[errors-missing_evidence]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[running-release_unconfirmed]
+FAILED tests/test_tb09_safe_admission.py::test_tb09_invalid_evidence_never_admits[unknown_residents-release_unconfirmed]
+18 failed, 2 passed, 1 warning in 0.05s

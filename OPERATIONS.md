@@ -357,3 +357,11 @@ Runtime identity additionally includes gateway image-workflow and launcher hashe
 Edit encoding has two observed operations: node4=text_vision_encode and node5=negative_text_vision_encode. The latter also processes reference images and is not the generation workflow's simple zero-conditioning operation. Both must execute or have explicit owned cache evidence for a complete edit measurement; an absent negative-encoding boundary is invalid.
 
 Collector timeout/disconnection does not cancel accepted work. Recover with the report's task_id and normal owned task/file API; if needed explicitly cancel that same task and wait for confirmed cleanup. A new observe invocation is a new task and must not be used as a recovery retry. Before the next controlled run, confirm prior work/cleanup ended. Missing acceptance response stays uncertain/invalid; resolve the server's owner-scoped request mapping instead of blindly resubmitting.
+
+## T09 离线切片 A：安全准入（2026-11-15）
+
+当前生产没有有效标定预算，默认图片健康降级、新请求503；已有本人幂等请求、任务与结果仍可恢复。资源不足保持queued/waiting_resources并通过blocked_reason解释；只有同一host/runtime/backend session/切换task的实际release_proven、空驻留/空运行以及连续无空洞窗口才可进入准入。release_epoch或/free响应均不构成证明；T08当前没有该证明，因此不会凭现有遥测启用profile。配置与完整异常矩阵由切片B继续交付。
+
+系统准入为MemAvailable >= 新增峰值+保守裕量+至少20GiB；容器余量独立覆盖峰值+裕量，不相加统一内存口径。开工前立即复查，等待计时独立于已有900秒推理时钟。取消等待任务不产生推理；若/free仍在途，串行控制权继续等其结算，不能借终态放行下一单。所有模型仍按冷释放验证，未优化热驻留。
+
+回退：先停新接单、保全任务/文件/注册表和证据，确认外部工作及控制请求结束；只使用保留owner/取消/清理和安全准入的版本。不能回退为20GiB静态判断或移除保护器。无schema迁移，无生产部署/重启/模型负载；实机和Windows/macOS Harness仍未验证。证据见evidence/issue-10/progress.md。

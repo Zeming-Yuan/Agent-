@@ -10,7 +10,7 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
-from services.gateway import create_app
+from image_test_harness import image_app as create_app
 from services.identity import KeyRegistry
 
 class BackendEvents:
