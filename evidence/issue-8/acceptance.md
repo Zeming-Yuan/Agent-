@@ -42,3 +42,7 @@ Explicit affected-file selection:275passed/one existing dependency warning (b-fi
 ## Slice B initial review and repair
 
 Fixed1c566b6 review: Standards1 P1 (failed unreturned-result unlink did not halt admission); Spec1 P2 (pending /free HTTP request not settled before cancellation). Both repaired with independent failing reproductions and affected31passed (b-review-repair-affected.txt). Reclaim failures now always become cleanup_unconfirmed, including cancellation-during-save and successful-return race. /free uses existing settled_post; response loss halts admission using the existing uncertainty policy. It still does not prove model release. Independent re-review pending next fixed commit.
+
+## Final reviewed source and verification
+
+Implementation HEAD85ee22d; independent final Standards0/Spec0 (review-b.md). Both archived product/ADR payloads SHA256-match the fixed commit. Fresh final-affected.txt:**277passed**, one existing AnyIO warning; final-collect.txt:**28selected/308collected** across T07 lifecycle/stdio names. Narrow repair selection31passed. Source hashes unchanged before/after the final affected run. No unresolved important findings or deferred minors; no full-suite/full-gate claim. Production/physical GPU and actual desktop-platform acceptance remain explicitly未验证.
