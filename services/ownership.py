@@ -51,6 +51,8 @@ def require_owner(db, kind: str, object_id: str, owner: str) -> None:
 def validate_ownership(db, files: Path, *, legacy_owner: str | None = None) -> dict:
     """Validate one SQLite snapshot; optional legacy identity is only for offline contract."""
     import json
+    if files.is_symlink() or not files.is_dir():
+        raise ValueError('unsafe files directory')
     tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     owners = {(row['kind'], row['object_id']): row['owner']
               for row in db.execute('SELECT * FROM object_owners')} if 'object_owners' in tables else {}

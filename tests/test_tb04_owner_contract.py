@@ -201,7 +201,7 @@ def test_tb04_owner_contract_requires_stable_explicit_identity(tmp_path, owner):
     assert store.db.read_bytes() == before
 
 
-@pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'nested-backup'])
+@pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'keys-symlink', 'nested-backup'])
 def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
     from scripts.migrate_image_owners import backup_state
     store = Store(tmp_path / 'runtime')
@@ -212,6 +212,10 @@ def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
         (store.files / 'orphan').symlink_to(outside / 'private')
     elif unsafe == 'files-symlink':
         store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+    elif unsafe == 'keys-symlink':
+        from services.identity import KeyRegistry
+        KeyRegistry(outside / 'keys.sqlite3').issue('B')
+        (store.root / 'keys.sqlite3').symlink_to(outside / 'keys.sqlite3')
     else:
         target = store.files / 'backup'
     with pytest.raises(ValueError, match='unsafe'):
@@ -229,3 +233,15 @@ def test_tb04_owner_contract_preserves_explicit_triggers(tmp_path):
     created = store.submit('image_generate', None, {'prompt': 'x'}, None, owner='legacy')
     with store.connect() as db:
         assert [row[0] for row in db.execute('SELECT task_id FROM task_audit')] == [created['id']]
+
+
+def test_tb04_owner_contract_preview_refuses_linked_files_root(tmp_path):
+    from scripts.migrate_image_owners import contract_ownership
+    from services.ownership import inspect_contract
+    store = Store(tmp_path / 'runtime')
+    outside = tmp_path / 'outside'; outside.mkdir()
+    store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+    before = store.db.read_bytes()
+    with pytest.raises(ValueError, match='unsafe'):
+        inspect_contract(store.db, legacy_owner='legacy')
+    assert store.db.read_bytes() == before

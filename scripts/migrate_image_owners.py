@@ -62,7 +62,7 @@ def backup_state(db_path: Path, backup_dir: Path) -> dict:
     db_path = Path(db_path).resolve(strict=True)
     target = Path(backup_dir).resolve()
     source_files = db_path.parent / 'files'
-    if (source_files.is_symlink() or not source_files.is_dir() or
+    if ((db_path.parent / 'keys.sqlite3').is_symlink() or source_files.is_symlink() or not source_files.is_dir() or
             target.is_relative_to(source_files.resolve()) or
             any(p.is_symlink() or not (p.is_file() or p.is_dir()) for p in source_files.rglob('*'))):
         raise ValueError('unsafe backup filesystem')

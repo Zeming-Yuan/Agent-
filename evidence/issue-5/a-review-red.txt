@@ -1,0 +1,53 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___ test_tb04_owner_contract_backup_refuses_unsafe_filesystem[keys-symlink] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-210/test_tb04_owner_contract_backu0')
+unsafe = 'keys-symlink'
+
+    @pytest.mark.parametrize('unsafe', ['orphan-symlink', 'files-symlink', 'keys-symlink', 'nested-backup'])
+    def test_tb04_owner_contract_backup_refuses_unsafe_filesystem(tmp_path, unsafe):
+        from scripts.migrate_image_owners import backup_state
+        store = Store(tmp_path / 'runtime')
+        outside = tmp_path / 'outside'; outside.mkdir()
+        (outside / 'private').write_bytes(b'private')
+        target = tmp_path / 'backup'
+        if unsafe == 'orphan-symlink':
+            (store.files / 'orphan').symlink_to(outside / 'private')
+        elif unsafe == 'files-symlink':
+            store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+        elif unsafe == 'keys-symlink':
+            from services.identity import KeyRegistry
+            KeyRegistry(outside / 'keys.sqlite3').issue('B')
+            (store.root / 'keys.sqlite3').symlink_to(outside / 'keys.sqlite3')
+        else:
+            target = store.files / 'backup'
+>       with pytest.raises(ValueError, match='unsafe'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:221: Failed
+__________ test_tb04_owner_contract_preview_refuses_linked_files_root __________
+
+tmp_path = PosixPath('/tmp/pytest-of-clusteradmin/pytest-210/test_tb04_owner_contract_previ0')
+
+    def test_tb04_owner_contract_preview_refuses_linked_files_root(tmp_path):
+        from scripts.migrate_image_owners import contract_ownership
+        from services.ownership import inspect_contract
+        store = Store(tmp_path / 'runtime')
+        outside = tmp_path / 'outside'; outside.mkdir()
+        store.files.rmdir(); store.files.symlink_to(outside, target_is_directory=True)
+        before = store.db.read_bytes()
+>       with pytest.raises(ValueError, match='unsafe'):
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/test_tb04_owner_contract.py:245: Failed
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_backup_refuses_unsafe_filesystem[keys-symlink]
+FAILED tests/test_tb04_owner_contract.py::test_tb04_owner_contract_preview_refuses_linked_files_root
+2 failed, 36 deselected, 1 warning in 0.14s
