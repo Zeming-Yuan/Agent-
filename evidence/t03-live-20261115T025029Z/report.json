@@ -1,0 +1,73 @@
+{
+  "run_id": "t03-live-20261115T025029Z",
+  "started_utc": "2026-11-15T02:50:29.241710+00:00",
+  "scope": "real localhost HTTPS using existing project CA, real processes/SQLite/files/CPU PDF worker/MCP stdio; NO model loading",
+  "not_verified": [
+    "physical image generation/editing",
+    "Windows/macOS actual Harness",
+    "production release/recovery",
+    "memory calibration"
+  ],
+  "checks": [
+    {
+      "name": "port-initially-unused-18018",
+      "passed": true
+    },
+    {
+      "name": "port-initially-unused-18444",
+      "passed": true
+    },
+    {
+      "name": "port-initially-unused-18013",
+      "passed": true
+    },
+    {
+      "name": "image-model-not-running",
+      "passed": true
+    },
+    {
+      "name": "key-files-private",
+      "passed": true
+    },
+    {
+      "name": "trusted-existing-CA-real-HTTPS",
+      "passed": true,
+      "http": "HTTP/1.1"
+    },
+    {
+      "name": "untrusted-CA-rejected",
+      "passed": true
+    }
+  ],
+  "services_before": {
+    "ltx-worker": "active",
+    "ltx-resource-guard": "active",
+    "agent-mm-image": "failed",
+    "agent-mm-image-memory-guard": "inactive",
+    "agent-mm-gateway": "inactive",
+    "agent-mm-https": "inactive"
+  },
+  "trusted_ca_sha256": "86add5dc332c9c6c759318cb67826779d9994e8c667a8cb32550983c3733cfb8",
+  "status": "failed",
+  "failure_type": "LocalProtocolError",
+  "failure": "Illegal header value b'Bearer '",
+  "cleanup": {
+    "owned_processes_stopped": true,
+    "test_keys_revoked": true,
+    "services_after": {
+      "ltx-worker": "active",
+      "ltx-resource-guard": "active",
+      "agent-mm-image": "failed",
+      "agent-mm-image-memory-guard": "inactive",
+      "agent-mm-gateway": "inactive",
+      "agent-mm-https": "inactive"
+    },
+    "original_service_states_preserved": true
+  },
+  "trusted_ca_unchanged": true,
+  "raw_credentials_absent_from_service_logs": true,
+  "min_available_gib_observed": 70.631,
+  "sampling_note": "1Hz observed availability only; not a profile/memory-safety calibration",
+  "finished_utc": "2026-11-15T02:50:30.232312+00:00",
+  "checks_passed": 7
+}
