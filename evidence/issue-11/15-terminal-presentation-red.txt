@@ -1,0 +1,42 @@
+........................................................................ [ 18%]
+..........................................................F............. [ 36%]
+........................................................................ [ 55%]
+........................................................................ [ 73%]
+........................................................................ [ 92%]
+..............................                                           [100%]
+=================================== FAILURES ===================================
+___________ test_tb07_late_internal_update_cannot_overwrite_terminal ___________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-579/test_tb07_late_internal_update0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf3445602b920>, wait_task=<function owner_env.<locals>.wait_task at 0xf34456028360>)
+
+    def test_tb07_late_internal_update_cannot_overwrite_terminal(owner_env):
+        with owner_env.client() as c:
+            tid = owner_env.submit(c).json()['id']
+            cancelled = c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A')).json()
+            c.app.state.store.update(tid, status='completed', result={'file_id': 'unverified'})
+            # update() is used by older worker callers; it must honor all terminal states.
+            c.app.state.store.event(tid, {'type': 'failed', 'error': 'late'})
+            assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json() == cancelled
+            # A failed terminal must have the same protection as cancellation.
+            other = owner_env.submit(c).json()['id']
+            store = c.app.state.store
+            failed = store.event(other, {'type': 'failed', 'error': 'fixture'})
+            store.update(other, status='running')
+>           assert c.get('/v1/tasks/' + other, headers=owner_env.auth('A')).json() == failed
+E           AssertionError: assert {'blocked_rea...fixture', ...} == {'blocked_rea...fixture', ...}
+E
+E             Omitting 18 identical items, use -vv to show
+E             Left contains 2 more items:
+E             {'queue_ahead': None, 'queue_reason': None}
+E             Use -v to get more diff
+
+tests/test_tb07_lifecycle.py:483: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_late_internal_update_cannot_overwrite_terminal
+1 failed, 389 passed, 1 warning in 119.62s (0:01:59)

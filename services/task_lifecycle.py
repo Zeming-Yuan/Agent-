@@ -33,6 +33,10 @@ def apply_event(task: dict, event: dict, *, backend_stopped=False, result_saved=
         if task.get('stage') == 'waiting_resources' and task.get('blocked_reason') == event['reason']:
             return out
         out.update(stage='waiting_resources', blocked_reason=event['reason'])
+    elif kind == 'resource_ready':
+        if task['status'] != 'queued' or task.get('cancel_requested') or task.get('stage') != 'waiting_resources':
+            return out
+        out.update(stage='queued', blocked_reason=None)
     elif kind == 'stage':
         stage = event['stage']
         if task.get('cancel_requested') or stage not in STAGE_ORDER:

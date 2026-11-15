@@ -1,0 +1,33 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_tb10_expired_profile_wait_does_not_disable_other_valid_profiles _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-592/test_tb10_expired_profile_wait0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xeb4c11eee480>, wait_task=<function owner_env.<locals>.wait_task at 0xeb4c11eecfe0>)
+
+    def test_tb10_expired_profile_wait_does_not_disable_other_valid_profiles(owner_env):
+        import time
+        backend=owner_env.new_backend(hold=True)
+        config=synthetic_resources(wait_timeout=.15)
+        a,b=seed_blocked_pair(owner_env,backend,config)
+        config['memory_budgets']['high']=dataclasses.replace(config['memory_budgets']['high'],valid_until=time.monotonic()-1)
+        with configured_client(owner_env,backend,config) as c:
+            try:
+                assert backend.started.wait(1)
+                failed=owner_env.wait_task(c,a,'A',lambda t:t['status']=='failed',timeout=1)
+>               assert failed['blocked_reason']=='resource_wait_expired',failed
+E               AssertionError: {'blocked_reason': 'release_unconfirmed', 'cancel_requested': False, 'created': 1794733629, 'error': 'Image resource wait expired: invalid_budget', ...}
+E               assert 'release_unconfirmed' == 'resource_wait_expired'
+E
+E                 - resource_wait_expired
+E                 + release_unconfirmed
+
+tests/test_tb10_fair_queue.py:442: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_expired_profile_wait_does_not_disable_other_valid_profiles
+1 failed, 27 deselected, 1 warning in 0.48s

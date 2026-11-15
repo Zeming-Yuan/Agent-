@@ -1,0 +1,38 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___ test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-552/test_tb10_blocked_owner_head_d0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf3a446fd9620>, wait_task=<function owner_env.<locals>.wait_task at 0xf3a446fd96c0>)
+
+    def test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        recovered = threading.Event()
+        config = synthetic_resources(wait_timeout=5.)
+        sample = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(sample(tid),
+            available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], peak_increment_bytes=2*1024**3)
+        with configured_client(owner_env, backend, config, run_worker=False) as c:
+            ref = owner_env.upload(c)
+            a1 = owner_env.submit(c, 'A', kind='image_edit', image_ids=[ref], quality='high').json()['id']
+            a2 = owner_env.submit(c, 'A').json()['id']
+            b1 = owner_env.submit(c, 'B').json()['id']
+        with configured_client(owner_env, backend, config) as c:
+            try:
+>               assert backend.started.wait(1), 'eligible B did not start while A head was memory blocked'
+E               AssertionError: eligible B did not start while A head was memory blocked
+E               assert False
+E                +  where False = wait(1)
+E                +    where wait = <threading.Event at 0xf3a446f7a7b0: unset>.wait
+E                +      where <threading.Event at 0xf3a446f7a7b0: unset> = <conftest.ImageBackend object at 0xf3a446f6be60>.started
+
+tests/test_tb10_fair_queue.py:88: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake
+1 failed, 4 deselected, 1 warning in 1.28s

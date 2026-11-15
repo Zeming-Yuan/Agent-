@@ -394,3 +394,15 @@ bash -n deploy/run-image.sh deploy/run-gateway-runtime.sh
 T09最终审查修复：/free迟迟未返回时也在配置wait_timeout到达后明确failed/release_unconfirmed，健康立即降级且新任务503；worker仍持有在途HTTP请求直到其结算，不会因任务已失败而放行下一单。此请求另有原30秒网络边界，不能用它替代用户可见资源等待上限。对不确定请求只做人工受控恢复。
 
 T09取消组合故障：等待/free时取消queued任务后，仍检查该请求最终响应。HTTP失败或断线/结果未知都保持原任务cancelled，但健康降级且拒绝新工作503；不能只等请求返回而忽略失败状态。
+
+# T10 公平轮转（离线实施）
+
+备份/恢复除原任务、素材、归属、请求及 runtime 外，同时保全 image_enqueues 与 image_schedule。前者使用自增入队序，同时间提交也有稳定 FIFO；后者持久保存 last_owner 与唯一 claimed_task。正常清理结束才定向清除该 claim；重启按原 running 失败/queued 保留规则恢复，保留 last_owner，不将队列重新置为全局 FIFO。
+
+资源不足 owner 留在本人队首，worker 通过有间隔的只读采样等待资源变化，不因队列查询或无可执行任务反复 /free 或 /prompt。资源等待沿用现有 runtime 和等待上限，不引入另一个任务状态机。新表仅添加，不重建或删除旧表；没有不可逆迁移。
+
+回退先停接单、保全新增任务/素材/调度旁表，确认在途推理与控制请求结算。多人模式不得静默退回不公平 FIFO；修复前可仅开放单 owner 受控恢复，仍保留 owner 校验与 T07/T09 安全边界。未执行真实发布/备份恢复/物理回滚；离线恢复反例与最终证据见 evidence/issue-11/。
+
+T10 切片审查后的恢复语义：保全 image_schedule.prompt_id 与 claim 的关联；恢复进程先清除遗留占位/关联，不重置 owner 游标。取消或终态显示与执行控制请求的结算分离，仍只计一个占位。资源等待使用原 reducer 的 resource_ready/resource_wait，未占用队首由 worker 生命周期内的只读监视结算；不取消他人正在执行的任务。当前普通运行 prompt 必须与 slot 精确匹配，未知 prompt 仍 fail-closed。
+
+T10 配置失效与服务故障分开：已排队任务的个别 profile 预算/包络过期或缺失时，该任务等待超限失败（invalid_budget 诊断），不影响其他有效 profile 的新建/排程；不能用此例外绕过有效预算。旧模型释放未知、采样失效或孤儿工作仍停止全局准入并要求维护恢复。

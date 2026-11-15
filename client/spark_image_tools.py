@@ -56,6 +56,10 @@ def present_task(task):
     started=task.get('stage_started_at')
     out['stage_wait_seconds']=max(0,int(time.time()-started)) if isinstance(started,(int,float)) else None
     if task.get('stage') != 'generating':out.update(step=None,steps=None)
+    if 'queue_ahead' in task and task['status'] in ('queued','running'):
+        ahead = task['queue_ahead']
+        out['queue_text'] = (f'当前前方 {ahead} 单，排位随资源与队列变化' if type(ahead) is int
+                             else '等待资源，当前无法确定前方单数')
     return out
 
 

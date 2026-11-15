@@ -1,0 +1,46 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-561/test_tb10_unclaimed_wait_deadl0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfd1139d28540>, wait_task=<function owner_env.<locals>.wait_task at 0xfd1139d28f40>)
+
+    def test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid), available_bytes=25*1024**3)
+        a, b = seed_blocked_pair(owner_env, backend, config)
+        with configured_client(owner_env, backend, config) as c:
+            try:
+                assert backend.started.wait(1)
+>               failed = owner_env.wait_task(c, a, 'A', lambda t: t['status'] == 'failed', timeout=1)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb10_fair_queue.py:144:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xfd1139a2c800>
+tid = 'task-96d9fa393955407abdf5a7885a7eb6d2', owner = 'A'
+predicate = <function test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs.<locals>.<lambda> at 0xfd1139a59e40>
+timeout = 1
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-96d9fa393955407abdf5a7885a7eb6d2', 'kind': 'image_edit', 'file_id': 'file-a9153a0763ae42c79ebb56cb3bad93cb', 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'high', 'image_ids': ['file-a9153a0763ae42c79ebb56cb3bad93cb'], 'foreground_file_id': None, 'title': ''}, 'status': 'queued', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794732522, 'updated': 1794732522, 'stage': 'waiting_resources', 'stage_seq': 1, 'stage_started_at': 1794732522.7106164, 'stage_updated_at': 1794732522.7106164, 'blocked_reason': 'system_memory', 'cancel_requested': False, 'step': None, 'steps': None, 'queue_ahead': None, 'queue_reason': 'system_memory'}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs
+1 failed, 6 deselected, 1 warning in 1.31s

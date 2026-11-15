@@ -1,0 +1,23 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_tb10_mcp_explains_dynamic_queue_snapshot_without_eta ___________
+
+    def test_tb10_mcp_explains_dynamic_queue_snapshot_without_eta():
+        from client.spark_image_tools import present_task
+        task = {'id':'task-fixture','kind':'image_generate','status':'queued','stage':'queued',
+                'queue_ahead':2, 'queue_reason':None}
+        shown = present_task(task)
+>       assert shown['queue_text'] == '当前前方 2 单，排位随资源与队列变化'
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'queue_text'
+
+tests/test_tb10_fair_queue.py:49: KeyError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_mcp_explains_dynamic_queue_snapshot_without_eta
+1 failed, 3 deselected, 1 warning in 0.10s

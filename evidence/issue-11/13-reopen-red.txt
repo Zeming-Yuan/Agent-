@@ -1,0 +1,299 @@
+....F.FF.F.                                                              [100%]
+=================================== FAILURES ===================================
+___ test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake ___
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_blocked_owner_head_d0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7fdc7a7b6a0>, wait_task=<function owner_env.<locals>.wait_task at 0xe7fdc7a7b7e0>)
+
+    def test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        recovered = threading.Event()
+        config = synthetic_resources(wait_timeout=5.)
+        sample = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(sample(tid),
+            available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        config['memory_budgets']['generate'] = dataclasses.replace(config['memory_budgets']['generate'], peak_increment_bytes=2*1024**3)
+        with configured_client(owner_env, backend, config, run_worker=False) as c:
+            ref = owner_env.upload(c)
+            a1 = owner_env.submit(c, 'A', kind='image_edit', image_ids=[ref], quality='high').json()['id']
+            a2 = owner_env.submit(c, 'A').json()['id']
+            b1 = owner_env.submit(c, 'B').json()['id']
+>       with configured_client(owner_env, backend, config) as c:
+
+tests/test_tb10_fair_queue.py:86:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+tests/test_tb10_fair_queue.py:67: in configured_client
+    with TestClient(create_app(env.root, env.keys['legacy'], key_registry=env.registry,
+services/gateway.py:69: in create_app
+    store = Store(root, max_pending)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <services.store.Store object at 0xe7fdc7ab7800>
+root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_blocked_owner_head_d0/runtime')
+max_pending = 4
+
+    def __init__(self, root: Path, max_pending=4):
+        self.root = Path(root)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.files = self.root / 'files'
+        self.files.mkdir(mode=0o700, exist_ok=True)
+        self.db = self.root / 'state.sqlite3'
+        self.max_pending = max_pending
+        self.image_resource_view = None
+        with self.connect() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
+                owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
+            CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
+                file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
+            CREATE TABLE IF NOT EXISTS file_tombstones(file_id TEXT PRIMARY KEY, owner TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS task_requests(owner TEXT NOT NULL, request_key TEXT NOT NULL,
+                fingerprint TEXT NOT NULL, task_id TEXT NOT NULL, PRIMARY KEY(owner, request_key));
+            CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
+            CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
+              options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
+              idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
+            ''')
+>           db.executescript('''
+            CREATE TABLE IF NOT EXISTS image_enqueues(enqueue_seq INTEGER PRIMARY KEY AUTOINCREMENT,
+              task_id TEXT NOT NULL UNIQUE);
+            CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              last_owner TEXT, claimed_task TEXT);
+            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_enqueues(task_id)
+              SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
+            ''')
+E           sqlite3.OperationalError: table image_schedule has 4 columns but 3 values were supplied
+
+services/store.py:61: OperationalError
+_____ test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs ______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_unclaimed_wait_deadl0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7fdc7af74c0>, wait_task=<function owner_env.<locals>.wait_task at 0xe7fdc7af7a60>)
+
+    def test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid), available_bytes=25*1024**3)
+        a, b = seed_blocked_pair(owner_env, backend, config)
+>       with configured_client(owner_env, backend, config) as c:
+
+tests/test_tb10_fair_queue.py:141:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+tests/test_tb10_fair_queue.py:67: in configured_client
+    with TestClient(create_app(env.root, env.keys['legacy'], key_registry=env.registry,
+services/gateway.py:69: in create_app
+    store = Store(root, max_pending)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <services.store.Store object at 0xe7fdd5f01760>
+root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_unclaimed_wait_deadl0/runtime')
+max_pending = 4
+
+    def __init__(self, root: Path, max_pending=4):
+        self.root = Path(root)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.files = self.root / 'files'
+        self.files.mkdir(mode=0o700, exist_ok=True)
+        self.db = self.root / 'state.sqlite3'
+        self.max_pending = max_pending
+        self.image_resource_view = None
+        with self.connect() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
+                owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
+            CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
+                file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
+            CREATE TABLE IF NOT EXISTS file_tombstones(file_id TEXT PRIMARY KEY, owner TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS task_requests(owner TEXT NOT NULL, request_key TEXT NOT NULL,
+                fingerprint TEXT NOT NULL, task_id TEXT NOT NULL, PRIMARY KEY(owner, request_key));
+            CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
+            CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
+              options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
+              idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
+            ''')
+>           db.executescript('''
+            CREATE TABLE IF NOT EXISTS image_enqueues(enqueue_seq INTEGER PRIMARY KEY AUTOINCREMENT,
+              task_id TEXT NOT NULL UNIQUE);
+            CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              last_owner TEXT, claimed_task TEXT);
+            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_enqueues(task_id)
+              SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
+            ''')
+E           sqlite3.OperationalError: table image_schedule has 4 columns but 3 values were supplied
+
+services/store.py:61: OperationalError
+______ test_tb10_recovered_head_waits_for_occupied_turn_without_expiring _______
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_recovered_head_waits0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7fdd5f7ea20>, wait_task=<function owner_env.<locals>.wait_task at 0xe7fdd5fd2f20>)
+
+    def test_tb10_recovered_head_waits_for_occupied_turn_without_expiring(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        recovered = threading.Event()
+        original = config['resource_sampler']
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid), available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        a, b = seed_blocked_pair(owner_env, backend, config)
+>       with configured_client(owner_env, backend, config) as c:
+
+tests/test_tb10_fair_queue.py:157:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+tests/test_tb10_fair_queue.py:67: in configured_client
+    with TestClient(create_app(env.root, env.keys['legacy'], key_registry=env.registry,
+services/gateway.py:69: in create_app
+    store = Store(root, max_pending)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <services.store.Store object at 0xe7fdc7a940b0>
+root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_recovered_head_waits0/runtime')
+max_pending = 4
+
+    def __init__(self, root: Path, max_pending=4):
+        self.root = Path(root)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.files = self.root / 'files'
+        self.files.mkdir(mode=0o700, exist_ok=True)
+        self.db = self.root / 'state.sqlite3'
+        self.max_pending = max_pending
+        self.image_resource_view = None
+        with self.connect() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
+                owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
+            CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
+                file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
+            CREATE TABLE IF NOT EXISTS file_tombstones(file_id TEXT PRIMARY KEY, owner TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS task_requests(owner TEXT NOT NULL, request_key TEXT NOT NULL,
+                fingerprint TEXT NOT NULL, task_id TEXT NOT NULL, PRIMARY KEY(owner, request_key));
+            CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
+            CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
+              options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
+              idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
+            ''')
+>           db.executescript('''
+            CREATE TABLE IF NOT EXISTS image_enqueues(enqueue_seq INTEGER PRIMARY KEY AUTOINCREMENT,
+              task_id TEXT NOT NULL UNIQUE);
+            CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              last_owner TEXT, claimed_task TEXT);
+            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_enqueues(task_id)
+              SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
+            ''')
+E           sqlite3.OperationalError: table image_schedule has 4 columns but 3 values were supplied
+
+services/store.py:61: OperationalError
+____ test_tb10_proven_release_with_low_memory_yields_without_repeated_free _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_proven_release_with_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe7fdc7af6f20>, wait_task=<function owner_env.<locals>.wait_task at 0xe7fdc7af7060>)
+
+    def test_tb10_proven_release_with_low_memory_yields_without_repeated_free(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        config['resource_settings']['wait_timeout'] = 3.
+        freed = threading.Event(); recovered = threading.Event()
+        original = config['resource_sampler']; calls = []
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            resident_profiles=frozenset() if freed.is_set() else frozenset({'high'}),
+            available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        async def external(request):
+            if request.url.path == '/free':calls.append('free');freed.set()
+            return await backend(request)
+        # Retain the event stream while wrapping the external HTTP boundary.
+        external.event_stream = backend.event_stream
+        a, b = seed_blocked_pair(owner_env, external, config)
+>       with configured_client(owner_env, external, config) as c:
+
+tests/test_tb10_fair_queue.py:200:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+/usr/lib/python3.12/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+tests/test_tb10_fair_queue.py:67: in configured_client
+    with TestClient(create_app(env.root, env.keys['legacy'], key_registry=env.registry,
+services/gateway.py:69: in create_app
+    store = Store(root, max_pending)
+            ^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <services.store.Store object at 0xe7fdc79ff3b0>
+root = PosixPath('/tmp/pytest-of-clusteradmin/pytest-574/test_tb10_proven_release_with_0/runtime')
+max_pending = 4
+
+    def __init__(self, root: Path, max_pending=4):
+        self.root = Path(root)
+        self.root.mkdir(mode=0o700, parents=True, exist_ok=True)
+        self.files = self.root / 'files'
+        self.files.mkdir(mode=0o700, exist_ok=True)
+        self.db = self.root / 'state.sqlite3'
+        self.max_pending = max_pending
+        self.image_resource_view = None
+        with self.connect() as db:
+            db.executescript('''
+            CREATE TABLE IF NOT EXISTS object_owners(kind TEXT NOT NULL, object_id TEXT NOT NULL,
+                owner TEXT NOT NULL, PRIMARY KEY(kind, object_id));
+            CREATE TABLE IF NOT EXISTS file_digests(owner TEXT NOT NULL, digest TEXT NOT NULL,
+                file_id TEXT UNIQUE NOT NULL, PRIMARY KEY(owner, digest));
+            CREATE TABLE IF NOT EXISTS file_tombstones(file_id TEXT PRIMARY KEY, owner TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS task_requests(owner TEXT NOT NULL, request_key TEXT NOT NULL,
+                fingerprint TEXT NOT NULL, task_id TEXT NOT NULL, PRIMARY KEY(owner, request_key));
+            CREATE TABLE IF NOT EXISTS files(id TEXT PRIMARY KEY, name TEXT, bytes INTEGER, created INTEGER);
+            CREATE TABLE IF NOT EXISTS tasks(id TEXT PRIMARY KEY, kind TEXT, file_id TEXT,
+              options TEXT, status TEXT, progress REAL, result TEXT, error TEXT,
+              idem TEXT, fingerprint TEXT, created INTEGER, updated INTEGER);
+            CREATE TABLE IF NOT EXISTS task_runtime(task_id TEXT PRIMARY KEY, stage TEXT NOT NULL,
+              stage_seq INTEGER NOT NULL, stage_started_at REAL NOT NULL, stage_updated_at REAL NOT NULL,
+              blocked_reason TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0);
+            INSERT OR IGNORE INTO task_runtime(task_id,stage,stage_seq,stage_started_at,stage_updated_at,blocked_reason,cancel_requested)
+              SELECT id,status,0,updated,updated,NULL,0 FROM tasks;
+            ''')
+>           db.executescript('''
+            CREATE TABLE IF NOT EXISTS image_enqueues(enqueue_seq INTEGER PRIMARY KEY AUTOINCREMENT,
+              task_id TEXT NOT NULL UNIQUE);
+            CREATE TABLE IF NOT EXISTS image_schedule(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+              last_owner TEXT, claimed_task TEXT);
+            INSERT OR IGNORE INTO image_schedule VALUES(1,NULL,NULL);
+            INSERT OR IGNORE INTO image_enqueues(task_id)
+              SELECT id FROM tasks WHERE kind IN ('image_generate','image_edit') ORDER BY created,rowid;
+            ''')
+E           sqlite3.OperationalError: table image_schedule has 4 columns but 3 values were supplied
+
+services/store.py:61: OperationalError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_blocked_owner_head_does_not_block_others_or_allow_own_overtake
+FAILED tests/test_tb10_fair_queue.py::test_tb10_unclaimed_wait_deadline_is_visible_while_other_owner_runs
+FAILED tests/test_tb10_fair_queue.py::test_tb10_recovered_head_waits_for_occupied_turn_without_expiring
+FAILED tests/test_tb10_fair_queue.py::test_tb10_proven_release_with_low_memory_yields_without_repeated_free
+4 failed, 7 passed, 1 warning in 4.76s

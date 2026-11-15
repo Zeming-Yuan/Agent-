@@ -1,0 +1,13 @@
+........................................................................ [ 62%]
+...........................................                              [100%]
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+tests/test_tb10_fair_queue.py::test_tb10_real_stdio_tls_exposes_dynamic_counts_and_downloads_same_result
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/httpx/_config.py:51: DeprecationWarning: `verify=<str>` is deprecated. Use `verify=ssl.create_default_context(cafile=...)` or `verify=ssl.create_default_context(capath=...)` instead.
+    warnings.warn(message, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+115 passed, 359 deselected, 2 warnings in 25.79s

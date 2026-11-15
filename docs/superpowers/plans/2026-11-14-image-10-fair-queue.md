@@ -12,7 +12,7 @@
 
 **Ticket:** T10；Blocked by：T09。需要 T09 明确可执行/资源等待与控制权释放语义；共享调度状态串行整合。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 2026-11-15 按用户确认离线执行单票；原产品非 Git，受控源码 checkout 为 /home/clusteradmin/.codex/workspaces/agent-mm-issue-8-20261115，分支 feat/issue-11-fair-queue，固定基线 5e64eb080341a28b35e912e52e8273e16e2fbcd2。切片 A 为 471acb1，95 项受影响验证；切片 B 包含审查发现的 RED/GREEN 修复、重启/取消/并发/满载/资源等待及真实 stdio+本地 TLS 测试。完整证据、实际命令与验收映射见 evidence/issue-11/acceptance.md；最终独立复审与选择性交付结果在该文件持续记录。#10 OPEN、实机与双端 Harness 未验收。下文未实施/预期描述保留为原计划历史，不作为实测结论。
 
 ## Global Constraints
 
@@ -260,3 +260,10 @@ git commit -m "test(image): t10 boundaries and recovery"
 - [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+
+
+## 2026-11-15 执行差异
+
+为保持 T07/T09 语义，claim 与游标原子提交，而 running/loading 仍仅在释放与资源证据通过后设置。新表只添加，不重建 tasks。资源等待复用现有 reducer；worker 生命周期内的只读监视结算未占用队首的等待上限，resource_ready 清除已恢复条件的等待时钟。必要释放不能被释放前容量阻止；已证明空闲但容量不足则保留 queued 并让出轮次。排位与 claim 共用轮转/队首规则，已知本次占用 prompt 精确关联，未知/孤儿仍保守。审查发现均写失败用例后最小修复。只运行修改相关检查，不运行完整门禁，依据用户明确范围。原目录不初始化 Git；受控源码独立提交后按预像校验选择性回送，并保全私有回退副本。
+
+离线交付最终代码05f8ddc，Standards0/Spec0；28项专项、17个受影响文件393项通过，原产品目录同一393项复验通过。原目录保持非Git，预像保全、最终哈希与逐条验收见 evidence/issue-11/acceptance.md、sync-manifest.json。#11仍OPEN等待实机/双端验收，#10及父#1不改；未运行完整项目门禁。

@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+____ test_tb10_proven_release_with_low_memory_yields_without_repeated_free _____
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-567/test_tb10_proven_release_with_0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf9689e329940>, wait_task=<function owner_env.<locals>.wait_task at 0xf9689e3299e0>)
+
+    def test_tb10_proven_release_with_low_memory_yields_without_repeated_free(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        config = blocked_config()
+        config['resource_settings']['wait_timeout'] = 3.
+        freed = threading.Event(); recovered = threading.Event()
+        original = config['resource_sampler']; calls = []
+        config['resource_sampler'] = lambda tid: dataclasses.replace(original(tid),
+            resident_profiles=frozenset() if freed.is_set() else frozenset({'high'}),
+            available_bytes=(60 if recovered.is_set() else 25)*1024**3)
+        async def external(request):
+            if request.url.path == '/free':calls.append('free');freed.set()
+            return await backend(request)
+        # Retain the event stream while wrapping the external HTTP boundary.
+        external.event_stream = backend.event_stream
+        a, b = seed_blocked_pair(owner_env, external, config)
+        with configured_client(owner_env, external, config) as c:
+            try:
+>               assert backend.started.wait(1), 'released but memory-blocked A held B control turn'
+E               AssertionError: released but memory-blocked A held B control turn
+E               assert False
+E                +  where False = wait(1)
+E                +    where wait = <threading.Event at 0xf9689e30b6b0: unset>.wait
+E                +      where <threading.Event at 0xf9689e30b6b0: unset> = <conftest.ImageBackend object at 0xf9689e3094f0>.started
+
+tests/test_tb10_fair_queue.py:202: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_proven_release_with_low_memory_yields_without_repeated_free
+1 failed, 9 deselected, 1 warning in 1.25s

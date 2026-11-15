@@ -1,0 +1,32 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+_________ test_tb10_http_worker_serves_other_owner_before_second_task __________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-548/test_tb10_http_worker_serves_o0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xfe90a4efa8e0>, wait_task=<function owner_env.<locals>.wait_task at 0xfe90a4efa980>)
+
+    def test_tb10_http_worker_serves_other_owner_before_second_task(owner_env):
+        backend = owner_env.new_backend(hold=True)
+        with owner_env.client(backend=backend, run_worker=True) as c:
+            a1 = owner_env.submit(c, 'A', request_key='a1').json()['id']
+            assert backend.started.wait(2)
+            a2 = owner_env.submit(c, 'A', request_key='a2').json()['id']
+            b1 = owner_env.submit(c, 'B', request_key='b1').json()['id']
+            backend.finish.set()
+            owner_env.wait_task(c, a2, 'A', lambda t: t['status'] == 'completed')
+            owner_env.wait_task(c, b1, 'B', lambda t: t['status'] == 'completed')
+>           assert [job['client_id'] for job in backend.jobs] == [a1, b1, a2]
+E           AssertionError: assert ['task-b7ec4e...8b797a989f83'] == ['task-b7ec4e...0105279447bc']
+E
+E             At index 1 diff: 'task-4a2b146c8f5743f1a3940105279447bc' != 'task-997a25bc901d4c0ab1e78b797a989f83'
+E             Use -v to get more diff
+
+tests/test_tb10_fair_queue.py:21: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb10_fair_queue.py::test_tb10_http_worker_serves_other_owner_before_second_task
+1 failed, 1 passed, 1 warning in 1.08s
