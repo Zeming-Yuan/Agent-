@@ -1,0 +1,17 @@
+[Unit]
+Description=Dual Spark authenticated capability gateway
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/clusteradmin/Desktop/Agent多模态服务
+Environment=MAIN_TOKEN_FILE=/home/clusteradmin/Desktop/Agent多模态服务/.private/main-api.key
+ExecStartPre=-/usr/bin/docker rm agent-mm-gateway-runtime
+ExecStart=/home/clusteradmin/Desktop/Agent多模态服务/deploy/run-gateway-runtime.sh
+ExecStop=-/usr/bin/docker stop -t 20 agent-mm-gateway-runtime
+Restart=on-failure
+RestartSec=5
+UMask=0077
+MemoryMax=2G
+
+[Install]
+WantedBy=default.target

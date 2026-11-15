@@ -1,0 +1,17 @@
+[Unit]
+Description=Private CA HTTPS endpoint for Spark Agent gateway
+After=agent-mm-gateway.service
+Wants=agent-mm-gateway.service
+
+[Service]
+WorkingDirectory=/home/clusteradmin/Desktop/Agent多模态服务
+Environment=XDG_DATA_HOME=/home/clusteradmin/Desktop/Agent多模态服务/.private/data
+Environment=XDG_CONFIG_HOME=/home/clusteradmin/Desktop/Agent多模态服务/.private/config
+ExecStart=/home/clusteradmin/.local/bin/caddy run --config /home/clusteradmin/Desktop/Agent多模态服务/deploy/gateway.Caddyfile --adapter caddyfile
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

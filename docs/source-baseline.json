@@ -1,0 +1,14 @@
+{
+  "services/gateway.py": "ab2564c68992aea9bdd342eb58759c210d0f31b0fec6ba23c1801189f34d650a",
+  "services/store.py": "1b2e396554b76b39d2aadff523e56584468eeb20c44b416f8e77758354ac3b43",
+  "services/images.py": "43f36af162502c456f2250383fe7e4a1c2eeb0176fba4075a22d73113ebd176e",
+  "services/image_routes.py": "2294f8292c8741b94c9e7d761074efff67b972cd9e1d91957e64d5156dd41240",
+  "services/image_options.py": "0cbd02cc0416a5b45249e3f6c3730ec7d771e933dba7774450efd0b949c57fb7",
+  "services/media.py": "20e5581ac4081d1d46cb1f740c10b2cd21d9bde02c75e9f3e2b3c5225f7057c6",
+  "client/spark_image_tools.py": "c04c50f6937d75238dcae27ac77aefd36845d2fcea1878217fe28a75ad333f5f",
+  "scripts/benchmark_images.py": "1ebc23416b55d7c24d71be2efc4e4d26d0398b3f44280995f3cf0a8e91568cbd",
+  "scripts/build_image_client_bundle.py": "bc6a5bf24102ca298ec128266aec42127e0e953f0faf36c0f73ca39d871f3485",
+  "deploy/start-comfy.py": "ef751e1b508bfcf2b53aae3a0dbb67f3a63d5cfa85c18d2357427317ebb2bb61",
+  "client/mac/install-mac.command": "c9089d1caf36d45d53c5d1ce5a8c04ac3eb0f4d89304585927100e2cf19b84f8",
+  "client/mac/README.md": "b26086471187acd6f3fd420bcf1a78938d20b92b1adf0bb57ee1e329febb64a1"
+}

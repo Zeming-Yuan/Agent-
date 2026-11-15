@@ -1,0 +1,18 @@
+[Unit]
+Description=Agent Z-Image and Qwen Image Edit private GPU worker
+After=network-online.target
+StartLimitIntervalSec=600
+StartLimitBurst=3
+
+[Service]
+WorkingDirectory=/home/clusteradmin/Desktop/Agent多模态服务
+ExecStartPre=-/usr/bin/docker rm agent-mm-image
+ExecStart=/home/clusteradmin/Desktop/Agent多模态服务/deploy/run-image.sh
+ExecStop=-/usr/bin/docker stop -t 30 agent-mm-image
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=45
+UMask=0077
+
+[Install]
+WantedBy=default.target

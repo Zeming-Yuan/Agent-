@@ -1,0 +1,11 @@
+[Unit]
+Description=Encrypted Spark01 model loopback tunnel
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -L 127.0.0.1:18010:127.0.0.1:18010 spark01
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

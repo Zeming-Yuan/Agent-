@@ -1,0 +1,20 @@
+[Unit]
+Description=Agent multimodal Qwen3.6 main GPU backend
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
+
+[Service]
+WorkingDirectory=/home/spark01/agent-multimodal-service
+Environment=MAIN_CONTEXT=200000
+Environment=MAIN_KV_CACHE_BYTES=6442450944
+ExecStartPre=-/usr/bin/docker rm agent-mm-main
+ExecStart=/home/spark01/agent-multimodal-service/deploy/run-main.sh
+ExecStop=-/usr/bin/docker stop -t 20 agent-mm-main
+Restart=on-failure
+RestartSec=30
+TimeoutStopSec=30
+UMask=0077
+
+[Install]
+WantedBy=default.target
