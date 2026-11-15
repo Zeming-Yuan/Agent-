@@ -136,3 +136,5 @@ python scripts/build_image_client_bundle.py --config /private/person/image.json 
 包结构固定为 SparkImageTools/，根 spark_image_tools.py 转入 client/ 中同一公共桥接实现，包含 client/request_journal.py。T12/T13只提供平台安装/config资源，不复制协议或并行修改公共文件。本票在Linux真实stdio+临时TLS+真实HTTP鉴权/Store/worker上验收；外部推理替身，未代替实际双端Harness/真实后端验收。逐AC、RED/GREEN和限制见 evidence/issue-7/acceptance.md。
 
 T06 B审查修复：平台资源名称必须是规范相对POSIX路径，拒绝 ./、重复分隔符、Windows盘符与大小写形式的client公共目录覆盖；防止ZIP解压归一化后替换公共入口。b-review-path-red/green记录复现及验证。
+
+T06 Windows路径保护补充：拒绝路径分量末尾点/空格、Windows保留设备名、非法字符与控制字符，并拒绝已有包文件作为目录前缀。避免解压器替换非法字符、截断NUL或大小写处理后覆盖公共入口/日志模块；实际Windows系统验收仍未运行。

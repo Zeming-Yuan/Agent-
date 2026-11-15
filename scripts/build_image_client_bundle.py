@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import ssl
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -41,7 +42,10 @@ def build_bundle(config_path: Path, platform_assets: dict[str,Path], output_path
         # Only explicitly selected platform code/docs. Never sweep a runtime directory.
         if (str(path)!=name or path.is_absolute() or '..' in path.parts or '\\' in name or ':' in name or not path.parts
                 or any(p.startswith('.') for p in path.parts) or path.parts[0].casefold()=='client'
-                or name.casefold() in {p.casefold() for p in files}
+                or any(p.endswith(('.', ' ')) or re.search(r'[<>:"|?*\x00-\x1f\x7f]',p)
+                       or re.fullmatch(r'(?i:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?',p) for p in path.parts)
+                or any(name.casefold()==p.casefold() or name.casefold().startswith(p.casefold()+'/')
+                       or p.casefold().startswith(name.casefold()+'/') for p in files)
                 or path.suffix.lower() not in {'.md','.command','.ps1','.py'}
                 or source.suffix.lower()!=path.suffix.lower()
                 or source.is_symlink() or not source.is_file()):

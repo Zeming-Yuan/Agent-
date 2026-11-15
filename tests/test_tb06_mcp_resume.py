@@ -299,7 +299,12 @@ def test_tb06_bundle_rejects_runtime_and_credential_assets(tmp_path):
         assert not target.exists()
 
 
-@pytest.mark.parametrize('name',['./spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py'])
+@pytest.mark.parametrize('name',[
+    './spark_image_tools.py','./client/request_journal.py','Client/extra.py','docs//helper.py','C:/helper.py',
+    'client./request_journal.py','Client /request_journal.py','spark?image?tools.py',
+    'spark<image>tools.py','spark_image_tools.py\x00extra.py','docs\x01/helper.py','CON.py',
+    'spark_image_tools.py/helper.py','api_key/helper.py',
+])
 def test_tb06_bundle_cannot_replace_public_modules_through_path_aliases(tmp_path,name):
     from scripts.build_image_client_bundle import build_bundle
     key=tmp_path/'key';key.write_text('test-personal-credential')

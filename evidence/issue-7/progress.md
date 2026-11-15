@@ -18,3 +18,5 @@ Task2: independent real stdio/TLS acceptance kills actual MCP child after HTTP a
 Task2: b-collect26selected; b-affected-before-review61passed/1existing dependency warning. Type/lint/build/CI N/A; only affected tests per user. Review B pending.
 
 B initial independent review: Standards1P2/Spec1P2, same noncanonical ZIP asset-name bypass, both reproduced extraction overriding public wrapper at immutable4b6af14. Regression4RED/1existing guard pass -> canonical-path/casefold/drive guard GREEN7bundlechecks. Full affected rerun and fixed-snapshot re-review pending.
+
+B re-review atde970c0: bothaxes found1P2 residual Windows trailing-dot/space alias. Added7RED cases (trailingdot/space,illegalchar substitution,NUL/control,device names), fixed component validation ->14bundlechecks passed. Added2prefix REDs for public files used as directories ->16bundlechecks passed. Deterministic Windows path normalization evidence does not claim actual Windows extraction. User fix/re-review requirement takes precedence over executing-plans no-repeat review default. Final affected rerun pending.
