@@ -38,3 +38,7 @@ Selective original-product delivery must compare each destination to the pre-wor
 ## Fixed pre-review verification
 
 Explicit affected-file selection:275passed/one existing dependency warning (b-final-affected.txt), source hashes unchanged. T07 collection26 selected at this snapshot (b-collect.txt); actual stdio includesone T07 test and one retained T06 subprocess regression. 19-active-node-green runs prescribed affected selection after the final event fix. Counts are evidence for their recorded source snapshots, not a claim about later review repairs.
+
+## Slice B initial review and repair
+
+Fixed1c566b6 review: Standards1 P1 (failed unreturned-result unlink did not halt admission); Spec1 P2 (pending /free HTTP request not settled before cancellation). Both repaired with independent failing reproductions and affected31passed (b-review-repair-affected.txt). Reclaim failures now always become cleanup_unconfirmed, including cancellation-during-save and successful-return race. /free uses existing settled_post; response loss halts admission using the existing uncertainty policy. It still does not prove model release. Independent re-review pending next fixed commit.

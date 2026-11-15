@@ -303,3 +303,5 @@ submission_unknown或cleanup_unconfirmed时worker退出，health和新图片工�
 保存使用同目录私有.pending临时文件：慢写/fsync在线程、写库前结算，目录与元数据提交后才成功。取消等待该写入完成，清理未交付结果后才终态。进程崩溃可能留下未登记的.pending或尚未提交的最终文件；先停全部写入者并保全DB/files，离线核对后人工清理，不能在线按文件名删除。
 
 回退保留旁表和新增数据，只能使用仍保护owner、终态与清理且显式列写入task_runtime的版本；不得回退到切片A七列VALUES或旧提前cancelled版本。可先停新增事件/展示而保留最终生命周期规则，无需DROP旁表。生产发布、恢复演练、Windows/macOS Harness与真实模型未验证。验证命令、逐AC证据和审查见evidence/issue-8/acceptance.md；仅受影响门禁，未跑全套。
+
+T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。

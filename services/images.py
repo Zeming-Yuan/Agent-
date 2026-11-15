@@ -154,6 +154,16 @@ def cleanup_scratch(store,tid=None,names=()):
             if Path(name).name==name:(inputs/name).unlink(missing_ok=True)
 
 
+def reclaim_result(store, fid, *, owner):
+    """Failure to reclaim an owned, undelivered result is uncertain cleanup."""
+    try:
+        store.delete_file(fid,owner=owner)
+    except Exception as exc:
+        if isinstance(exc,HTTPException) and exc.status_code==404:
+            return
+        raise CleanupUncertain('Image result reclamation unconfirmed; operator recovery required') from exc
+
+
 async def process_image(item,store,client,url,*,unload_models=True,event_stream_factory=None):
     opts=item['options'];tid=item['id'];pid=None;names=[];watcher=None;saved_fid=None;result_ready=False;backend_failed=False
     streams=contextlib.AsyncExitStack()
@@ -170,7 +180,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
             if Path(name).name!=name or folder:raise RuntimeError('Invalid image backend upload path')
             names[-1]=name
         if unload_models:
-            r=await client.post(url+'/free',json={'unload_models':True,'free_memory':True});r.raise_for_status()
+            r=await settled_post(client,url+'/free',json={'unload_models':True,'free_memory':True});r.raise_for_status()
         store.event(tid,{'type':'stage','stage':'loading'})
         # ComfyUI requires a canonical UUID. Hold it before sending any bytes.
         pid=str(uuid.uuid4())
@@ -227,9 +237,7 @@ async def process_image(item,store,client,url,*,unload_models=True,event_stream_
     finally:
         def discard_result():
             if saved_fid:
-                try:store.delete_file(saved_fid,owner=owner)
-                except HTTPException as exc:
-                    if exc.status_code != 404:raise
+                reclaim_result(store,saved_fid,owner=owner)
         async def cleanup():
             try:
                 if watcher:
@@ -281,7 +289,7 @@ async def image_worker(store,client,url,active,*,event_stream_factory=None):
             result=await job
             task=store.worker_task(tid)
             if task['cancel_requested']:
-                store.delete_file(result['file_id'],owner=store.worker_task(tid)['owner'])
+                reclaim_result(store,result['file_id'],owner=task['owner'])
                 store.transition(tid,status='cancelled',stage='cancelled',expected_seq=task['stage_seq'])
             else:
                 store.transition(tid,status='completed',stage='completed',expected_seq=task['stage_seq'],result=result)

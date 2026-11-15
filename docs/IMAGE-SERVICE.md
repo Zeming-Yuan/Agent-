@@ -154,3 +154,5 @@ status 保留 queued/running/completed/failed/cancelled。stage、stage_seq、st
 /free阶段仅表示释放请求处理，不能证明模型已释放。实际安全释放与内存准入仍归T08/T09；本票没有改变20GiB保护、四单/2GiB上限或个人配额。运行取消先cancelling，定向停止、history/scratch及未交付输出清理结束后才cancelled；慢fsync不阻塞查询，取消等待写线程结算，不提前选择下一单。输出数据和目录fsync、SQLite owner元数据提交后才completed，可鉴权读取。保存失败是failed，停止/清理不明是failed并停worker、新工作503，已有查询/结果/幂等重放仍可用。错误原因submission_unknown、cleanup_unconfirmed、backend_execution_error不含后端原始业务payload。
 
 完整证据和未验证边界见evidence/issue-8/acceptance.md；实际双端Harness、真实后端及生产发布仍未验证。
+
+T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，停止worker/新准入，保留现存文件供停写维护；不能按普通失败继续下一单。取消期间已发出的/free HTTP控制请求必须先结算，结果未知则停止准入。此确认仅为请求结算，不是T08/T09的模型释放证明。

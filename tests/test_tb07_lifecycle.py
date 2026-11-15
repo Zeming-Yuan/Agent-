@@ -525,3 +525,76 @@ def test_tb07_cas_rejects_stale_writer_and_preserves_phase_start(owner_env):
         assert store.event(tid,{'type':'progress','step':True,'steps':8}) == stepped
         assert store.event(tid,{'type':'progress','step':2,'steps':40}) == stepped
         assert store.event(tid,{'type':'progress','step':1,'steps':8}) == stepped
+
+
+def test_tb07_result_reclamation_failure_halts_worker(owner_env, monkeypatch):
+    import os
+    import threading
+    from pathlib import Path
+    backend = owner_env.new_backend()
+    entered = threading.Event(); release = threading.Event(); saved = []
+    fsync, unlink = os.fsync, Path.unlink
+    fault = [True]
+    def gate(fd):
+        path = Path('/proc/self/fd/' + str(fd)).resolve()
+        if path.parent == owner_env.root/'files' and not saved:
+            saved.append(path); entered.set(); assert release.wait(3)
+        return fsync(fd)
+    def deny_reclamation(path, *args, **kwargs):
+        if fault[0] and path.parent == owner_env.root/'files' and path.name.startswith('file-'):
+            raise PermissionError('synthetic result reclamation failure')
+        return unlink(path, *args, **kwargs)
+    monkeypatch.setattr(os, 'fsync', gate)
+    monkeypatch.setattr(Path, 'unlink', deny_reclamation)
+    with owner_env.client(backend=backend, run_worker=True) as c:
+        tid = owner_env.submit(c).json()['id']; assert entered.wait(2)
+        try:
+            c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+            second = owner_env.submit(c, 'B').json()['id']
+        finally:
+            release.set()
+        try:
+            failed = owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'failed')
+            assert failed['blocked_reason'] == 'cleanup_unconfirmed'
+            assert c.get('/health', headers=owner_env.auth('A')).status_code == 503
+            assert owner_env.submit(c).status_code == 503
+            assert c.get('/v1/tasks/' + second, headers=owner_env.auth('B')).json()['status'] == 'queued'
+            assert len(backend.jobs) == 1
+        finally:
+            fault[0] = False  # let pre-fix teardown finish after the failing assertion
+
+
+def test_tb07_cancel_waits_for_accepted_free_request(owner_env):
+    import asyncio
+    import threading
+    import httpx
+    backend = owner_env.new_backend()
+    started = threading.Event(); release = threading.Event(); settled = threading.Event()
+    overlapped = threading.Event(); calls = 0
+    async def unload_request():
+        assert await asyncio.to_thread(release.wait, 5)
+        settled.set()
+    async def external(request):
+        nonlocal calls
+        if request.url.path == '/free':
+            calls += 1
+            if calls == 1:
+                operation = asyncio.create_task(unload_request())
+                started.set()
+                await asyncio.shield(operation)  # server operation survives client cancellation
+            return httpx.Response(200, json={})
+        if request.url.path == '/prompt' and not settled.is_set(): overlapped.set()
+        return await backend(request)
+    with owner_env.client(backend=external, run_worker=True) as c:
+        try:
+            tid = owner_env.submit(c).json()['id']; assert started.wait(2)
+            c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+            second = owner_env.submit(c, 'B').json()['id']
+            assert not overlapped.wait(.5), 'next prompt preceded pending /free response'
+            assert c.get('/v1/tasks/' + tid, headers=owner_env.auth('A')).json()['stage'] == 'cancelling'
+            assert c.get('/v1/tasks/' + second, headers=owner_env.auth('B')).json()['status'] == 'queued'
+        finally:
+            release.set()
+        owner_env.wait_task(c, tid, 'A', lambda t: t['status'] == 'cancelled')
+        owner_env.wait_task(c, second, 'B', lambda t: t['status'] == 'completed')
+        assert settled.is_set() and not overlapped.is_set()

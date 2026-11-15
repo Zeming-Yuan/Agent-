@@ -1,0 +1,48 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______________ test_tb07_cancel_waits_for_accepted_free_request _______________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-403/test_tb07_cancel_waits_for_acc0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xf64c151b9a80>, wait_task=<function owner_env.<locals>.wait_task at 0xf64c151b9bc0>)
+
+    def test_tb07_cancel_waits_for_accepted_free_request(owner_env):
+        import asyncio
+        import threading
+        import httpx
+        backend = owner_env.new_backend()
+        started = threading.Event(); release = threading.Event(); settled = threading.Event()
+        overlapped = threading.Event(); calls = 0
+        async def unload_request():
+            assert await asyncio.to_thread(release.wait, 5)
+            settled.set()
+        async def external(request):
+            nonlocal calls
+            if request.url.path == '/free':
+                calls += 1
+                if calls == 1:
+                    operation = asyncio.create_task(unload_request())
+                    started.set()
+                    await asyncio.shield(operation)  # server operation survives client cancellation
+                return httpx.Response(200, json={})
+            if request.url.path == '/prompt' and not settled.is_set(): overlapped.set()
+            return await backend(request)
+        with owner_env.client(backend=external, run_worker=True) as c:
+            try:
+                tid = owner_env.submit(c).json()['id']; assert started.wait(2)
+                c.post('/v1/tasks/' + tid + '/cancel', headers=owner_env.auth('A'))
+                second = owner_env.submit(c, 'B').json()['id']
+>               assert not overlapped.wait(.5), 'next prompt preceded pending /free response'
+E               AssertionError: next prompt preceded pending /free response
+E               assert not True
+E                +  where True = wait(0.5)
+E                +    where wait = <threading.Event at 0xf64c14e122a0: set>.wait
+
+tests/test_tb07_lifecycle.py:589: AssertionError
+=============================== warnings summary ===============================
+../../../Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb07_lifecycle.py::test_tb07_cancel_waits_for_accepted_free_request
+1 failed, 26 deselected, 1 warning in 0.67s
