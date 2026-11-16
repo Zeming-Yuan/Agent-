@@ -130,7 +130,7 @@ T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，
 公共构建API：`build_bundle(config_path:Path, platform_assets:dict[str,Path], output_path:Path)->Path`，模块 scripts.build_image_client_bundle。平台资源是显式名称到文件的映射，仅接收同扩展名的 .md/.command/.ps1/.py；不扫描目录、不接收运行库/Key/私有目录/覆盖公共模块。保留公共 requirements.txt、配置、模块与根入口。新输出必须不存在，包文件0600。个人配置必须显式提供 base_url/api_key_file/ca_file，可选output_dir；包内只放该Key、CA及所选资源，日志不打包。示例（路径均为执行时私有输入）：
 
 ```bash
-python scripts/build_image_client_bundle.py --config /private/person/image.json --output /private/delivery/person-mac.zip --asset README.md=client/mac/README.md --asset install-mac.command=client/mac/install-mac.command
+python scripts/build_image_client_bundle.py --config /private/person/image.json --output /private/delivery/person-mac.zip --asset README.md=client/mac/README.md --asset configure.py=client/mac/configure.py --asset install-mac.command=client/mac/install-mac.command
 ```
 
 包结构固定为 SparkImageTools/，根 spark_image_tools.py 转入 client/ 中同一公共桥接实现，包含 client/request_journal.py。T12/T13只提供平台安装/config资源，不复制协议或并行修改公共文件。本票在Linux真实stdio+临时TLS+真实HTTP鉴权/Store/worker上验收；外部推理替身，未代替实际双端Harness/真实后端验收。逐AC、RED/GREEN和限制见 evidence/issue-7/acceptance.md。
@@ -170,3 +170,11 @@ T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，�
 T10 审查修复：已知旧 profile 驻留占用余量时，先允许一次受控释放，不能用释放前余量阻止必要卸载。若释放已由 T09 连续关联证据确认、容量仍不足，原任务保留 queued 并让出轮次；在内存恢复前只读等待，不反复 /free。其他 owner 推理时仍独立检查未占用队首的资源等待期限；资源恢复即回到排队，不把等待别人完成的时间当资源超时。本人后续任务会继承阻塞队首原因。快照仅识别与当前执行 claim 精确关联的运行 prompt，孤儿/未知 prompt 不会被忽略。
 
 若已排队任务的 profile 预算/包络后来失效，该任务在资源等待上限后失败，诊断保留 invalid_budget；其他 profile 的有效任务继续轮转。未知/失效的后端观测仍按 T09 停止全局准入，不把 profile 配置失败当作旧模型释放不确定。
+
+## T13 macOS 客户端（2026-11-16，离线实现）
+
+macOS 专属 `client/mac/configure.py` 生成独立的 `command`、`args` 和 `cwd` JSON 字段，拒绝相对路径并保留中文/空格；不把个人 Key 或 Authorization 写入插件片段。`install-mac.command` 只接受显式个人配置与 Key，校验 HTTPS `/v1`、`api_key_file` 和 `ca_file`，创建 Python 3.11+ 虚拟环境，更新先备份配置，卸载只删除 `.venv` 和生成的插件片段，保留请求日志、恢复记录和输出图片。
+
+Python bridge 的 CA 与 Harness 网络进程的 `NODE_EXTRA_CA_CERTS` 分开配置；不通过关闭 TLS 校验绕过问题。T13 只修改 macOS 专属配置/安装/说明/测试和本 ADR，公共 bridge、打包器、服务端协议与状态机未改。`tests/test_tb13_macos_client.py` 覆盖 Unicode/空格路径、相对路径拒绝、无凭证 JSON、CLI 输出、安装器 shell 语法与私有状态保留说明。
+
+本机 Linux checkout 的 `tb13` 测试通过，但实际 macOS/Harness 版本登记、真实 TLS/局域网权限、生成→编辑→生成、阶段/排队、取消、断线/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；这些证据不能由服务器 stdio 或静态配置测试替代。回退先停用插件并保全个人数据，再删除 `.venv` 或恢复平台资产。
