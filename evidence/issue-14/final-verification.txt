@@ -10,6 +10,9 @@ Green:
   bash -n client/mac/install-mac.command
   Result: passed.
 
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q
+  Result: 509 passed, 1 warning.
+
 Scope:
   Tests cover macOS Unicode/space paths, relative path rejection, JSON plugin output,
   credential exclusion, HTTPS URL credential/query/fragment rejection, installer explicit
