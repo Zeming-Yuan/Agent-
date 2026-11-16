@@ -170,3 +170,11 @@ T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，�
 T10 审查修复：已知旧 profile 驻留占用余量时，先允许一次受控释放，不能用释放前余量阻止必要卸载。若释放已由 T09 连续关联证据确认、容量仍不足，原任务保留 queued 并让出轮次；在内存恢复前只读等待，不反复 /free。其他 owner 推理时仍独立检查未占用队首的资源等待期限；资源恢复即回到排队，不把等待别人完成的时间当资源超时。本人后续任务会继承阻塞队首原因。快照仅识别与当前执行 claim 精确关联的运行 prompt，孤儿/未知 prompt 不会被忽略。
 
 若已排队任务的 profile 预算/包络后来失效，该任务在资源等待上限后失败，诊断保留 invalid_budget；其他 profile 的有效任务继续轮转。未知/失效的后端观测仍按 T09 停止全局准入，不把 profile 配置失败当作旧模型释放不确定。
+
+## T13 macOS 客户端（2026-11-16，离线实现）
+
+macOS 专属 `client/mac/configure.py` 生成独立的 `command`、`args` 和 `cwd` JSON 字段，拒绝相对路径并保留中文/空格；不把个人 Key 或 Authorization 写入插件片段。`install-mac.command` 只接受显式个人配置与 Key，校验 HTTPS `/v1`、`api_key_file` 和 `ca_file`，创建 Python 3.11+ 虚拟环境，更新先备份配置，卸载只删除 `.venv` 和生成的插件片段，保留请求日志、恢复记录和输出图片。
+
+Python bridge 的 CA 与 Harness 网络进程的 `NODE_EXTRA_CA_CERTS` 分开配置；不通过关闭 TLS 校验绕过问题。T13 只修改 macOS 专属配置/安装/说明/测试和本 ADR，公共 bridge、打包器、服务端协议与状态机未改。`tests/test_tb13_macos_client.py` 覆盖 Unicode/空格路径、相对路径拒绝、无凭证 JSON、CLI 输出、安装器 shell 语法与私有状态保留说明。
+
+本机 Linux checkout 的 `tb13` 测试通过，但实际 macOS/Harness 版本登记、真实 TLS/局域网权限、生成→编辑→生成、阶段/排队、取消、断线/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；这些证据不能由服务器 stdio 或静态配置测试替代。回退先停用插件并保全个人数据，再删除 `.venv` 或恢复平台资产。
