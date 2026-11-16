@@ -4,19 +4,21 @@
 
 ## 安装
 
-1. 将受控客户端目录解压到固定路径，例如 `C:\Users\Tester\Spark Image Tools`。不要把个人 Key、CA、配置、请求日志或图片放入公开 ZIP/仓库。
-2. 在 PowerShell 中运行：
+1. 将 T12 Windows 客户端目录解压到固定路径，例如 `C:\Users\Tester\Spark Image Tools`。包根目录应包含 `spark_image_tools.py`（或可由脚本从 `client\spark_image_tools.py` 补齐）、`client\windows` 以及依赖清单。不要把个人 Key、CA、配置、请求日志或图片放入公开 ZIP/仓库。
+2. 准备仅当前用户可读的 `api_key_file` 和 CA 文件及个人 JSON 配置，然后在 PowerShell 中运行：
 
    ```powershell
-   .\client\windows\install-windows.ps1 -InstallDir "C:\Users\Tester\Spark Image Tools"
+   .\client\windows\install-windows.ps1 -InstallDir "C:\Users\Tester\Spark Image Tools" `
+     -ConfigFile "C:\Users\Tester\Spark Image Tools\personal.json" `
+     -ApiKeyFile "C:\Users\Tester\Spark Image Tools\private\api.key"
    ```
 
-   脚本只使用当前用户的 `py -3` 启动 Python 3.11+ 虚拟环境，并在依赖安装失败时返回非零错误。它不修改全局 PowerShell 执行策略。
-3. 准备仅当前用户可读的 `api_key_file` 和 CA 文件，然后生成 Harness 插件片段：
+   脚本只使用当前用户的 `py -3` 启动 Python 3.11+ 虚拟环境，并在依赖安装失败时返回非零错误。它会优先使用安装根目录的 `requirements.txt`，否则使用受控客户端的 `client\image-tools-requirements.txt`；它不修改全局 PowerShell 执行策略。
+3. 生成 Harness 插件片段：
 
    ```powershell
-   C:\Users\Tester\SparkImageTools\.venv\Scripts\python.exe `
-     C:\Users\Tester\SparkImageTools\client\windows\configure.py `
+     C:\Users\Tester\Spark Image Tools\.venv\Scripts\python.exe `
+     C:\Users\Tester\Spark Image Tools\client\windows\configure.py `
      --install-dir "C:\Users\Tester\Spark Image Tools" `
      --config-file "C:\Users\Tester\Spark Image Tools\personal.json" `
      | Out-File -Encoding utf8NoBOM .\spark-images.windows.json
@@ -37,6 +39,8 @@
 ```
 
 服务 URL 必须是 HTTPS `/v1`；客户端保持 CA 校验，不使用 `verify=False`。Key 文件只在私有路径中读取，不能写入插件 JSON、日志或报告。
+
+实际 Harness 的网络进程若使用 Node，请在该 Harness 的用户级启动配置中把 `NODE_EXTRA_CA_CERTS` 指向同一份个人 CA；只给 Python bridge 配置 CA 不会改变其他进程的系统信任。不要把 CA 合并到公共包，也不要用关闭证书校验来绕过配置错误。
 
 ## 更新与卸载
 

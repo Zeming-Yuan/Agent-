@@ -16,13 +16,23 @@ function Assert-Command([string]$Name) {
     }
 }
 
-function Protect-PrivateFile([string]$Path) {
+function Protect-PrivateFile([string]$Path, [string]$Rights = "Read,Write") {
     if (-not $Path -or -not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         return
     }
-    $user = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    & icacls.exe $Path /inheritance:r /grant:r "${user}:(R,W)" | Out-Null
-    if ($LASTEXITCODE -ne 0) {
+    $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent().User
+    $acl = Get-Acl -LiteralPath $Path
+    $acl.SetAccessRuleProtection($true, $false)
+    foreach ($rule in @($acl.Access)) {
+        [void]$acl.RemoveAccessRule($rule)
+    }
+    $access = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        $identity, $Rights, "Allow"
+    )
+    [void]$acl.AddAccessRule($access)
+    try {
+        Set-Acl -LiteralPath $Path -AclObject $acl
+    } catch {
         throw "Could not restrict private file permissions: $Path"
     }
 }
@@ -37,10 +47,32 @@ function Backup-ExistingConfig([string]$Path) {
     Protect-PrivateFile $backup
 }
 
+function Stage-Bridge([string]$Root) {
+    $bridge = Join-Path $Root "spark_image_tools.py"
+    if (Test-Path -LiteralPath $bridge -PathType Leaf) {
+        return
+    }
+    $sourceRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+    $sourceBridge = Join-Path $sourceRoot "client\spark_image_tools.py"
+    $sourceJournal = Join-Path $sourceRoot "client\request_journal.py"
+    if (-not (Test-Path -LiteralPath $sourceBridge -PathType Leaf)) {
+        throw "Missing spark_image_tools.py in the Windows package"
+    }
+    Copy-Item -LiteralPath $sourceBridge -Destination $bridge
+    $journal = Join-Path $Root "request_journal.py"
+    if (-not (Test-Path -LiteralPath $journal -PathType Leaf) -and
+        (Test-Path -LiteralPath $sourceJournal -PathType Leaf)) {
+        Copy-Item -LiteralPath $sourceJournal -Destination $journal
+    }
+}
+
 $Root = [System.IO.Path]::GetFullPath($InstallDir)
 $venv = Join-Path $Root ".venv"
 $python = Join-Path $venv "Scripts\python.exe"
 $requirements = Join-Path $Root "requirements.txt"
+if (-not (Test-Path -LiteralPath $requirements -PathType Leaf)) {
+    $requirements = Join-Path $Root "client\image-tools-requirements.txt"
+}
 
 if ($Action -eq "Uninstall") {
     if (Test-Path -LiteralPath $venv) {
@@ -54,8 +86,9 @@ Assert-Command "py"
 if (-not (Test-Path -LiteralPath $Root -PathType Container)) {
     New-Item -ItemType Directory -Path $Root -Force | Out-Null
 }
+Stage-Bridge $Root
 if (-not (Test-Path -LiteralPath $requirements -PathType Leaf)) {
-    throw "Missing requirements.txt in installation directory"
+    throw "Missing image client requirements manifest in installation directory"
 }
 
 & py -3 -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)"
@@ -75,5 +108,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Protect-PrivateFile $ConfigFile
-Protect-PrivateFile $ApiKeyFile
+Protect-PrivateFile $ApiKeyFile "Read"
 Write-Output "Windows image client $Action complete: $Root"
