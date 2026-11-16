@@ -11,7 +11,9 @@ Green:
   Result: passed.
 
   /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q
-  Result: 509 passed, 1 warning.
+  First run: 509 passed, 1 timing-sensitive failure in the pre-existing T09
+  brief-headroom test (the same test passed alone).
+  Fresh rerun: 510 passed, 1 warning.
 
 Scope:
   Tests cover macOS Unicode/space paths, relative path rejection, JSON plugin output,
