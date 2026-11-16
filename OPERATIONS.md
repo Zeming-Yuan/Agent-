@@ -431,6 +431,14 @@ T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_wi
 
 回退：停止使用新插件片段并删除 `.venv`；保留个人配置、Key、请求日志和已保存图片，服务端任务仍使用原 owner 恢复入口。公共 bridge、打包器、服务端协议和状态机未在本票修改。
 
+## T13 macOS 客户端（离线实现，2026-11-16）
+
+本票新增 `client/mac/configure.py`、升级后的 `install-mac.command`、macOS 说明和 `tests/test_tb13_macos_client.py`。配置函数使用独立 `command`/`args`/`cwd`，拒绝相对路径；安装器要求显式个人 JSON 与 Key，校验 HTTPS `/v1` 及配置引用的 Key/CA，源码 checkout 必须显式 `--install-dir`，私有 bundle 才默认自身根目录，插件生成统一调用 `configure.py`。更新先生成配置备份，卸载只删除 `.venv`、插件 JSON 和本次安装生成的 bridge/configure 副本。请求日志、恢复记录、个人 Key、配置及 `~/Pictures` 输出不会被卸载清理。公共 bridge、请求日志协议、服务端状态机和打包器未修改。
+
+验证：首条 red 为 `client.mac.configure` 缺失（pytest 收集 ImportError）；补齐最小配置函数后进入 green。最终 `tests/test_tb13_macos_client.py` 为 **12 passed, 1 warning**；`bash -n client/mac/install-mac.command` 和 Python 编译通过；完整 pytest 首次出现既有 T09 时序失败后，单测复跑通过，fresh rerun 为 **510 passed, 1 warning**。测试覆盖 Unicode/空格路径、相对路径拒绝、CLI JSON 数组、凭证不嵌入、HTTPS URL 凭证/query/fragment 拒绝、源码 checkout 拒绝仓库安装目录、安装器显式输入/安装目录隔离/私有状态保留和合法 shell 语法。类型检查、静态 lint、构建、CI、Compose、seed、安全扫描和变异测试未配置（N/A）。
+
+macOS 实际 Harness、OS/Harness/Python 版本登记、真实 TLS/局域网权限、个人 Key 轮换、生成→编辑→生成、阶段/排队、取消、断网/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；Linux checkout 与服务器 stdio 不能替代这些证据。回退：停止使用新插件并保全个人数据与服务端任务，删除 `.venv` 或恢复平台资产，禁止恢复共享 Key 或盲目重提。
+
 ## T14 联合验收证据门禁（2026-11-16）
 
 联合验收报告必须同时给出 Windows 与 macOS 的实际 Harness、操作系统/ Harness 版本、任务标识和证据；AC-01 至 AC-20 每一项都必须明确 `passed: true` 并关联非空证据。`profiles` 不能为空；若报告包含完整 T11 profile 记录，则继续调用既有 `validate_profile_report`，并核对最终构建的 `runtime_hash`。证据项可以用 `{ "path": ..., "sha256": ... }` 引用，校验器会在指定的 `--evidence-root` 下核对文件和摘要。

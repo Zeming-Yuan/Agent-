@@ -1,0 +1,30 @@
+T13 macOS client verification (2026-11-16)
+
+Red:
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb13_macos_client.py
+  Result: collection failed with ModuleNotFoundError: client.mac.configure (expected missing seam).
+
+Green:
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb13_macos_client.py
+  Result: 12 passed, 1 warning.
+  bash -n client/mac/install-mac.command
+  Result: passed.
+
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q
+  First run: 509 passed, 1 timing-sensitive failure in the pre-existing T09
+  brief-headroom test (the same test passed alone).
+  Fresh rerun: 510 passed, 1 warning.
+
+Scope:
+  Tests cover macOS Unicode/space paths, relative path rejection, JSON plugin output,
+  credential exclusion, HTTPS URL credential/query/fragment rejection, source checkout
+  install-dir rejection, installer explicit input/install-dir isolation, canonical config
+  generator use, generated-artifact cleanup/private-state preservation, and shell syntax.
+  The shared bridge, server, database, and bundle builder were not modified.
+
+Not verified:
+  Actual macOS/Harness, platform and Python version registration, real TLS and LAN
+  permissions, key rotation, generation/edit/generation, queue/stage display, cancel,
+  disconnect/restart recovery, chat image rendering, and custom-directory save.
+  Typecheck, lint, build, CI, Compose, seed, security, and mutation gates are N/A because
+  they are not configured in this repository.
