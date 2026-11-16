@@ -1,0 +1,2 @@
+$ .venv/bin/python -m compileall -q scripts tests
+$ bash -n deploy/run-image.sh deploy/run-gateway-runtime.sh

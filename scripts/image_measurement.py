@@ -1,5 +1,104 @@
 """Validate evidence before reporting latency; missing observations are not zeros."""
 
+
+MIN_AVAILABLE_BYTES = 20 * 1024**3
+
+
+def validate_profile_report(report: dict) -> list[str]:
+    """Return evidence defects that keep a profile from being enabled.
+
+    A profile report is an evidence gate, rather than a schema check.  Every
+    accepted run must be independently valid and correlated to the same
+    runtime; absent measurements stay invalid instead of being treated as
+    safe defaults.
+    """
+    errors: list[str] = []
+    if not isinstance(report, dict):
+        return ["report"]
+
+    for key in ("profile", "runtime_hash", "input_envelope", "budget"):
+        if not report.get(key):
+            errors.append(key)
+    if report.get("profile") not in {"fast", "standard", "high"}:
+        errors.append("profile")
+    envelope = report.get("input_envelope")
+    if not isinstance(envelope, dict) or not envelope.get("sizes") or not envelope.get("references"):
+        errors.append("input_envelope")
+
+    cycles = report.get("cycles", [])
+    if not isinstance(cycles, list) or len(cycles) < 3:
+        errors.append("cycles")
+
+    runs = report.get("raw_runs", [])
+    if not isinstance(runs, list) or len(runs) < max(9, len(cycles) * 3 if isinstance(cycles, list) else 9):
+        errors.append("raw_runs")
+        runs = [] if not isinstance(runs, list) else runs
+    else:
+        for run in runs:
+            if validate_run(run):
+                errors.append("raw_runs")
+                break
+
+    task_ids = [run.get("task_id") for run in runs]
+    request_ids = [run.get("request_id") for run in runs]
+    if len(task_ids) != len(set(task_ids)) or len(request_ids) != len(set(request_ids)):
+        errors.append("duplicate_tasks")
+
+    runtime_hash = report.get("runtime_hash")
+    if runtime_hash and any(run.get("runtime_hash") != runtime_hash for run in runs):
+        errors.append("runtime_hash")
+
+    if runs and isinstance(cycles, list) and len(runs) >= len(cycles) * 3:
+        expected = ["generate", report.get("profile"), "generate"] * len(cycles)
+        observed = [run.get("profile") for run in runs[: len(expected)]]
+        if observed != expected:
+            errors.append("profile_order")
+
+    if report.get("release_proof") is not True:
+        errors.append("release_proof")
+    if report.get("guard_events"):
+        errors.append("guard_events")
+
+    minimum = report.get("min_available_bytes")
+    if isinstance(minimum, bool) or not isinstance(minimum, int) or minimum < MIN_AVAILABLE_BYTES:
+        errors.append("reserve")
+
+    budget = report.get("budget")
+    if isinstance(budget, dict):
+        numeric_budget = [value for value in budget.values()
+                          if isinstance(value, (int, float)) and not isinstance(value, bool)]
+        reserve = budget.get("reserve_bytes")
+        if (not numeric_budget or any(value <= 0 for value in numeric_budget)
+                or not isinstance(reserve, (int, float)) or reserve < MIN_AVAILABLE_BYTES):
+            errors.append("budget")
+    else:
+        errors.append("budget")
+
+    baseline_status = report.get("baseline_status")
+    if baseline_status is not None and baseline_status != "stable":
+        errors.append("baseline")
+
+    # Keep validation output stable for callers that use it as a diagnostic
+    # code list while avoiding duplicate entries from multiple checks.
+    return list(dict.fromkeys(errors))
+
+
+def latency_summary(valid_runs: list[dict]) -> dict:
+    """Summarize saved-output latency for already validated runs."""
+    import math
+    import statistics
+
+    if not valid_runs:
+        return {"count": 0, "p50_ms": None, "p95_ms": None, "range_ms": None}
+    values = sorted((run["saved_ns"] - run["submitted_ns"]) / 1e6 for run in valid_runs)
+    p95_index = max(0, math.ceil(0.95 * len(values)) - 1)
+    return {
+        "count": len(values),
+        "p50_ms": statistics.median(values),
+        "p95_ms": values[p95_index],
+        "range_ms": [values[0], values[-1]],
+    }
+
 def validate_run(record: dict) -> list[str]:
     errors = []
     for name in ('run_id', 'request_id', 'task_id', 'profile', 'runtime_hash'):

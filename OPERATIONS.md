@@ -406,3 +406,19 @@ T09取消组合故障：等待/free时取消queued任务后，仍检查该请求
 T10 切片审查后的恢复语义：保全 image_schedule.prompt_id 与 claim 的关联；恢复进程先清除遗留占位/关联，不重置 owner 游标。取消或终态显示与执行控制请求的结算分离，仍只计一个占位。资源等待使用原 reducer 的 resource_ready/resource_wait，未占用队首由 worker 生命周期内的只读监视结算；不取消他人正在执行的任务。当前普通运行 prompt 必须与 slot 精确匹配，未知 prompt 仍 fail-closed。
 
 T10 配置失效与服务故障分开：已排队任务的个别 profile 预算/包络过期或缺失时，该任务等待超限失败（invalid_budget 诊断），不影响其他有效 profile 的新建/排程；不能用此例外绕过有效预算。旧模型释放未知、采样失效或孤儿工作仍停止全局准入并要求维护恢复。
+
+## T11 实机标定门禁与 model-switch（离线实现，2026-11-16）
+
+新增 `scripts.image_measurement.validate_profile_report` 作为 profile 启用前的证据门禁：至少三轮、每轮三次独立任务、唯一 task/request ID、同一 runtime、有效单次运行证据、真实释放证明、无保护器事件、系统余量至少 20GiB，以及带 `reserve_bytes` 的正值预算均必须存在。`latency_summary` 只对已验证记录计算端到端保存延迟，缺少记录返回空摘要。
+
+新增统一入口：
+
+```bash
+.venv/bin/python -m scripts.benchmark_images --scenario model-switch \
+  --profiles fast,standard,high --cycles 3 \
+  --config "<维护者私有配置>" --report-dir "<私有验收目录>"
+```
+
+入口按每个 profile 记录 `generate → edit → generate`，保存每次尝试和 profile 报告；`--cycles` 小于 3 或 profile 名称不在 `fast,standard,high` 时在网络请求前拒绝。当前观测器没有真实旧模型释放证明，报告保持 `baseline_status=not_calibrated`、`enabled=false`，不会因 JSON 形状通过而启用生产 profile。测试验证了空 raw runs、重复任务、runtime 混用、余量/保护事件/预算反例与完整保存延迟统计。
+
+本轮门禁证据：`tests/test_tb11_calibrated_switching.py` 13 passed；受影响回归 `-k "tb11 or tb08 or tb09 or tb10"` 182 passed；完整 `pytest -q` 为 490 passed、1 warning。真实 GPU/保护器/释放证明、profile 预算签署和 Windows/macOS Harness 仍未验证；因此不宣称任何 profile 已启用或父规格完成。非 Git 产品工作区未生成伪造提交，回退为删除本票新增入口/测试并保留现有 T08/T09 fail-closed 行为。

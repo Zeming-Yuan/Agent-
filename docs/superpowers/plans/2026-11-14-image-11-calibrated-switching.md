@@ -12,7 +12,7 @@
 
 **Ticket:** T11；Blocked by：T10。标定必须针对已整合的最终 worker/调度构建，避免测量过程中又修改同一服务。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 已实现离线证据门禁、model-switch 入口及反例测试；本轮未运行真实硬件标定，profile 仍保持禁用。
 
 ## Global Constraints
 
@@ -267,6 +267,9 @@ git commit -m "test(image): t11 boundaries and recovery"
 
 - 应用 [测量契约](2026-11-14-image-measurement-contract.md)，修改前审核 baseline，完成后执行第11步结果核查。
 - 本轮实际 baseline：**not_run**；没有本轮性能/内存标定原始结果，不能报告速度提升、回归或安全参数已成立。
+- 本轮实现验证：`tests/test_tb11_calibrated_switching.py` 13 passed；受影响回归 `-k "tb11 or tb08 or tb09 or tb10"` 182 passed；完整 `pytest -q` 为 490 passed、1 warning。测试覆盖 profile 报告证据门禁、重复任务/runtime 混用、余量/保护事件/预算反例、端到端保存延迟统计，以及 `--cycles < 3` 的命令行拒绝。
+- 原始命令输出、一次可复现的 T09 时序抖动及通过后的重跑、完整套件和 SHA256 清单保存在 `evidence/issue-12/`；不含凭证、业务素材或真实硬件曲线。
+- 本轮交付的 `model-switch` 入口只记录私有 generate→edit→generate 尝试并保持 `baseline_status=not_calibrated`/`enabled=false`，不会把离线或合成报告当作生产批准。
 - 现有历史脚本与原始位置、计时边界错误、固定幂等/no-op风险见测量契约；历史数字不作为当前 before。
 - 负载/缓存/并发/样本、host/runtime、输出验证、错误计数和复测命令必须写入实际执行记录；比较设置至少每侧5次交替，安全闭环每拟启用profile至少3轮。
 - 原始结果存调用者私有唯一 run 目录；报告队列/加载/推理/保存/下载与端到端时间，状态不全则 inconclusive。
@@ -277,6 +280,6 @@ git commit -m "test(image): t11 boundaries and recovery"
 - [x] 第一条失败原因与最小实现明确；状态反例为测试代码/实际演示，不只保留图。
 - [x] 新签名来自共享契约，当前尚未实现的接口由明确前置/本票交付。
 - [x] 边界 A/B 各自带测试与文档；回退不会丢新数据或恢复共享读取。
-- [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
+- [x] 已运行 red/green、受影响回归并同步门禁文档；真实 GPU/保护器/释放证明、预算签署及双端实机验收仍未完成，不能声明本票或父规格完成。
 
 本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
