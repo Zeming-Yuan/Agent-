@@ -254,7 +254,7 @@ git commit -m "test(image): t13 boundaries and recovery"
 ## Execution record (2026-11-16)
 
 - [x] 首条测试先 red：`client.mac.configure` 尚不存在，pytest 收集失败。
-- [x] 最小配置函数、CLI、安装器私有状态边界和 macOS 说明已实现；受影响测试 11 passed，shell 语法和 Python 编译检查通过。
+- [x] 最小配置函数、CLI、安装器私有状态边界和 macOS 说明已实现；受影响测试 12 passed，shell 语法和 Python 编译检查通过。
 - [x] 源码 checkout 安装要求显式 `--install-dir`，私有 bundle 默认自身根目录；安装器调用唯一的 `configure.py`，卸载清理本次生成的 bridge/configure 副本。
 - [x] ADR、`docs/IMAGE-SERVICE.md`、`OPERATIONS.md` 与离线证据 `evidence/issue-14/final-verification.txt` 已同步。
 - [ ] 实际 macOS/Harness、真实 TLS/局域网权限、完整生成→编辑→生成及恢复链路仍未验证，不能据此宣称本票实机验收完成。

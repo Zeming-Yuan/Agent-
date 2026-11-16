@@ -117,3 +117,27 @@ def test_tb13_install_script_is_valid_shell_and_readme_explains_two_ca_processes
     assert "NODE_EXTRA_CA_CERTS" in readme
     assert "个人 Key" in readme
     assert "保存失败" in readme
+
+
+def test_tb13_source_checkout_rejects_repo_install_dir():
+    install = Path(__file__).resolve().parents[1] / "client/mac/install-mac.command"
+    repo = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [
+            "bash",
+            str(install),
+            "--action",
+            "install",
+            "--install-dir",
+            str(repo),
+            "--config-file",
+            "/tmp/missing-personal.json",
+            "--api-key-file",
+            "/tmp/missing-key",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 2
+    assert "源码 checkout" in result.stderr

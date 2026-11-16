@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR=""
+SOURCE_ROOT=""
 INSTALL_DIR_SET=0
 ACTION="install"
 CONFIG_FILE=""
@@ -65,6 +66,18 @@ elif [[ "$INSTALL_DIR_SET" -eq 0 ]]; then
   exit 2
 fi
 
+if [[ -f "$SCRIPT_DIR/../spark_image_tools.py" ]]; then
+  SOURCE_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+fi
+if [[ -n "$SOURCE_ROOT" ]]; then
+  case "$ROOT_DIR/" in
+    "$SOURCE_ROOT/"*)
+      echo "--install-dir 必须位于源码 checkout 之外的独立目录。" >&2
+      exit 2
+      ;;
+  esac
+fi
+
 if [[ "$ACTION" == "uninstall" ]]; then
   rm -rf "$ROOT_DIR/.venv"
   rm -f "$ROOT_DIR/deepseek-harness-plugin.json"
@@ -88,6 +101,18 @@ fi
   echo "需要存在的 --api-key-file 个人 Key 文件。" >&2
   exit 2
 }
+
+CONFIGURER_SOURCE=""
+if [[ -f "$SCRIPT_DIR/configure.py" ]]; then
+  CONFIGURER_SOURCE="$SCRIPT_DIR/configure.py"
+elif [[ -n "$SOURCE_ROOT" && -f "$ROOT_DIR/client/mac/configure.py" ]]; then
+  CONFIGURER_SOURCE="$ROOT_DIR/client/mac/configure.py"
+elif [[ "$ROOT_DIR" == "$SCRIPT_DIR" && -f "$ROOT_DIR/configure.py" ]]; then
+  CONFIGURER_SOURCE="$ROOT_DIR/configure.py"
+else
+  echo "缺少 canonical macOS configure.py，不能校验或生成 Harness 插件配置。" >&2
+  exit 2
+fi
 
 python_bin=""
 for candidate in python3.13 python3.12 python3.11 python3; do
@@ -136,17 +161,7 @@ PY
 }
 
 stage_configure() {
-  local target="$ROOT_DIR/configure.py" source=""
-  if [[ -f "$SCRIPT_DIR/configure.py" ]]; then
-    source="$SCRIPT_DIR/configure.py"
-  elif [[ -f "$ROOT_DIR/client/mac/configure.py" ]]; then
-    source="$ROOT_DIR/client/mac/configure.py"
-  elif [[ -f "$ROOT_DIR/configure.py" ]]; then
-    source="$ROOT_DIR/configure.py"
-  else
-    echo "缺少 macOS configure.py，不能生成 Harness 插件配置。" >&2
-    exit 2
-  fi
+  local target="$ROOT_DIR/configure.py" source="$CONFIGURER_SOURCE"
   if [[ "$source" != "$target" ]]; then
     cp -p -- "$source" "$target"
     touch "$ROOT_DIR/.configure.generated"
@@ -156,10 +171,10 @@ stage_configure() {
   CONFIGURER="$target"
 }
 
+"$python_bin" "$CONFIGURER_SOURCE" --validate-config "$CONFIG_FILE" --api-key-file "$API_KEY_FILE"
 backup_existing_config
 stage_bridge
 stage_configure
-"$python_bin" "$CONFIGURER" --validate-config "$CONFIG_FILE" --api-key-file "$API_KEY_FILE"
 
 requirements="$ROOT_DIR/requirements.txt"
 [[ -f "$requirements" ]] || requirements="$ROOT_DIR/client/image-tools-requirements.txt"
