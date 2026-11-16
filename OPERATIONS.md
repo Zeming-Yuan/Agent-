@@ -422,3 +422,11 @@ T10 配置失效与服务故障分开：已排队任务的个别 profile 预算/
 入口按每个 profile 记录 `generate → edit → generate`，保存每次尝试和 profile 报告；`--cycles` 小于 3 或 profile 名称不在 `fast,standard,high` 时在网络请求前拒绝。当前观测器没有真实旧模型释放证明，报告保持 `baseline_status=not_calibrated`、`enabled=false`，不会因 JSON 形状通过而启用生产 profile。测试验证了空 raw runs、重复任务、runtime 混用、余量/保护事件/预算反例与完整保存延迟统计。
 
 本轮门禁证据：`tests/test_tb11_calibrated_switching.py` 13 passed；受影响回归 `-k "tb11 or tb08 or tb09 or tb10"` 182 passed；完整 `pytest -q` 为 490 passed、1 warning。真实 GPU/保护器/释放证明、profile 预算签署和 Windows/macOS Harness 仍未验证；因此不宣称任何 profile 已启用或父规格完成。非 Git 产品工作区未生成伪造提交，回退为删除本票新增入口/测试并保留现有 T08/T09 fail-closed 行为。
+
+## T12 Windows 客户端（离线实现，2026-11-16）
+
+Windows 专属资源位于 `client/windows/`：`configure.py` 生成实际 Harness 所需的 JSON 插件数组，使用独立的 `command`、`args`、`cwd` 字段，保留中文和空格路径；`install-windows.ps1` 使用当前用户的 Python 3.11+ 虚拟环境，更新先备份配置，卸载只移除 `.venv` 并保留个人 Key、请求日志和图片。配置只引用私有 Key/CA 文件，不绕过 TLS 验证，不把凭证写入插件片段或公开文档。
+
+T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_windows_client.py` 的 Unicode/空格路径断言通过。静态 Python 编译通过。受影响回归和 PowerShell 脚本执行尚未在本 Linux 主机运行；实际 Windows/Harness 安装、升级/卸载、真实 CA/Key、生成→编辑→生成、断网/重启恢复、保存失败重取及聊天展示仍未验证，且依赖仍 open 的 #12/T11。证据文件见 `evidence/issue-13/`。
+
+回退：停止使用新插件片段并删除 `.venv`；保留个人配置、Key、请求日志和已保存图片，服务端任务仍使用原 owner 恢复入口。公共 bridge、打包器、服务端协议和状态机未在本票修改。
