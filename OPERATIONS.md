@@ -435,6 +435,6 @@ T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_wi
 
 本票新增 `client/mac/configure.py`、升级后的 `install-mac.command`、macOS 说明和 `tests/test_tb13_macos_client.py`。配置函数使用独立 `command`/`args`/`cwd`，拒绝相对路径；安装器要求显式个人 JSON 与 Key，校验 HTTPS `/v1` 及配置引用的 Key/CA，源码 checkout 必须显式 `--install-dir`，私有 bundle 才默认自身根目录，插件生成统一调用 `configure.py`。更新先生成配置备份，卸载只删除 `.venv`、插件 JSON 和本次安装生成的 bridge/configure 副本。请求日志、恢复记录、个人 Key、配置及 `~/Pictures` 输出不会被卸载清理。公共 bridge、请求日志协议、服务端状态机和打包器未修改。
 
-验证：首条 red 为 `client.mac.configure` 缺失（pytest 收集 ImportError）；补齐最小配置函数后进入 green。最终 `tests/test_tb13_macos_client.py` 为 **8 passed, 1 warning**；`bash -n client/mac/install-mac.command` 通过。测试覆盖 Unicode/空格路径、相对路径拒绝、CLI JSON 数组、凭证不嵌入、安装器显式输入/私有状态保留和合法 shell 语法。类型检查、静态 lint、构建、CI、Compose、seed、安全扫描和变异测试未配置（N/A）。
+验证：首条 red 为 `client.mac.configure` 缺失（pytest 收集 ImportError）；补齐最小配置函数后进入 green。最终 `tests/test_tb13_macos_client.py` 为 **11 passed, 1 warning**；`bash -n client/mac/install-mac.command` 和 Python 编译通过。测试覆盖 Unicode/空格路径、相对路径拒绝、CLI JSON 数组、凭证不嵌入、HTTPS URL 凭证/query/fragment 拒绝、安装器显式输入/安装目录隔离/私有状态保留和合法 shell 语法。类型检查、静态 lint、构建、CI、Compose、seed、安全扫描和变异测试未配置（N/A）。
 
 macOS 实际 Harness、OS/Harness/Python 版本登记、真实 TLS/局域网权限、个人 Key 轮换、生成→编辑→生成、阶段/排队、取消、断网/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；Linux checkout 与服务器 stdio 不能替代这些证据。回退：停止使用新插件并保全个人数据与服务端任务，删除 `.venv` 或恢复平台资产，禁止恢复共享 Key 或盲目重提。

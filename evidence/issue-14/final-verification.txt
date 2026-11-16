@@ -6,14 +6,15 @@ Red:
 
 Green:
   /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb13_macos_client.py
-  Result: 8 passed, 1 warning.
+  Result: 11 passed, 1 warning.
   bash -n client/mac/install-mac.command
   Result: passed.
 
 Scope:
   Tests cover macOS Unicode/space paths, relative path rejection, JSON plugin output,
-  credential exclusion, installer explicit input/install-dir isolation, canonical config
-  generator use, generated-artifact cleanup/private-state preservation, and shell syntax.
+  credential exclusion, HTTPS URL credential/query/fragment rejection, installer explicit
+  input/install-dir isolation, canonical config generator use, generated-artifact
+  cleanup/private-state preservation, and shell syntax.
   The shared bridge, server, database, and bundle builder were not modified.
 
 Not verified:
