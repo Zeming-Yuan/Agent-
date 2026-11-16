@@ -73,6 +73,6 @@ tests/test_tb12_windows_client.py: 8 passed, 1 warning
 -k "tb12 or tb06 or tb07": 76 passed, 422 deselected, 1 warning
 ```
 
-这些测试覆盖 Unicode/空格路径、相对路径拒绝、JSON 插件数组、凭证不嵌入、私有包根入口/依赖清单，以及安装脚本的 ACL、更新备份和卸载保留契约。失败后恢复边界是：只删除 `.venv` 或修复个人输出目录，再用原 `request_id`/任务 ID 调 `list_image_tasks` 和 `get_image_task`；不重新提交推理。
+这些测试覆盖 Unicode/空格路径、相对路径拒绝、JSON 插件数组、凭证不嵌入、私有包根入口/依赖清单，以及安装脚本源文本中的 ACL、更新备份和卸载保留契约。它们没有执行 PowerShell 或 Windows ACL。失败后恢复边界是：只删除 `.venv` 或修复个人输出目录，再用原 `request_id`/任务 ID 调 `list_image_tasks` 和 `get_image_task`；不重新提交推理。
 
 本票验收映射：AC-01（Windows/Harness/Python 实机版本、安装/更新/卸载）未验证；AC-06（个人 Key/CA、Unicode/空格路径和自定义目录）自动化边界已验证，真实 TLS/Key 未验证；AC-07/08/09/10（真实生成、阶段/队列、取消、断网/重启恢复和聊天展示）未验证；AC-12（Windows 专属 diff）已由固定点到 HEAD 的复核覆盖。Windows PowerShell、ACL、Harness 和已标定后端不可在本 Linux 主机代验。
