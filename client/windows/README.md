@@ -78,4 +78,4 @@ full pytest suite: 498 passed, 1 warning
 
 本票验收映射：AC-01（Windows/Harness/Python 实机版本、安装/更新/卸载）未验证；AC-06（个人 Key/CA、Unicode/空格路径和自定义目录）自动化边界已验证，真实 TLS/Key 未验证；AC-07/08/09/10（真实生成、阶段/队列、取消、断网/重启恢复和聊天展示）未验证；AC-12（Windows 专属 diff）已由固定点到 HEAD 的复核覆盖。Windows PowerShell、ACL、Harness 和已标定后端不可在本 Linux 主机代验。
 
-完整输出保存在 `evidence/issue-13/final-verification.txt`。
+完整验证的命令、结果和限制摘要保存在 `evidence/issue-13/final-verification.txt`。
