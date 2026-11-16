@@ -427,6 +427,6 @@ T10 配置失效与服务故障分开：已排队任务的个别 profile 预算/
 
 Windows 专属资源位于 `client/windows/`：`configure.py` 生成实际 Harness 所需的 JSON 插件数组，使用独立的 `command`、`args`、`cwd` 字段，保留中文和空格路径；`install-windows.ps1` 使用当前用户的 Python 3.11+ 虚拟环境，更新先备份配置，卸载只移除 `.venv` 并保留个人 Key、请求日志和图片。配置只引用私有 Key/CA 文件，不绕过 TLS 验证，不把凭证写入插件片段或公开文档。
 
-T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_windows_client.py` 的 Unicode/空格路径断言通过。静态 Python 编译通过。受影响回归和 PowerShell 脚本执行尚未在本 Linux 主机运行；实际 Windows/Harness 安装、升级/卸载、真实 CA/Key、生成→编辑→生成、断网/重启恢复、保存失败重取及聊天展示仍未验证，且依赖仍 open 的 #12/T11。证据文件见 `evidence/issue-13/`。
+T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_windows_client.py` 8 passed，受影响回归 `-k "tb12 or tb06 or tb07"` 为 76 passed（各有1项既有Starlette弃用警告）。测试覆盖 Unicode/空格路径、相对路径拒绝、凭证不嵌入、私有包根入口、当前用户 SID ACL、更新备份和卸载保留契约。静态 Python 编译通过。PowerShell 脚本执行尚未在本 Linux 主机运行；实际 Windows/Harness 安装、升级/卸载、真实 CA/Key、生成→编辑→生成、断网/重启恢复、保存失败重取及聊天展示仍未验证，且依赖仍 open 的 #12/T11。逐条 AC 映射与失败/恢复路径见 `client/windows/README.md`，证据文件见 `evidence/issue-13/`。
 
 回退：停止使用新插件片段并删除 `.venv`；保留个人配置、Key、请求日志和已保存图片，服务端任务仍使用原 owner 恢复入口。公共 bridge、打包器、服务端协议和状态机未在本票修改。

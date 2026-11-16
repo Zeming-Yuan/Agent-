@@ -74,11 +74,15 @@ def test_tb12_install_script_has_private_update_and_preserving_uninstall_contrac
     assert "SetAccessRuleProtection($true, $false)" in script
     assert "Stage-Bridge" in script
     assert "client\\image-tools-requirements.txt" in script
+    assert "ConfigFile is required" in script
+    assert "ApiKeyFile is required" in script
     assert "Remove-Item -LiteralPath $venv" in script
     assert "Set-ExecutionPolicy" not in script
     readme = (Path(__file__).resolve().parents[1] / "client/windows/README.md").read_text()
     assert "保留配置、Key、日志和已保存图片" in readme
     assert "NODE_EXTRA_CA_CERTS" in readme
+    assert "Out-File -Encoding UTF8" in readme
+    assert "utf8NoBOM" not in readme
 
 
 def test_tb12_private_bundle_has_clean_root_entrypoint_and_manifest(tmp_path):

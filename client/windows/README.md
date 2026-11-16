@@ -21,10 +21,10 @@
      C:\Users\Tester\Spark Image Tools\client\windows\configure.py `
      --install-dir "C:\Users\Tester\Spark Image Tools" `
      --config-file "C:\Users\Tester\Spark Image Tools\personal.json" `
-     | Out-File -Encoding utf8NoBOM .\spark-images.windows.json
+     | Out-File -Encoding UTF8 .\spark-images.windows.json
    ```
 
-   将 JSON 数组作为实际 Harness 的 MCP 插件配置导入。`command`、`args` 和 `cwd` 是独立字段，因此中文和空格不会被 shell 二次拆分。配置只引用 Key/CA 文件，不嵌入凭证。
+   `Out-File -Encoding UTF8` 兼容 Windows PowerShell 5.1（输出 BOM 的 JSON 仍可被 Harness 读取）。将 JSON 数组作为实际 Harness 的 MCP 插件配置导入。`command`、`args` 和 `cwd` 是独立字段，因此中文和空格不会被 shell 二次拆分。配置只引用 Key/CA 文件，不嵌入凭证。
 
 `personal.json` 的最小形状如下；`api_key_file`、`ca_file`、`output_dir` 和 `journal_path` 可以是绝对路径，也可以相对配置文件所在目录：
 
@@ -63,3 +63,16 @@
 实际 Harness 中应看到 `generate_image`、`edit_image`、`list_image_tasks`、`get_image_task` 和 `cancel_image_task`。提交先返回任务 ID；按阶段和前方单数继续查询。断网、工具重启或提交响应丢失后，先用 `list_image_tasks` 找回本人的任务，再使用同一个 `request_id` 重放；保存目录不可写时只修复目录后重取 `get_image_task`，不要重新提交推理。取消必须由用户显式发起，`cancelling` 表示后台清理仍在进行。
 
 实际 Windows/Harness 的生图→编辑→生图、取消、断网/重启恢复、聊天内图片展示和自定义目录保存仍需在已标定后端可用后验收。当前票不伪造这些实机证据。
+
+## 离线验证记录与验收边界
+
+在受控 Linux checkout 中运行：
+
+```text
+tests/test_tb12_windows_client.py: 8 passed, 1 warning
+-k "tb12 or tb06 or tb07": 76 passed, 422 deselected, 1 warning
+```
+
+这些测试覆盖 Unicode/空格路径、相对路径拒绝、JSON 插件数组、凭证不嵌入、私有包根入口/依赖清单，以及安装脚本的 ACL、更新备份和卸载保留契约。失败后恢复边界是：只删除 `.venv` 或修复个人输出目录，再用原 `request_id`/任务 ID 调 `list_image_tasks` 和 `get_image_task`；不重新提交推理。
+
+本票验收映射：AC-01（Windows/Harness/Python 实机版本、安装/更新/卸载）未验证；AC-06（个人 Key/CA、Unicode/空格路径和自定义目录）自动化边界已验证，真实 TLS/Key 未验证；AC-07/08/09/10（真实生成、阶段/队列、取消、断网/重启恢复和聊天展示）未验证；AC-12（Windows 专属 diff）已由固定点到 HEAD 的复核覆盖。Windows PowerShell、ACL、Harness 和已标定后端不可在本 Linux 主机代验。

@@ -82,6 +82,19 @@ if ($Action -eq "Uninstall") {
     exit 0
 }
 
+if (-not $ConfigFile) {
+    throw "ConfigFile is required for install or update"
+}
+if (-not $ApiKeyFile) {
+    throw "ApiKeyFile is required for install or update"
+}
+if (-not (Test-Path -LiteralPath $ConfigFile -PathType Leaf)) {
+    throw "ConfigFile does not exist: $ConfigFile"
+}
+if (-not (Test-Path -LiteralPath $ApiKeyFile -PathType Leaf)) {
+    throw "ApiKeyFile does not exist: $ApiKeyFile"
+}
+
 Assert-Command "py"
 if (-not (Test-Path -LiteralPath $Root -PathType Container)) {
     New-Item -ItemType Directory -Path $Root -Force | Out-Null
