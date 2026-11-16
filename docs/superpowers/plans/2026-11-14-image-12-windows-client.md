@@ -12,7 +12,7 @@
 
 **Ticket:** T12；Blocked by：T11。实际桌面验收需要已标定且可安全服务的后端；只改 Windows 专属资源，可与 T13 分别验收。
 
-**Plan status:** 已完成 Windows 专属离线实现、TDD red/green、受影响回归、文档/ADR 与双轴 review；真实 Windows/Harness、PowerShell/ACL 和 T11 标定后端仍未验收，票据保持 open。
+**Plan status:** 已完成 Windows 专属离线实现、TDD red/green、受影响回归、文档/ADR 与双轴 review（见 `evidence/issue-13/review-final.md`）；真实 Windows/Harness、PowerShell/ACL 和 T11 标定后端仍未验收，票据保持 open。
 
 ## Global Constraints
 
@@ -252,6 +252,7 @@ git commit -m "test(image): t12 boundaries and recovery"
 - [x] 第一条失败原因与最小实现明确；状态反例为测试代码/实际演示，不只保留图。
 - [x] 新签名来自共享契约，当前尚未实现的接口由明确前置/本票交付。
 - [x] 边界 A/B 各自带测试与文档；回退不会丢新数据或恢复共享读取。
-- [ ] 离线 red/green、受影响回归和完整 pytest 已记录在 `evidence/issue-13/`；所需 Windows/Harness 实机验收仍待依赖 #12/T11 和实际 Windows 环境，完成前不能关闭票据。
+- [x] 离线 red/green、受影响回归和完整 pytest 已记录在 `evidence/issue-13/`；双轴 review 结果见 `evidence/issue-13/review-final.md`。
+- [ ] 所需 Windows/Harness 实机验收仍待依赖 #12/T11 和实际 Windows 环境，完成前不能关闭票据。
 
 本计划已按用户授权执行离线产品实现；未部署生产、未运行 Windows/Harness 实机流程，也未关闭票据。

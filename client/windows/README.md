@@ -76,6 +76,6 @@ full pytest suite: 498 passed, 1 warning
 
 这些测试覆盖 Unicode/空格路径、相对路径拒绝、JSON 插件数组、凭证不嵌入、私有包根入口/依赖清单，以及安装脚本源文本中的 ACL、更新备份和卸载保留契约。它们没有执行 PowerShell 或 Windows ACL。失败后恢复边界是：只删除 `.venv` 或修复个人输出目录，再用原 `request_id`/任务 ID 调 `list_image_tasks` 和 `get_image_task`；不重新提交推理。
 
-本票验收映射：AC-01（Windows/Harness/Python 实机版本、安装/更新/卸载）未验证；AC-06（个人 Key/CA、Unicode/空格路径和自定义目录）自动化边界已验证，真实 TLS/Key 未验证；AC-07/08/09/10（真实生成、阶段/队列、取消、断网/重启恢复和聊天展示）未验证；AC-12（Windows 专属 diff）已由固定点到 HEAD 的复核覆盖。Windows PowerShell、ACL、Harness 和已标定后端不可在本 Linux 主机代验。
+本票验收映射：本票 AC-1（Windows/Harness/Python 实机版本、安装/更新/卸载）未验证；AC-2（个人 Key/CA、Unicode/空格路径和自定义目录）自动化边界已验证，真实 TLS/Key 未验证；AC-3（真实生成→编辑→生成、阶段/队列、取消、断网/重启恢复和聊天展示）未验证；AC-4（响应丢失重放、保存失败重取、换 owner 隔离）未验证；AC-5（只改 Windows 专属资产/说明/测试）已由固定点到 HEAD 的复核覆盖。父规格中的队列阶段、Key 轮换和双端 Harness 验收不由这些静态检查代替。Windows PowerShell、ACL、Harness 和已标定后端不可在本 Linux 主机代验。
 
 完整验证的命令、结果和限制摘要保存在 `evidence/issue-13/final-verification.txt`。
