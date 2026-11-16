@@ -9,6 +9,7 @@
 ```bash
 bash client/mac/install-mac.command \
   --action install \
+  --install-dir "/Users/me/Applications/Spark Image Tools" \
   --config-file "/Users/me/个人 配置.json" \
   --api-key-file "/Users/me/私有/key"
 ```
@@ -20,6 +21,7 @@ bash client/mac/install-mac.command \
 ```bash
 bash client/mac/install-mac.command \
   --action update \
+  --install-dir "/Users/me/Applications/Spark Image Tools" \
   --config-file "/Users/me/个人 配置.json" \
   --api-key-file "/Users/me/私有/key"
 ```
@@ -27,7 +29,8 @@ bash client/mac/install-mac.command \
 卸载只移除 `.venv` 和生成的插件片段，保留配置、Key、请求日志和图片：
 
 ```bash
-bash client/mac/install-mac.command --action uninstall
+bash client/mac/install-mac.command --action uninstall \
+  --install-dir "/Users/me/Applications/Spark Image Tools"
 ```
 
 ## CA 与 Harness 进程

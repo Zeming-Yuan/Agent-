@@ -2,13 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ -f "$SCRIPT_DIR/spark_image_tools.py" ]]; then
-  # Private bundles place the bridge and requirements beside this installer.
-  ROOT_DIR="$SCRIPT_DIR"
-else
-  # The source checkout keeps platform assets under client/mac/.
-  ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-fi
+ROOT_DIR=""
+INSTALL_DIR_SET=0
 ACTION="install"
 CONFIG_FILE=""
 API_KEY_FILE=""
@@ -32,6 +27,7 @@ while (($#)); do
       [[ $# -ge 2 ]] || { usage; exit 2; }
       mkdir -p "$2"
       ROOT_DIR="$(cd "$2" && pwd)"
+      INSTALL_DIR_SET=1
       shift 2
       ;;
     --config-file)
@@ -61,9 +57,24 @@ case "$ACTION" in
   *) echo "Unknown action: $ACTION" >&2; exit 2 ;;
 esac
 
+if [[ "$INSTALL_DIR_SET" -eq 0 && -f "$SCRIPT_DIR/spark_image_tools.py" ]]; then
+  # Private bundles place the bridge and requirements beside this installer.
+  ROOT_DIR="$SCRIPT_DIR"
+elif [[ "$INSTALL_DIR_SET" -eq 0 ]]; then
+  echo "源码 checkout 安装必须显式提供 --install-dir；不会修改仓库目录。" >&2
+  exit 2
+fi
+
 if [[ "$ACTION" == "uninstall" ]]; then
   rm -rf "$ROOT_DIR/.venv"
   rm -f "$ROOT_DIR/deepseek-harness-plugin.json"
+  if [[ -f "$ROOT_DIR/.spark_image_tools.generated" ]]; then
+    rm -f "$ROOT_DIR/spark_image_tools.py" "$ROOT_DIR/request_journal.py" \
+      "$ROOT_DIR/.spark_image_tools.generated"
+  fi
+  if [[ -f "$ROOT_DIR/.configure.generated" ]]; then
+    rm -f "$ROOT_DIR/configure.py" "$ROOT_DIR/.configure.generated"
+  fi
   # requests.sqlite3, personal config, Key and ~/Pictures output images are never removed.
   echo "已卸载 Mac 图片客户端运行环境；个人配置、Key、请求日志和图片已保留。"
   exit 0
@@ -133,24 +144,51 @@ backup_existing_config() {
 stage_bridge() {
   local bridge="$ROOT_DIR/spark_image_tools.py"
   [[ -f "$bridge" ]] && return 0
-  [[ -f "$ROOT_DIR/client/spark_image_tools.py" ]] || {
-    echo "缺少公共 spark_image_tools.py，不能安装。" >&2
-    exit 2
-  }
-  cat > "$bridge" <<'PY'
+  if [[ -f "$ROOT_DIR/client/spark_image_tools.py" ]]; then
+    cat > "$bridge" <<'PY'
 from client.spark_image_tools import main
 
 if __name__ == "__main__":
     main()
 PY
+  elif [[ -f "$SCRIPT_DIR/../spark_image_tools.py" ]]; then
+    cp -p -- "$SCRIPT_DIR/../spark_image_tools.py" "$bridge"
+    if [[ -f "$SCRIPT_DIR/../request_journal.py" ]]; then
+      cp -p -- "$SCRIPT_DIR/../request_journal.py" "$ROOT_DIR/request_journal.py"
+    fi
+  else
+    echo "缺少公共 spark_image_tools.py，不能安装。" >&2
+    exit 2
+  fi
   chmod 600 -- "$bridge"
+  touch "$ROOT_DIR/.spark_image_tools.generated"
+  chmod 600 -- "$ROOT_DIR/.spark_image_tools.generated"
+}
+
+stage_configure() {
+  local target="$ROOT_DIR/configure.py"
+  [[ -f "$target" ]] && { CONFIGURER="$target"; return 0; }
+  if [[ -f "$SCRIPT_DIR/configure.py" ]]; then
+    cp -p -- "$SCRIPT_DIR/configure.py" "$target"
+  elif [[ -f "$ROOT_DIR/client/mac/configure.py" ]]; then
+    cp -p -- "$ROOT_DIR/client/mac/configure.py" "$target"
+  else
+    echo "缺少 macOS configure.py，不能生成 Harness 插件配置。" >&2
+    exit 2
+  fi
+  chmod 600 -- "$target"
+  touch "$ROOT_DIR/.configure.generated"
+  chmod 600 -- "$ROOT_DIR/.configure.generated"
+  CONFIGURER="$target"
 }
 
 backup_existing_config
 stage_bridge
+stage_configure
 
 requirements="$ROOT_DIR/requirements.txt"
 [[ -f "$requirements" ]] || requirements="$ROOT_DIR/client/image-tools-requirements.txt"
+[[ -f "$requirements" ]] || requirements="$SCRIPT_DIR/../image-tools-requirements.txt"
 [[ -f "$requirements" ]] || { echo "缺少图片客户端依赖清单。" >&2; exit 2; }
 
 umask 077
@@ -158,30 +196,10 @@ umask 077
 "$ROOT_DIR/.venv/bin/python" -m pip install -r "$requirements"
 chmod 600 -- "$CONFIG_FILE" "$API_KEY_FILE"
 
-"$ROOT_DIR/.venv/bin/python" - "$ROOT_DIR" "$CONFIG_FILE" "$ROOT_DIR/deepseek-harness-plugin.json" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-root = Path(sys.argv[1]).resolve()
-config = Path(sys.argv[2]).resolve()
-output = Path(sys.argv[3])
-payload = [{
-    "id": "mcp-spark-images",
-    "name": "@deepseek-ai/dsh-mcp-client",
-    "config": {
-        "serverName": "spark_images",
-        "transport": "stdio",
-        "command": str(root / ".venv" / "bin" / "python"),
-        "args": [str(root / "spark_image_tools.py"), "--config", str(config)],
-        "cwd": str(root),
-        "toolCallTimeoutMs": 60000,
-        "failOnStartupError": False,
-    },
-}]
-output.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-output.chmod(0o600)
-PY
+"$ROOT_DIR/.venv/bin/python" "$CONFIGURER" \
+  --install-dir "$ROOT_DIR" --config-file "$CONFIG_FILE" \
+  > "$ROOT_DIR/deepseek-harness-plugin.json"
+chmod 600 -- "$ROOT_DIR/deepseek-harness-plugin.json"
 
 echo "Mac 图片客户端 $ACTION 完成：$ROOT_DIR"
 echo "请把 deepseek-harness-plugin.json 导入实际 Harness；Python bridge 与 Harness 网络进程分别配置 CA。"

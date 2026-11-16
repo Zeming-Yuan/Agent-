@@ -130,7 +130,7 @@ T06 A审查修复：request_id必须为1..128个无空格可打印ASCII字符，
 公共构建API：`build_bundle(config_path:Path, platform_assets:dict[str,Path], output_path:Path)->Path`，模块 scripts.build_image_client_bundle。平台资源是显式名称到文件的映射，仅接收同扩展名的 .md/.command/.ps1/.py；不扫描目录、不接收运行库/Key/私有目录/覆盖公共模块。保留公共 requirements.txt、配置、模块与根入口。新输出必须不存在，包文件0600。个人配置必须显式提供 base_url/api_key_file/ca_file，可选output_dir；包内只放该Key、CA及所选资源，日志不打包。示例（路径均为执行时私有输入）：
 
 ```bash
-python scripts/build_image_client_bundle.py --config /private/person/image.json --output /private/delivery/person-mac.zip --asset README.md=client/mac/README.md --asset install-mac.command=client/mac/install-mac.command
+python scripts/build_image_client_bundle.py --config /private/person/image.json --output /private/delivery/person-mac.zip --asset README.md=client/mac/README.md --asset configure.py=client/mac/configure.py --asset install-mac.command=client/mac/install-mac.command
 ```
 
 包结构固定为 SparkImageTools/，根 spark_image_tools.py 转入 client/ 中同一公共桥接实现，包含 client/request_journal.py。T12/T13只提供平台安装/config资源，不复制协议或并行修改公共文件。本票在Linux真实stdio+临时TLS+真实HTTP鉴权/Store/worker上验收；外部推理替身，未代替实际双端Harness/真实后端验收。逐AC、RED/GREEN和限制见 evidence/issue-7/acceptance.md。

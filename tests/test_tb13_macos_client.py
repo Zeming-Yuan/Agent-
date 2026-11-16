@@ -67,6 +67,7 @@ def test_tb13_install_script_preserves_private_state_and_uses_explicit_inputs():
     assert "set -euo pipefail" in script
     assert "--config-file" in script
     assert "--api-key-file" in script
+    assert "源码 checkout 安装必须显式提供 --install-dir" in script
     assert "Backup-ExistingConfig" not in script
     assert "backup_existing_config" in script
     assert "stage_bridge" in script
@@ -74,6 +75,8 @@ def test_tb13_install_script_preserves_private_state_and_uses_explicit_inputs():
     assert "requests.sqlite3" in script
     assert "Pictures" in script
     assert "api_key spark-image.json" not in script
+    assert '"$CONFIGURER"' in script
+    assert "deepseek-harness-plugin.json" in script
 
 
 def test_tb13_install_script_is_valid_shell_and_readme_explains_two_ca_processes():
