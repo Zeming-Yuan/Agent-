@@ -74,6 +74,8 @@ Run: `python -m pytest -q tests/test_tb12_windows_client.py`
 
 Expected: 当前无 Windows 安装/配置模块；最初 ModuleNotFoundError。后续若把整个命令手工拼成一个字符串或复用 Mac venv 路径，argv/command 断言失败。 这是执行前预期，不是本轮已取得的测试结果。
 
+实际 red 记录在 `evidence/issue-13/01-red.txt`：受控环境使用 `.venv/bin/python` 采集到 `ModuleNotFoundError: No module named 'client.windows'`；实现后同一测试 1 passed，见 `01-green.txt`。
+
 - [x] **Step 3: 最小实现，先让这一条完整路径可工作**
 
 在 `client/windows/configure.py` 应用以下核心，按该文件职责接入真实路由/存储，不替换真实业务层为 mock：
@@ -107,8 +109,8 @@ Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错�
 
 - [x] **Step 5: 同步文档/ADR**
 
-- [ ] client/windows/README.md：版本、安装/升级、CA、工具列表、图片输入能力、恢复及卸载
-- [ ] OPERATIONS.md：Windows 实际验收记录与未通过项
+- [x] client/windows/README.md：版本、安装/升级、CA、工具列表、图片输入能力、恢复及卸载；离线输出和未验收边界已记录
+- [x] OPERATIONS.md：Windows 实际验收记录与未通过项；实机未验证项明确标注
 
 - [x] **Step 6: 独立提交边界 A**
 
