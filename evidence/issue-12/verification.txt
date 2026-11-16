@@ -1,0 +1,84 @@
+$ .venv/bin/python -m pytest --collect-only -q -k tb11_calibrated_switching
+tests/test_tb11_calibrated_switching.py::test_tb11_no_raw_runs_cannot_enable_profile
+tests/test_tb11_calibrated_switching.py::test_tb11_valid_synthetic_report_passes_shape_gate
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_counterexamples[change0-raw_runs]
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_counterexamples[change1-release_proof]
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_counterexamples[change2-guard_events]
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_counterexamples[change3-reserve]
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_counterexamples[change4-budget]
+tests/test_tb11_calibrated_switching.py::test_tb11_duplicate_task_ids_are_not_independent_runs
+tests/test_tb11_calibrated_switching.py::test_tb11_runtime_mismatch_cannot_be_hidden_by_valid_run_shape
+tests/test_tb11_calibrated_switching.py::test_tb11_profile_runs_must_follow_generate_edit_generate_order
+tests/test_tb11_calibrated_switching.py::test_tb11_latency_summary_reports_full_saved_output_window
+tests/test_tb11_calibrated_switching.py::test_tb11_model_switch_rejects_less_than_three_cycles
+tests/test_tb11_calibrated_switching.py::test_tb11_model_switch_rejects_duplicate_profiles
+
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+13/490 tests collected (477 deselected) in 0.20s
+
+$ .venv/bin/python -m pytest -q tests/test_tb11_calibrated_switching.py
+.............                                                            [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+13 passed, 1 warning in 0.10s
+
+$ .venv/bin/python -m pytest -q -k "tb11 or tb08 or tb09 or tb10"
+........................................................................ [ 39%]
+....................................................F................... [ 79%]
+......................................                                   [100%]
+=================================== FAILURES ===================================
+__________ test_tb09_brief_headroom_spike_is_not_a_stable_safe_start ___________
+
+owner_env = namespace(root=PosixPath('/tmp/pytest-of-clusteradmin/pytest-609/test_tb09_brief_headroom_spike0/runtime'), registry=<...tion owner_env.<locals>.submit at 0xe5f7776bc860>, wait_task=<function owner_env.<locals>.wait_task at 0xe5f7776bfb00>)
+
+    def test_tb09_brief_headroom_spike_is_not_a_stable_safe_start(owner_env):
+        config=resources(wait_timeout=.15)
+        original=config['resource_sampler'];reads=0
+        def sample(tid):
+            nonlocal reads
+            reads+=1
+            return dataclasses.replace(original(tid),available_bytes=(60 if reads%8 in (6,7) else 25)*1024**3)
+        config['resource_sampler']=sample
+        backend=owner_env.new_backend()
+        with client_with_resources(owner_env,backend,**config) as c:
+            tid=owner_env.submit(c).json()['id']
+>           done=owner_env.wait_task(c,tid,'A',lambda t:t['status'] in ('failed','completed'))
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_tb09_safe_admission.py:436:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+c = <starlette.testclient.TestClient object at 0xe5f777590050>
+tid = 'task-8b1c56c521ae403e944818ccb2913bd6', owner = 'A'
+predicate = <function test_tb09_brief_headroom_spike_is_not_a_stable_safe_start.<locals>.<lambda> at 0xe5f777762200>
+timeout = 3.0
+
+    def wait_task(c,tid,owner,predicate,timeout=3.0):
+        deadline=time.monotonic()+timeout; last=None
+        while time.monotonic()<deadline:
+            r=c.get("/v1/tasks/"+tid,headers=env.auth(owner)); assert r.status_code==200,r.text
+            last=r.json()
+            if predicate(last): return last
+            threading.Event().wait(.01)
+>       raise AssertionError(f"task did not converge: {last}")
+E       AssertionError: task did not converge: {'id': 'task-8b1c56c521ae403e944818ccb2913bd6', 'kind': 'image_generate', 'file_id': None, 'options': {'prompt': 'fixture', 'size': '1024x1024', 'seed': 0, 'quality': 'standard', 'image_ids': [], 'foreground_file_id': None, 'title': ''}, 'status': 'queued', 'progress': 0.0, 'result': None, 'error': None, 'created': 1794792080, 'updated': 1794792083, 'stage': 'waiting_resources', 'stage_seq': 102, 'stage_started_at': 1794792083.652035, 'stage_updated_at': 1794792083.652035, 'blocked_reason': 'system_memory', 'cancel_requested': False, 'step': None, 'steps': None, 'queue_ahead': None, 'queue_reason': 'system_memory'}
+
+tests/conftest.py:140: AssertionError
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/starlette/testclient.py:45
+  /home/clusteradmin/Desktop/Agent多模态服务/.venv/lib/python3.12/site-packages/starlette/testclient.py:45: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_tb09_safe_admission.py::test_tb09_brief_headroom_spike_is_not_a_stable_safe_start
+1 failed, 181 passed, 308 deselected, 1 warning in 38.12s

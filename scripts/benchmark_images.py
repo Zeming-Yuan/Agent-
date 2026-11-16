@@ -17,7 +17,13 @@ import uuid
 
 import httpx
 from PIL import Image
-from scripts.image_measurement import summarize_run, validate_run, write_curve, baseline_summary
+from scripts.image_measurement import (
+    baseline_summary,
+    summarize_run,
+    validate_profile_report,
+    validate_run,
+    write_curve,
+)
 
 
 def read_rows(directory, name):
@@ -41,7 +47,7 @@ def write_json(path, value):
     save_private(path, (json.dumps(value, indent=2, sort_keys=True, allow_nan=False)+'\n').encode())
 
 
-async def observe(config, report_root, *, transport=None):
+async def observe(config, report_root, *, transport=None, profile=None, options=None):
     run_id = uuid.uuid4().hex
     directory = Path(report_root)/run_id
     directory.mkdir(mode=0o700, parents=True)
@@ -53,8 +59,8 @@ async def observe(config, report_root, *, transport=None):
     if not config['base_url'].startswith('https://'): raise ValueError('HTTPS is required')
     context = ssl.create_default_context(cafile=config['ca_file'])
     key = Path(config['api_key_file']).read_text().strip()
-    options = config.get('options', {})
-    profile = options.get('quality', 'standard') if config.get('kind') == 'image_edit' else 'generate'
+    options = dict(config.get('options', {}) if options is None else options)
+    profile = profile or (options.get('quality', 'standard') if config.get('kind') == 'image_edit' else 'generate')
     row = {'evidence_version': 1, 'expected_host_id': config['expected_host_id'], 'run_id': run_id, 'request_id': run_id+'-0', 'task_id': None, 'profile': profile,
            'runtime_hash': config['runtime_hash'], 'host_match': False, 'backend_executions': 0,
            'status': 'not_started', 'output_verified': False, 'memory_samples': [], 'guard_events': [],
@@ -98,6 +104,7 @@ async def observe(config, report_root, *, transport=None):
                 row['saved_ns'] = time.monotonic_ns()
                 row['output_verified'] = True
                 row['output_sha256'] = hashlib.sha256(data).hexdigest()
+                row['result_file_id'] = fid
     except httpx.HTTPStatusError as exc:
         row.update(status='rejected' if exc.response.status_code == 429 else 'http_error',
                    http_status=exc.response.status_code, failure='HTTPStatusError')
@@ -157,20 +164,109 @@ async def observe(config, report_root, *, transport=None):
     write_json(directory/'profile-report.json', {'profile': profile, 'runtime_hash': config['runtime_hash'],
         'baseline_status': 'not_calibrated', 'enabled': False, 'raw_runs': [run_id], 'release_proof': None})
     save_private(directory/'memory.svg', write_curve(memory, tasks, capture_start, capture_end).encode())
+    summary['result_file_id'] = row.get('result_file_id')
+    summary['raw_run'] = row
     return summary
+
+
+async def model_switch(config, report_root, profiles, cycles, *, transport=None):
+    """Run a guarded generate/edit/generate sequence for each edit profile.
+
+    The function intentionally keeps reports disabled until a maintainer has
+    correlated release proof and a signed budget.  It records every attempted
+    run, including failures, so a partial or unsafe calibration cannot look
+    complete.
+    """
+    if cycles < 3:
+        raise ValueError('cycles must be at least 3')
+    names = [name.strip() for name in profiles if name.strip()]
+    if not names or any(name not in {'fast', 'standard', 'high'} for name in names):
+        raise ValueError('profiles must be a non-empty subset of fast,standard,high')
+    if len(names) != len(set(names)):
+        raise ValueError('profiles must be unique')
+    if not isinstance(config, dict) or not config.get('runtime_hash'):
+        raise ValueError('runtime_hash is required')
+
+    root = Path(report_root)
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    reports = {}
+    for name in names:
+        runs = []
+        cycle_rows = []
+        for cycle in range(1, cycles + 1):
+            generate_options = dict(config.get('generation_options', config.get('options', {})))
+            generate_options.pop('quality', None)
+            generated = await observe(config, root, transport=transport,
+                                      profile='generate', options=generate_options)
+            runs.append(generated['raw_run'])
+            edit_options = dict(config.get('edit_options', {}))
+            edit_options.update({'quality': name})
+            if generated.get('result_file_id'):
+                edit_options['image_ids'] = [generated['result_file_id']]
+            edited = await observe({**config, 'kind': 'image_edit'}, root, transport=transport,
+                                   profile=name, options=edit_options)
+            runs.append(edited['raw_run'])
+            final = await observe(config, root, transport=transport,
+                                  profile='generate', options=generate_options)
+            runs.append(final['raw_run'])
+            cycle_rows.append({'cycle': cycle, 'task_ids': [
+                generated.get('task_id'), edited.get('task_id'), final.get('task_id')
+            ], 'statuses': [generated['status'], edited['status'], final['status']]})
+
+        report = {
+            'profile': name,
+            'cycles': cycle_rows,
+            'raw_runs': runs,
+            'runtime_hash': config['runtime_hash'],
+            'input_envelope': config.get('input_envelope', {}),
+            'budget': config.get('budgets', {}).get(name, config.get('budget', {})),
+            'min_available_bytes': min(
+                (row.get('available_bytes') for run in runs for row in run.get('memory_samples', [])
+                 if isinstance(row.get('available_bytes'), int)),
+                default=0,
+            ),
+            'release_proof': all(run.get('release_proof') is True for run in runs),
+            'guard_events': [event for run in runs for event in run.get('guard_events', [])],
+            'baseline_status': 'not_calibrated',
+        }
+        report['errors'] = validate_profile_report(report)
+        report['enabled'] = not report['errors']
+        reports[name] = report
+        write_json(root / f'profile-{name}.json', report)
+
+    result = {
+        'scenario': 'model-switch',
+        'cycles': cycles,
+        'profiles': reports,
+        'enabled_profiles': [name for name, report in reports.items() if report['enabled']],
+        'disabled_profiles': [name for name, report in reports.items() if not report['enabled']],
+    }
+    write_json(root / 'model-switch.json', result)
+    return result
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--scenario', choices=['observe'], required=True)
+    parser.add_argument('--scenario', choices=['observe', 'model-switch'], required=True)
     parser.add_argument('--config', type=Path, required=True)
     parser.add_argument('--report-dir', type=Path, required=True)
+    parser.add_argument('--profiles', default='')
+    parser.add_argument('--cycles', type=int, default=3)
     args = parser.parse_args()
+    if args.scenario == 'model-switch' and args.cycles < 3:
+        print(json.dumps({'status': 'configuration_error', 'error': 'cycles must be at least 3'}))
+        return 2
     try:
-        summary = asyncio.run(observe(json.loads(args.config.read_text()), args.report_dir))
+        config = json.loads(args.config.read_text())
+        if args.scenario == 'model-switch':
+            summary = asyncio.run(model_switch(config, args.report_dir, args.profiles.split(','), args.cycles))
+        else:
+            summary = asyncio.run(observe(config, args.report_dir))
     except (OSError, ValueError, KeyError) as exc:
         print(json.dumps({'status': 'configuration_error', 'error_type': type(exc).__name__})); return 2
-    print(json.dumps(summary, sort_keys=True))
+    print(json.dumps(summary, sort_keys=True, default=str))
+    if args.scenario == 'model-switch':
+        return 0 if summary['enabled_profiles'] else 1
     return 0 if summary['valid_samples'] == 1 else 1
 
 
