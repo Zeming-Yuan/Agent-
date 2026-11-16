@@ -1,7 +1,7 @@
 import json
 import subprocess
 import sys
-from client.mac.configure import make_config
+from client.mac.configure import make_config, validate_client_config
 from pathlib import Path
 
 import pytest
@@ -39,6 +39,34 @@ def test_tb13_config_roundtrip_does_not_embed_credentials(root, config):
 def test_tb13_relative_paths_rejected(root, config):
     with pytest.raises(ValueError, match="absolute macOS paths"):
         make_config(root, config)
+
+
+@pytest.mark.parametrize(
+    "base_url",
+    [
+        "https://user:pass@example.test/v1",
+        "https://example.test/v1?token=leak",
+        "https://example.test/v1#fragment",
+    ],
+)
+def test_tb13_personal_config_rejects_url_credentials_query_and_fragment(tmp_path, base_url):
+    key = tmp_path / "key"
+    ca = tmp_path / "ca.crt"
+    key.write_text("personal-key")
+    ca.write_text("fixture-ca")
+    config = tmp_path / "personal.json"
+    config.write_text(
+        json.dumps(
+            {
+                "base_url": base_url,
+                "api_key_file": str(key),
+                "ca_file": str(ca),
+            }
+        )
+    )
+
+    with pytest.raises(ValueError, match="credentials, query, or fragment"):
+        validate_client_config(config, key)
 
 
 def test_tb13_configure_cli_emits_json_array_for_harness():

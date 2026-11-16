@@ -102,36 +102,6 @@ if [[ -z "$python_bin" ]]; then
   exit 1
 fi
 
-require_config_paths() {
-  "$python_bin" - "$CONFIG_FILE" "$API_KEY_FILE" <<'PY'
-import json
-import sys
-from pathlib import Path
-from urllib.parse import urlsplit
-
-path = Path(sys.argv[1]).expanduser().resolve()
-provided_key = Path(sys.argv[2]).expanduser().resolve()
-data = json.loads(path.read_text(encoding="utf-8"))
-url = urlsplit(data.get("base_url", ""))
-if url.scheme != "https" or not url.hostname or url.path.rstrip("/") != "/v1":
-    raise SystemExit("base_url must be an HTTPS /v1 URL")
-for key in ("api_key_file", "ca_file"):
-    value = data.get(key)
-    if not value:
-        raise SystemExit(f"config missing {key}")
-    candidate = Path(value).expanduser()
-    if not candidate.is_absolute():
-        candidate = path.parent / candidate
-    candidate = candidate.resolve()
-    if not candidate.is_file():
-        raise SystemExit(f"config {key} does not exist: {candidate}")
-    if key == "api_key_file" and candidate != provided_key:
-        raise SystemExit("--api-key-file must match config api_key_file")
-PY
-}
-
-require_config_paths
-
 backup_existing_config() {
   [[ "$ACTION" == "update" && -f "$CONFIG_FILE" ]] || return 0
   local stamp backup
@@ -166,25 +136,30 @@ PY
 }
 
 stage_configure() {
-  local target="$ROOT_DIR/configure.py"
-  [[ -f "$target" ]] && { CONFIGURER="$target"; return 0; }
+  local target="$ROOT_DIR/configure.py" source=""
   if [[ -f "$SCRIPT_DIR/configure.py" ]]; then
-    cp -p -- "$SCRIPT_DIR/configure.py" "$target"
+    source="$SCRIPT_DIR/configure.py"
   elif [[ -f "$ROOT_DIR/client/mac/configure.py" ]]; then
-    cp -p -- "$ROOT_DIR/client/mac/configure.py" "$target"
+    source="$ROOT_DIR/client/mac/configure.py"
+  elif [[ -f "$ROOT_DIR/configure.py" ]]; then
+    source="$ROOT_DIR/configure.py"
   else
     echo "缺少 macOS configure.py，不能生成 Harness 插件配置。" >&2
     exit 2
   fi
+  if [[ "$source" != "$target" ]]; then
+    cp -p -- "$source" "$target"
+    touch "$ROOT_DIR/.configure.generated"
+    chmod 600 -- "$ROOT_DIR/.configure.generated"
+  fi
   chmod 600 -- "$target"
-  touch "$ROOT_DIR/.configure.generated"
-  chmod 600 -- "$ROOT_DIR/.configure.generated"
   CONFIGURER="$target"
 }
 
 backup_existing_config
 stage_bridge
 stage_configure
+"$python_bin" "$CONFIGURER" --validate-config "$CONFIG_FILE" --api-key-file "$API_KEY_FILE"
 
 requirements="$ROOT_DIR/requirements.txt"
 [[ -f "$requirements" ]] || requirements="$ROOT_DIR/client/image-tools-requirements.txt"
