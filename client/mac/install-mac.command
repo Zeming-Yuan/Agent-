@@ -92,13 +92,14 @@ if [[ -z "$python_bin" ]]; then
 fi
 
 require_config_paths() {
-  "$python_bin" - "$CONFIG_FILE" <<'PY'
+  "$python_bin" - "$CONFIG_FILE" "$API_KEY_FILE" <<'PY'
 import json
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
 path = Path(sys.argv[1]).expanduser().resolve()
+provided_key = Path(sys.argv[2]).expanduser().resolve()
 data = json.loads(path.read_text(encoding="utf-8"))
 url = urlsplit(data.get("base_url", ""))
 if url.scheme != "https" or not url.hostname or url.path.rstrip("/") != "/v1":
@@ -110,8 +111,11 @@ for key in ("api_key_file", "ca_file"):
     candidate = Path(value).expanduser()
     if not candidate.is_absolute():
         candidate = path.parent / candidate
+    candidate = candidate.resolve()
     if not candidate.is_file():
         raise SystemExit(f"config {key} does not exist: {candidate}")
+    if key == "api_key_file" and candidate != provided_key:
+        raise SystemExit("--api-key-file must match config api_key_file")
 PY
 }
 
