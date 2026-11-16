@@ -12,7 +12,8 @@ Green:
 
 Scope:
   Tests cover macOS Unicode/space paths, relative path rejection, JSON plugin output,
-  credential exclusion, installer explicit inputs/private-state preservation, and shell syntax.
+  credential exclusion, installer explicit input/install-dir isolation, canonical config
+  generator use, generated-artifact cleanup/private-state preservation, and shell syntax.
   The shared bridge, server, database, and bundle builder were not modified.
 
 Not verified:
