@@ -178,3 +178,15 @@ macOS 专属 `client/mac/configure.py` 生成独立的 `command`、`args` 和 `c
 Python bridge 的 CA 与 Harness 网络进程的 `NODE_EXTRA_CA_CERTS` 分开配置；不通过关闭 TLS 校验绕过问题。T13 只修改 macOS 专属配置/安装/说明/测试和本 ADR，公共 bridge、打包器、服务端协议与状态机未改。`tests/test_tb13_macos_client.py` 覆盖 Unicode/空格路径、相对路径拒绝、无凭证 JSON、CLI 输出、安装器 shell 语法与私有状态保留说明。
 
 本机 Linux checkout 的 `tb13` 测试通过，但实际 macOS/Harness 版本登记、真实 TLS/局域网权限、生成→编辑→生成、阶段/排队、取消、断线/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；这些证据不能由服务器 stdio 或静态配置测试替代。回退先停用插件并保全个人数据，再删除 `.venv` 或恢复平台资产。
+
+## T14 联合验收门禁
+
+双端交付报告由 `scripts/check_image_acceptance.py` 校验。报告必须列出 AC-01 至 AC-20 的逐项结果，并同时提供 Windows、macOS 实际 Harness 的版本、任务标识和证据；缺少任一平台或任一 AC 证据都保持失败。`profiles` 必须非空，完整 profile 报告会复用 `validate_profile_report`，其运行时标识必须与最终构建一致。证据路径和 SHA-256 可通过 `--evidence-root` 受控核对。
+
+```bash
+python scripts/check_image_acceptance.py --report <private-report.json> --evidence-root <private-evidence-dir>
+```
+
+校验器不访问服务、不生成任务、不改变 owner/Key，也不关闭父规格 Issue。当前源码验证的是证据门禁和失败闭合行为；真实双端 Harness、生产图片后端和恢复演练仍需由维护者在私有报告中补齐，未补齐时不能宣称父规格完成。
+
+T14 门禁不会把字段形状当作交付证据：每个证据必须是存在文件及 SHA-256 的引用；完整 profile 必须通过 T11 的实测报告校验并与 `final_build.runtime_hash` 相同。报告还需逐项记录五类故障演练、后端执行计数、跨 owner 拒绝、同键单次重放、Key 轮换/legacy 接管及恢复前后新写入保全。缺项时 CLI 非零退出。

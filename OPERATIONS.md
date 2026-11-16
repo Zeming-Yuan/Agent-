@@ -438,3 +438,17 @@ T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_wi
 验证：首条 red 为 `client.mac.configure` 缺失（pytest 收集 ImportError）；补齐最小配置函数后进入 green。最终 `tests/test_tb13_macos_client.py` 为 **12 passed, 1 warning**；`bash -n client/mac/install-mac.command` 和 Python 编译通过；完整 pytest 首次出现既有 T09 时序失败后，单测复跑通过，fresh rerun 为 **510 passed, 1 warning**。测试覆盖 Unicode/空格路径、相对路径拒绝、CLI JSON 数组、凭证不嵌入、HTTPS URL 凭证/query/fragment 拒绝、源码 checkout 拒绝仓库安装目录、安装器显式输入/安装目录隔离/私有状态保留和合法 shell 语法。类型检查、静态 lint、构建、CI、Compose、seed、安全扫描和变异测试未配置（N/A）。
 
 macOS 实际 Harness、OS/Harness/Python 版本登记、真实 TLS/局域网权限、个人 Key 轮换、生成→编辑→生成、阶段/排队、取消、断网/工具重启恢复、聊天图片展示和自定义目录保存仍未验证；Linux checkout 与服务器 stdio 不能替代这些证据。回退：停止使用新插件并保全个人数据与服务端任务，删除 `.venv` 或恢复平台资产，禁止恢复共享 Key 或盲目重提。
+
+## T14 联合验收证据门禁（2026-11-16）
+
+联合验收报告必须同时给出 Windows 与 macOS 的实际 Harness、操作系统/ Harness 版本、任务标识和证据；AC-01 至 AC-20 每一项都必须明确 `passed: true` 并关联非空证据。`profiles` 不能为空；若报告包含完整 T11 profile 记录，则继续调用既有 `validate_profile_report`，并核对最终构建的 `runtime_hash`。证据项可以用 `{ "path": ..., "sha256": ... }` 引用，校验器会在指定的 `--evidence-root` 下核对文件和摘要。
+
+```bash
+python scripts/check_image_acceptance.py --report <private-report.json> --evidence-root <private-evidence-dir>
+```
+
+该命令输出 JSON `status` 和稳定错误路径；任一必需证据缺失或摘要/运行时不一致时以非零状态退出。它只读报告，不提交或关闭父 Issue，也不会把一端 Harness、服务器 stdio 或合成 profile 推导为双端交付。当前分支已覆盖校验器和反例测试；真实 Windows/macOS Harness、同一服务的双端任务、后端离线/重启/未知提交/资源不足/取消竞态、Key 撤销轮换及最终构建 profile 仍未验收，报告缺项必须保持失败。
+
+恢复演练边界：暂停新工作并确认后端控制请求和运行任务已结算，保全任务、文件、注册表、请求日志和新写入，再在隔离副本执行恢复。不得清空幂等映射、覆盖新库、重新推理或退回跨 owner 共享读取。恢复后用原 owner 查询原任务并核对后端执行计数；未能证明释放或一致性时继续停接单。
+
+T14 门禁补充：交付证据必须是存在文件的 SHA-256 引用；普通字符串或合成占位符不会被视为证据。报告还必须记录后端离线、网关重启、未知提交、资源不足及取消/完成竞态五类演练（含后端执行计数，单任务不得超过一次）、跨 owner 拒绝/同键只执行一次/Key 轮换/legacy 接管，以及停接单前后端空闲、新写入保全和不重放。缺少 `final_build.runtime_hash`、完整 T11 profile 或任一上述记录时，CLI 保持非零失败。
