@@ -2,7 +2,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+if [[ -f "$SCRIPT_DIR/spark_image_tools.py" ]]; then
+  # Private bundles place the bridge and requirements beside this installer.
+  ROOT_DIR="$SCRIPT_DIR"
+else
+  # The source checkout keeps platform assets under client/mac/.
+  ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+fi
 ACTION="install"
 CONFIG_FILE=""
 API_KEY_FILE=""
