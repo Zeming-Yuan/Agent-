@@ -170,3 +170,15 @@ T07 B审查修复：未交付结果回收失败也属于cleanup_unconfirmed，�
 T10 审查修复：已知旧 profile 驻留占用余量时，先允许一次受控释放，不能用释放前余量阻止必要卸载。若释放已由 T09 连续关联证据确认、容量仍不足，原任务保留 queued 并让出轮次；在内存恢复前只读等待，不反复 /free。其他 owner 推理时仍独立检查未占用队首的资源等待期限；资源恢复即回到排队，不把等待别人完成的时间当资源超时。本人后续任务会继承阻塞队首原因。快照仅识别与当前执行 claim 精确关联的运行 prompt，孤儿/未知 prompt 不会被忽略。
 
 若已排队任务的 profile 预算/包络后来失效，该任务在资源等待上限后失败，诊断保留 invalid_budget；其他 profile 的有效任务继续轮转。未知/失效的后端观测仍按 T09 停止全局准入，不把 profile 配置失败当作旧模型释放不确定。
+
+## T14 联合验收门禁
+
+双端交付报告由 `scripts/check_image_acceptance.py` 校验。报告必须列出 AC-01 至 AC-20 的逐项结果，并同时提供 Windows、macOS 实际 Harness 的版本、任务标识和证据；缺少任一平台或任一 AC 证据都保持失败。`profiles` 必须非空，完整 profile 报告会复用 `validate_profile_report`，其运行时标识必须与最终构建一致。证据路径和 SHA-256 可通过 `--evidence-root` 受控核对。
+
+```bash
+python scripts/check_image_acceptance.py --report <private-report.json> --evidence-root <private-evidence-dir>
+```
+
+校验器不访问服务、不生成任务、不改变 owner/Key，也不关闭父规格 Issue。当前源码验证的是证据门禁和失败闭合行为；真实双端 Harness、生产图片后端和恢复演练仍需由维护者在私有报告中补齐，未补齐时不能宣称父规格完成。
+
+T14 门禁不会把字段形状当作交付证据：每个证据必须是存在文件及 SHA-256 的引用；完整 profile 必须通过 T11 的实测报告校验并与 `final_build.runtime_hash` 相同。报告还需逐项记录五类故障演练、后端执行计数、跨 owner 拒绝、同键单次重放、Key 轮换/legacy 接管及恢复前后新写入保全。缺项时 CLI 非零退出。

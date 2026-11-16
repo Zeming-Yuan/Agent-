@@ -29,3 +29,7 @@ Cancellation settlement must validate the eventual HTTP result as well as wait f
 Normal profile enablement consumes `scripts.image_measurement.validate_profile_report`. The gate requires at least three complete cycles represented by at least nine independently identified runs, a matching runtime hash, a positive evidence-bound budget with at least a 20 GiB reserve, valid output and memory evidence for every run, no guard events, and a positive release proof. It also rejects duplicate task/request identities and non-stable baselines when a baseline status is present. A report that fails any check remains disabled.
 
 The `model-switch` benchmark records generate/edit/generate attempts and writes private per-profile reports. It does not manufacture release proof or budgets; with the current T08 observer reports remain `not_calibrated` and `enabled=false`. Physical model-release evidence, signed/approved budgets, and real hardware measurements remain required before any profile can be enabled. This preserves the existing fail-closed admission boundary and 20 GiB guard.
+
+## T14 最终构建与恢复证据（2026-11-16）
+
+联合验收报告中的完整 profile 记录继续经过 `validate_profile_report`，并要求与最终构建的 `runtime_hash` 一致；缺少真实 profile 证据不得启用或宣称交付。后端离线、未知提交、资源不足和取消/完成竞态的恢复必须停接单、确认控制请求结算并保全新写入，不能重新推理或绕过 20 GiB 保护。`check_image_acceptance` 只做只读证据门禁，不替代实机资源释放证明。

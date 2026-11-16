@@ -430,3 +430,17 @@ Windows 专属资源位于 `client/windows/`：`configure.py` 生成实际 Harne
 T12 首条 red 因 `client.windows` 模块不存在；随后 `tests/test_tb12_windows_client.py` 8 passed，受影响回归 `-k "tb12 or tb06 or tb07"` 为 76 passed（各有1项既有Starlette弃用警告），完整 pytest 为 498 passed、1 warning。测试覆盖 Unicode/空格路径、相对路径拒绝、凭证不嵌入、私有包根入口，以及安装脚本源文本中的当前用户 SID ACL、更新备份和卸载保留契约；没有执行 PowerShell/Windows ACL。静态 Python 编译通过。实际 Windows/Harness 安装、升级/卸载、真实 CA/Key、生成→编辑→生成、断网/重启恢复、保存失败重取及聊天展示仍未验证，且依赖仍 open 的 #12/T11。逐条 AC 映射与失败/恢复路径见 `client/windows/README.md`，证据文件见 `evidence/issue-13/`。
 
 回退：停止使用新插件片段并删除 `.venv`；保留个人配置、Key、请求日志和已保存图片，服务端任务仍使用原 owner 恢复入口。公共 bridge、打包器、服务端协议和状态机未在本票修改。
+
+## T14 联合验收证据门禁（2026-11-16）
+
+联合验收报告必须同时给出 Windows 与 macOS 的实际 Harness、操作系统/ Harness 版本、任务标识和证据；AC-01 至 AC-20 每一项都必须明确 `passed: true` 并关联非空证据。`profiles` 不能为空；若报告包含完整 T11 profile 记录，则继续调用既有 `validate_profile_report`，并核对最终构建的 `runtime_hash`。证据项可以用 `{ "path": ..., "sha256": ... }` 引用，校验器会在指定的 `--evidence-root` 下核对文件和摘要。
+
+```bash
+python scripts/check_image_acceptance.py --report <private-report.json> --evidence-root <private-evidence-dir>
+```
+
+该命令输出 JSON `status` 和稳定错误路径；任一必需证据缺失或摘要/运行时不一致时以非零状态退出。它只读报告，不提交或关闭父 Issue，也不会把一端 Harness、服务器 stdio 或合成 profile 推导为双端交付。当前分支已覆盖校验器和反例测试；真实 Windows/macOS Harness、同一服务的双端任务、后端离线/重启/未知提交/资源不足/取消竞态、Key 撤销轮换及最终构建 profile 仍未验收，报告缺项必须保持失败。
+
+恢复演练边界：暂停新工作并确认后端控制请求和运行任务已结算，保全任务、文件、注册表、请求日志和新写入，再在隔离副本执行恢复。不得清空幂等映射、覆盖新库、重新推理或退回跨 owner 共享读取。恢复后用原 owner 查询原任务并核对后端执行计数；未能证明释放或一致性时继续停接单。
+
+T14 门禁补充：交付证据必须是存在文件的 SHA-256 引用；普通字符串或合成占位符不会被视为证据。报告还必须记录后端离线、网关重启、未知提交、资源不足及取消/完成竞态五类演练（含后端执行计数，单任务不得超过一次）、跨 owner 拒绝/同键只执行一次/Key 轮换/legacy 接管，以及停接单前后端空闲、新写入保全和不重放。缺少 `final_build.runtime_hash`、完整 T11 profile 或任一上述记录时，CLI 保持非零失败。

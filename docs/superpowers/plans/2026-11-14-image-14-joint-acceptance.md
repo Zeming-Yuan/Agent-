@@ -291,3 +291,13 @@ def test_tb14_empty_profiles_is_not_delivery():
 ```
 
 上面的 synthetic 只验证校验器字段逻辑，绝不能作为真实交付证据。Task 2 扩展后的实际 CLI 还要加载原始报告、逐 profile 校验、校验文件哈希/运行时与真实图片证据；对应集成测试用临时真实报告文件，先修改其中一个哈希和运行时，断言 CLI 非零退出。
+
+## 执行记录（2026-11-16）
+
+在受控 checkout 的 `feat/issue-15-joint-acceptance` 分支实现了 `scripts/check_image_acceptance.py` 和 `tests/test_tb14_joint_acceptance.py`。已验证：Mac-only 报告拒绝、Windows/macOS 任一缺失拒绝、AC-01..20 空证据拒绝、合成/最小字段形状拒绝、空 profile 拒绝、完整 hash-backed 报告通过、profile runtime 摘要不一致拒绝、最终构建 runtime 缺失拒绝、SHA-256 错误及重复执行计数拒绝，以及 CLI 缺证据非零退出。测试命令为 `.../.venv/bin/python -m pytest -q tests/test_tb14_joint_acceptance.py`，结果 16 passed（保留 1 个既有 AnyIO 弃用警告）。
+
+真实 Windows/macOS Harness、同一服务组合任务、后端故障恢复、Key 轮换/旧数据接管和最终构建的实机 profile 仍未运行；这些证据缺失会由 CLI 保持失败，不能将本次离线测试解释为 T14 或父规格完成。产品目录本身没有 Git 元数据，提交只在受控 checkout 形成。
+
+门禁实现已按复审收紧：普通字符串和合成占位符不再算证据；AC、平台、profile、演练、身份和恢复记录均需存在且带 SHA-256 文件引用。每个 profile 必须是完整 `validate_profile_report` 报告并匹配 `final_build.runtime_hash`；故障演练记录后端执行计数，超过一次的任务标记重复推理。当前没有真实报告，因此 CLI 在生产交付数据缺失时应保持非零。
+
+受影响回归在最终提交前重跑；16 项 T14 测试和 154 项 T08/T09/T11 回归均保留真实命令输出作为验证依据。
