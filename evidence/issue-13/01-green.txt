@@ -1,0 +1,5 @@
+Command: PYTHONPATH=/home/clusteradmin/.codex/workspaces/agent-mm-issue-12-20261116 /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb12_windows_client.py
+Result: 1 passed, 1 warning in 0.01s
+
+Command: /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m py_compile client/windows/configure.py
+Result: exit 0

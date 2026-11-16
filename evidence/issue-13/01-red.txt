@@ -1,0 +1,6 @@
+Command: python -m pytest -q tests/test_tb12_windows_client.py
+Result: unavailable in this environment (`python` is not installed).
+
+Command: PYTHONPATH=... /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb12_windows_client.py
+Result: collection failed as expected before implementation:
+ModuleNotFoundError: No module named 'client.windows'

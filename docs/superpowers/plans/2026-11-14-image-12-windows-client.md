@@ -12,7 +12,7 @@
 
 **Ticket:** T12；Blocked by：T11。实际桌面验收需要已标定且可安全服务的后端；只改 Windows 专属资源，可与 T13 分别验收。
 
-**Plan status:** 已确认 ticket 的实施计划；本轮尚未实现产品或运行新测试/硬件测量。
+**Plan status:** 已完成 Windows 专属离线实现、TDD red/green、受影响回归、文档/ADR 与双轴 review（见 `evidence/issue-13/review-final.md`）；真实 Windows/Harness、PowerShell/ACL 和 T11 标定后端仍未验收，票据保持 open。
 
 ## Global Constraints
 
@@ -53,7 +53,7 @@
 
 **Interfaces:** 消费上述输入，产出本票外部行为；新公共签名以 Architecture/共享契约为准，不另起别名。
 
-- [ ] **Step 1: 写第一条失败测试**
+- [x] **Step 1: 写第一条失败测试**
 
 ```python
 from client.windows.configure import make_config
@@ -68,13 +68,15 @@ def test_tb12_windows_unicode_paths_are_separate_argv():
     assert plugin["cwd"] == root
 ```
 
-- [ ] **Step 2: 运行并确认预期失败原因**
+- [x] **Step 2: 运行并确认预期失败原因**
 
 Run: `python -m pytest -q tests/test_tb12_windows_client.py`
 
 Expected: 当前无 Windows 安装/配置模块；最初 ModuleNotFoundError。后续若把整个命令手工拼成一个字符串或复用 Mac venv 路径，argv/command 断言失败。 这是执行前预期，不是本轮已取得的测试结果。
 
-- [ ] **Step 3: 最小实现，先让这一条完整路径可工作**
+实际 red 记录在 `evidence/issue-13/01-red.txt`：受控环境使用 `.venv/bin/python` 采集到 `ModuleNotFoundError: No module named 'client.windows'`；实现后同一测试 1 passed，见 `01-green.txt`。
+
+- [x] **Step 3: 最小实现，先让这一条完整路径可工作**
 
 在 `client/windows/configure.py` 应用以下核心，按该文件职责接入真实路由/存储，不替换真实业务层为 mock：
 
@@ -93,24 +95,24 @@ def make_config(install_dir,config_file):
             "cwd":str(root),"toolCallTimeoutMs":60000,"failOnStartupError":False}}
 ```
 
-- [ ] 平台专属 configure CLI 使用 argparse 生成 JSON 数组（兼容 YAML）插件片段；Key 只在私有配置指向的文件，不能内嵌插件或公开 README。
-- [ ] 安装脚本检查退出码、现有配置先备份且不覆盖个人请求日志；使用当前用户 SID 给私有 Key/配置设仅本人 ACL，不改变全局 PowerShell 执行策略。
-- [ ] 使用个人 CA 配置 Python bridge，并对实际 Harness 的 Node/其他网络进程按其已登记配置加载 CA；不设 verify=False、不把 ca_file 当系统已信任。
+- [x] 平台专属 configure CLI 使用 argparse 生成 JSON 数组（兼容 YAML）插件片段；Key 只在私有配置指向的文件，不能内嵌插件或公开 README。
+- [x] 安装脚本检查退出码、现有配置先备份且不覆盖个人请求日志；使用当前用户 SID 给私有 Key/配置设仅本人 ACL，不改变全局 PowerShell 执行策略（静态契约已验证，Windows ACL 未实机执行）。
+- [x] 使用个人 CA 配置 Python bridge，并对实际 Harness 的 Node/其他网络进程按其已登记配置加载 CA；不设 verify=False、不把 ca_file 当系统已信任（文档/静态边界已验证，实际 Harness 未运行）。
 
-- [ ] **Step 4: 运行首条测试和受影响既有回归**
+- [x] **Step 4: 运行首条测试和受影响既有回归**
 
-Run: `python -m pytest -q tests/test_tb12_windows_client.py`
+Run: `.venv/bin/python -m pytest -q tests/test_tb12_windows_client.py`
 
-Run: `python -m pytest -q -k "tb12 or tb06 or tb07"`
+Run: `.venv/bin/python -m pytest -q -k "tb12 or tb06 or tb07"`
 
 Expected: 所选测试采集非零、断言通过；任何 HTTP/后端替身错误都解释，不能用 deselect/skip 当完成。
 
-- [ ] **Step 5: 同步文档/ADR**
+- [x] **Step 5: 同步文档/ADR**
 
-- [ ] client/windows/README.md：版本、安装/升级、CA、工具列表、图片输入能力、恢复及卸载
-- [ ] OPERATIONS.md：Windows 实际验收记录与未通过项
+- [x] client/windows/README.md：版本、安装/升级、CA、工具列表、图片输入能力、恢复及卸载；离线输出和未验收边界已记录
+- [x] OPERATIONS.md：Windows 实际验收记录与未通过项；实机未验证项明确标注
 
-- [ ] **Step 6: 独立提交边界 A**
+- [x] **Step 6: 独立提交边界 A**
 
 提交范围：首个外部行为、测试和必要文档；不夹带下一票迁移。Git checkout 中选择实际改动文件后执行：
 
@@ -133,7 +135,7 @@ git commit -m "feat(image): t12 vertical core"
 
 **Interfaces:** 延续 Task 1 的命名/字段/返回值；所有异常路径仍以 owner 隔离和同一任务身份为边界。
 
-- [ ] **Step 1: 把 Review Focus 反例写成具体测试**
+- [x] **Step 1: 把 Review Focus 反例写成具体测试**
 
 以下代码与 Task 1 的测试置于同一测试模块，保留该模块已经定义的 import/帮助函数；不是只画状态图：
 
@@ -157,13 +159,13 @@ def test_tb12_relative_install_paths_rejected(root,config):
     with pytest.raises(ValueError): make_config(root,config)
 ```
 
-- [ ] **Step 2: 执行反例，确认尚缺行为的失败而不是环境错误**
+- [x] **Step 2: 执行反例，确认尚缺行为的失败而不是环境错误**
 
 Run: `python -m pytest -q tests/test_tb12_windows_client.py`
 
 尚未实现的边界必须出现对应断言失败；已经满足的反例作为回归保留。缺依赖/网络误连/测试未采集先修正测试环境，不能计作业务 red。
 
-- [ ] **Step 3: 用最小改动满足反例，完成必要接线**
+- [x] **Step 3: 用最小改动满足反例，完成必要接线**
 
 `client/windows/install-windows.ps1` 的核心内容：
 
@@ -181,10 +183,10 @@ if ($LASTEXITCODE -ne 0) { throw "dependency installation failed" }
 ```
 
 
-- [ ] 在实际 Windows/Harness 版本运行生成→编辑→生成、取消、断网、工具重启、响应丢失恢复和不可写目录取图重试；保留任务 ID、图片 SHA256 与脱敏屏幕证据，服务器 stdio 不代替此步骤。
-- [ ] 如果发现公共桥接或构建器缺陷，先暂停平台票，沿公共主干串行修复并回归，再复验两个平台；本票不与 T13 同改公共文件。
+- [ ] 在实际 Windows/Harness 版本运行生成→编辑→生成、取消、断网、工具重启、响应丢失恢复和不可写目录取图重试；保留任务 ID、图片 SHA256 与脱敏屏幕证据，服务器 stdio 不代替此步骤。（当前主机无 Windows/Harness，未验证。）
+- [x] 如果发现公共桥接或构建器缺陷，先暂停平台票，沿公共主干串行修复并回归，再复验两个平台；本票不与 T13 同改公共文件。
 
-- [ ] **Step 4: 按逐条验收映射验证，并记录原始证据**
+- [x] **Step 4: 按逐条验收映射验证，并记录离线证据；实机项保持未验收**
 
 | 本票验收条件 | 验证安排 |
 | --- | --- |
@@ -210,11 +212,11 @@ python -m client.spark_image_tools --config "<Windows 个人配置文件>"
 
 平台实机步骤必须在实际 Windows Harness 完成并记录版本、任务 ID、脱敏屏幕和图片哈希；单测/静态配置通过不代替实际平台验收。
 
-- [ ] **Step 5: 文档、ADR 与证据同步**
+- [x] **Step 5: 文档、ADR 与证据同步**
 
 将实际测试输出、受影响回归、失败与恢复步骤写入 client/windows/README.md；与当前计划对应的 AC 映射逐项填证据。没有实测的项保持未验收，不能只打勾。
 
-- [ ] **Step 6: 独立提交边界 B**
+- [x] **Step 6: 独立提交边界 B**
 
 提交范围：其余反例测试、守卫/兼容接线、有效文档；保持本票在前置完成后独立可演示。
 
@@ -241,7 +243,7 @@ git commit -m "test(image): t12 boundaries and recovery"
 
 ## Verification environment
 
-以下 python 指令在受支持的工程虚拟环境执行。原工作区可用 .venv/bin/python；Windows 使用对应 .venv\\Scripts\\python.exe。新测试尚未创建，未采集到测试不算通过；本轮仅编写计划，不冒充 red/green 或实机验收已执行。
+以下指令在受支持的工程虚拟环境执行：`.venv/bin/python -m pytest -q`。Windows 使用对应 `.venv\\Scripts\\python.exe`。本轮已采集 TDD red/green、受影响回归和完整 pytest；PowerShell、Windows ACL、真实 Harness、TLS/Key 和 T11 标定后端仍未运行，不能由离线测试替代。
 
 
 ## Self-review and execution handoff
@@ -250,6 +252,7 @@ git commit -m "test(image): t12 boundaries and recovery"
 - [x] 第一条失败原因与最小实现明确；状态反例为测试代码/实际演示，不只保留图。
 - [x] 新签名来自共享契约，当前尚未实现的接口由明确前置/本票交付。
 - [x] 边界 A/B 各自带测试与文档；回退不会丢新数据或恢复共享读取。
-- [ ] 后续执行者运行 red/green、受影响回归与所需实机验收，填写实际证据后再声明完成。
+- [x] 离线 red/green、受影响回归和完整 pytest 已记录在 `evidence/issue-13/`；双轴 review 结果见 `evidence/issue-13/review-final.md`。
+- [ ] 所需 Windows/Harness 实机验收仍待依赖 #12/T11 和实际 Windows 环境，完成前不能关闭票据。
 
-本次只批准编写和发布计划，不启动产品实现。执行时由用户选择原生或子代理方式；未取得执行授权前不启动实现/部署。
+本计划已按用户授权执行离线产品实现；未部署生产、未运行 Windows/Harness 实机流程，也未关闭票据。

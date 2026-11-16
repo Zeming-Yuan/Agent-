@@ -1,0 +1,13 @@
+Command:
+PYTHONPATH=/home/clusteradmin/.codex/workspaces/agent-mm-issue-12-20261116 /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q
+
+Result:
+498 passed, 1 warning in 134.59s (0:02:14)
+
+Warning:
+Existing Starlette/AnyIO deprecation warning from the supported virtual environment.
+
+Additional checks:
+- `git diff --check c25211e...HEAD`: exit 0
+- Python `py_compile` for `client/windows/configure.py` and `tests/test_tb12_windows_client.py`: exit 0
+- PowerShell/Windows Harness execution: not run on this Linux host

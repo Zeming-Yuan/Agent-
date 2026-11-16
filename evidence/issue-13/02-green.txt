@@ -1,0 +1,7 @@
+Focused command:
+PYTHONPATH=/home/clusteradmin/.codex/workspaces/agent-mm-issue-12-20261116 /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q tests/test_tb12_windows_client.py
+Result: 8 passed, 1 warning in 0.04s
+
+Affected regression command:
+PYTHONPATH=/home/clusteradmin/.codex/workspaces/agent-mm-issue-12-20261116 /home/clusteradmin/Desktop/Agent多模态服务/.venv/bin/python -m pytest -q -k "tb12 or tb06 or tb07"
+Result: 76 passed, 422 deselected, 1 warning in 35.03s
